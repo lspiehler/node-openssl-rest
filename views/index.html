@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+		<style>
+			.list-group-item {
+				padding: 3px 10px;
+			}
+			.rightbtn {
+				text-align: right;
+			}
+			.list-group {
+				margin-bottom: 5px;
+			}
+		</style>
+		<script>
+			var index = {
+				commonName: {
+					title: 'Common Names',
+					section: 'cnsection',
+					list: 'commonnames',
+					input: 'cninput',
+					note: 'Add a common name',
+					name: 'common name',
+					maxlength: 64,
+					placeholder: 'certificatetools.com',
+					multivalue: true,
+					enabled: true
+				},
+				countryName: {
+					title: 'Country',
+					section: 'csection',
+					list: 'country',
+					input: 'cinput',
+					note: 'Add a country',
+					name: 'country',
+					maxlength: 2,
+					placeholder: 'US',
+					multivalue: false,
+					enabled: true
+				},
+				stateOrProvinceName: {
+					title: 'State',
+					section: 'statesection',
+					list: 'state',
+					input: 'stateinput',
+					note: 'Add a state',
+					name: 'state',
+					maxlength: 128,
+					placeholder: 'Louisiana',
+					multivalue: false,
+					enabled: true
+				},
+				localityName: {
+					title: 'Locality',
+					section: 'lsection',
+					list: 'locality',
+					input: 'linput',
+					note: 'Add a locality',
+					name: 'locality',
+					maxlength: 128,
+					placeholder: 'Slidell',
+					multivalue: false,
+					enabled: true
+				},
+				streetAddress: {
+					title: 'Street Address',
+					section: 'streetsection',
+					list: 'street',
+					input: 'streetinput',
+					note: 'Add a street address',
+					name: 'street',
+					maxlength: 128,
+					placeholder: '555 Bird Ln.',
+					multivalue: false,
+					enabled: false
+				},
+				organizationName: {
+					title: 'Organization',
+					section: 'orgsection',
+					list: 'organization',
+					input: 'orginput',
+					note: 'Add an organization',
+					name: 'organization',
+					maxlength: 64,
+					placeholder: 'Acme Inc.',
+					multivalue: false,
+					enabled: true
+				},
+				organizationalUnitName: {
+					title: 'Organizational Unit',
+					section: 'ousection',
+					list: 'ou',
+					input: 'ouinput',
+					note: 'Add an organizational unit',
+					name: 'organizational unit',
+					maxlength: 64,
+					placeholder: 'Information Technology',
+					multivalue: false,
+					enabled: false
+				},
+				postalCode:  {
+					title: 'Postal Code',
+					section: 'zipsection',
+					list: 'zipcode',
+					input: 'zipinput',
+					note: 'Add an postal code',
+					name: 'zipcode',
+					maxlength: 64,
+					placeholder: '70458',
+					multivalue: false,
+					enabled: false
+				},
+				emailAddress: {
+					title: 'Email Address',
+					section: 'emailsection',
+					list: 'email',
+					input: 'emailinput',
+					note: 'Add an email address',
+					name: 'email',
+					maxlength: 128,
+					placeholder: 'email@gmail.com',
+					multivalue: false,
+					enabled: false
+				}
+			}
+			function delItem(type, item) {
+				item.parentNode.parentNode.removeChild(item.parentNode);
+				var list = document.getElementById(index[type]['list']);
+				var items = list.getElementsByTagName('li');
+				if(items.length == 0) {
+					var li = document.createElement('li');
+					var span = document.createElement('span');
+					li.className = 'list-group-item';
+					li.style.border = 'none';
+					span.innerText = index[type]['note'];
+					span.className = 'none';
+					li.appendChild(span);
+					list.appendChild(li);
+				}
+				var input = document.getElementById(index[type]['input']);
+				input.value = item.parentNode.childNodes[1].innerText;
+				input.select();
+			}
+			function delSAN(item) {
+				item.parentNode.parentNode.removeChild(item.parentNode);
+				var list = document.getElementById('sanlist');
+				var items = list.getElementsByTagName('li');
+				//console.log(items.length);
+				if(items.length == 0) {
+					var li = document.createElement('li');
+					var span = document.createElement('span');
+					li.className = 'list-group-item';
+					li.style.border = 'none';
+					span.innerText = 'Add a subject alternative name';
+					span.className = 'none';
+					li.appendChild(span);
+					list.appendChild(li);
+				}
+				var typeinput = document.getElementById('typeinput');
+				for(var i = 0; i <= typeinput.options.length - 1; i++) {
+					if(typeinput.options[i].value==item.parentNode.childNodes[1].innerText) {
+						typeinput.selectedIndex = i;
+					}
+				}
+				var saninput = document.getElementById('saninput');
+				saninput.value = item.parentNode.childNodes[3].innerText;
+				saninput.select();
+			}
+			function addSAN() {
+				var list = document.getElementById('sanlist');
+				var items = list.getElementsByTagName('li');
+				var saninput = document.getElementById('saninput');
+				var typeinput = document.getElementById('typeinput');
+				if(saninput.value=='') {
+					alert('Cannot add a blank subject alternative name.');
+					saninput.select();
+					return;
+				}
+				//console.log(items[0].childNodes);
+				if(items.length == 1 && items[0].childNodes.length == 1) {
+					list.removeChild(items[0]);
+				} else {
+					for(var i = 0; i <= items.length - 1; i++) {
+						//console.log(items[i].childNodes[1].innerText);
+						var current = typeinput.value + saninput.value;
+						var exist = items[i].childNodes[1].innerText + items[i].childNodes[3].innerText;
+						if(current==exist) {
+							alert('The "' + typeinput.value + '" subject alternative name "' + saninput.value + '" has already been added');
+							return;
+						}
+					}
+				}
+				var li = document.createElement('li');
+				li.className = 'list-group-item';
+				li.style.border = 'none';
+				var spandel = document.createElement('span');
+				var spantype = document.createElement('span');
+				var spandelim = document.createElement('span');
+				var spanval = document.createElement('span');
+				spandel.style.color = '#a31d00';
+				spandel.style.fontFamily = 'Arial Black, Gadget, sans-serif';
+				spandel.fontWeight = 'bold';
+				spandel.innerText = 'X ';
+				spandel.style.cursor = 'pointer';
+				spandel.onclick = function(e) {
+					delSAN(e.target);
+				}
+				spandel.addEventListener('touchstart', function(e) {
+					// If there's exactly one finger inside this element
+					e.preventDefault();
+					delSAN(e.target);
+				}, false);
+				spantype.innerText = typeinput.value;
+				spandelim.innerText = ' : ';
+				spanval.innerText = saninput.value;
+				li.appendChild(spandel);
+				li.appendChild(spantype);
+				li.appendChild(spandelim);
+				li.appendChild(spanval);
+				list.appendChild(li);
+				saninput.select();
+			}
+			function addItem(type) {
+				//console.log(type);
+				
+				var list = document.getElementById(index[type]['list']);
+				var items = list.getElementsByTagName('li');
+				var input = document.getElementById(index[type]['input']);
+				if(input.value=='') {
+					alert('Cannot add a blank ' + index[type]['name'] + '.');
+					input.select();
+					return;
+				}
+				if(items.length == 1 && items[0].childNodes.length == 1) {
+					list.removeChild(items[0]);
+				} else {
+					for(var i = 0; i <= items.length - 1; i++) {
+						//console.log(items[i].childNodes[1].innerText);
+						if(input.value==items[i].childNodes[1].innerText) {
+							alert('The ' + index[type]['name'] + ' "' + input.value + '" has already been added');
+							return;
+						}
+					}
+				}
+				var li = document.createElement('li');
+				li.className = 'list-group-item';
+				li.style.border = 'none';
+				var spandel = document.createElement('span');
+				var spancn = document.createElement('span');
+				spandel.style.color = '#a31d00';
+				spandel.style.fontFamily = 'Arial Black, Gadget, sans-serif';
+				spandel.fontWeight = 'bold';
+				spandel.innerText = 'X ';
+				spandel.style.cursor = 'pointer';
+				spandel.onclick = function(e) {
+					delItem(type, e.target);
+				}
+				spandel.addEventListener('touchstart', function(e) {
+					// If there's exactly one finger inside this element
+					e.preventDefault();
+					delItem(type, e.target);
+				}, false);
+				spancn.innerText = input.value;
+				li.appendChild(spandel);
+				li.appendChild(spancn);
+				list.appendChild(li);
+				input.select();
+			}
+			
+			function addEvent(elem, param) {
+				elem.addEventListener("click", function() {
+					//alert(param);
+					addItem(param);
+				});
+			}
+			
+			function addRemoveSubjectAttrs() {
+				var addremove = document.getElementById('addremove');
+				for(var key in index) {
+					var mainspan = document.createElement('span');
+					mainspan.style.display = 'block';
+					var titlespan = document.createElement('span');
+					titlespan.innerText = ' ' + index[key]['title'];
+					var input = document.createElement('input');
+					if(index[key]['enabled']) {
+						addSubjectAttr(key, true);
+						input.checked = true;
+					} else {
+						addSubjectAttr(key, false);
+						input.checked = false;
+					}
+					input.value = key;
+					input.type = 'checkbox';
+					input.addEventListener('click', function(e) {
+						if(e.target.checked) {
+							console.log('add');
+							showSubjectAttr(e.target.value)
+						} else {
+							console.log('remove');
+							hideSubjectAttr(e.target.value)
+						}
+					});
+					mainspan.appendChild(input);
+					mainspan.appendChild(titlespan);
+					addremove.appendChild(mainspan);
+				}
+			}
+			
+			function hideSubjectAttr(key) {
+				//var subject = document.getElementById('subject');
+				var attr = document.getElementById(index[key]['section']);
+				attr.style.display = 'none';
+			}
+			
+			function showSubjectAttr(key) {
+				//var subject = document.getElementById('subject');
+				var attr = document.getElementById(index[key]['section']);
+				attr.style.display = 'block';
+			}
+			
+			function addSubjectAttr(key, enabled) {
+				var conrow = document.createElement('div');
+				conrow.id = index[key]['section']
+				conrow.className = 'row';
+				
+				if(enabled) {
+					conrow.style.display = 'block';
+				} else {
+					conrow.style.display = 'none';
+				}
+				
+				var concol = document.createElement('div');
+				concol.className = 'col';
+				
+				var row1 = document.createElement('div');
+				row1.className = 'row';
+				var row1col1 = document.createElement('div');
+				row1col1.innerText = index[key]['title'];
+				row1.appendChild(row1col1);
+				
+				var row2 = document.createElement('div');
+				row2.className = 'row';
+				
+				var row2input = document.createElement('input');
+				row2input.type = 'text';
+				row2input.placeholder = index[key]['placeholder'];
+				row2input.maxLength = index[key]['maxlength'];
+				row2input.className = 'form-control';
+				row2input.id = index[key]['input'];
+				var row2col1 = document.createElement('div');
+				row2col1.className = 'col-lg-10 col-lg-10 col-sm-9 col-xs-9';
+				row2col1.appendChild(row2input);
+				row2.appendChild(row2col1);
+				
+				concol.appendChild(row1);
+				concol.appendChild(row2);
+				
+				var row3 = document.createElement('div');
+				var list = document.createElement('ul');
+				
+				if(index[key]['multivalue']) {
+					var row2col2 = document.createElement('div');
+					row2col2.className = 'col-lg-2 col-lg-2 col-sm-3 col-xs-3 rightbtn';
+					var row2btn = document.createElement('button');
+					row2btn.className = 'btn btn-primary';
+					row2btn.type = 'button';
+					row2btn.innerText = 'Add';
+					/*row2btn.addEventListener("click", () => {
+						alert(id);
+						addItem(id);
+					});*/
+					addEvent(row2btn, key);
+					row2col2.appendChild(row2btn);
+					
+//					row2.appendChild(row2col1);
+					row2.appendChild(row2col2);
+					
+				} else {
+					row3.style.display = 'none';
+					list.style.display = 'none';
+				}
+				row3.className = 'row';
+				
+				var row3col1 = document.createElement('div');
+				row3col1.className = 'col-lg-1 col-lg-1 col-sm-1 col-xs-0';
+				
+				var row3col2 = document.createElement('div');
+				row3col2.className = 'col-lg-11 col-lg-11 col-sm-11 col-xs-12';
+				list.className = 'list-group';
+				list.id = index[key]['list'];
+				var item = document.createElement('li');
+				item.className = 'list-group-item';
+				item.style.border = 'none';
+				var placeholder = document.createElement('span');
+				placeholder.className = 'none';
+				placeholder.innerText = index[key]['note'];
+				
+				item.appendChild(placeholder);
+				list.appendChild(item);
+				row3col2.appendChild(list);
+				
+				row3.appendChild(row3col2);
+				concol.appendChild(row3);
+				
+				var subject = document.getElementById('subject');
+				
+				conrow.appendChild(concol);
+				subject.appendChild(conrow);
+			}
+			function enableGenerate(enable) {
+				var encryptcol = document.getElementById("encryptcol");
+				var keysizecol = document.getElementById("keysizecol");
+				if(enable) {
+					var encryption = document.getElementById("encryption");
+					encryptcol.style.display = 'block';
+					keysizecol.style.display = 'block';
+					toggleEncryption(encryption);
+				} else {
+					passwordcol.style.display = 'none';
+					ciphercol.style.display = 'none';
+					encryptcol.style.display = 'none';
+					keysizecol.style.display = 'none';
+				}
+			}
+			function enablePaste(enable) {
+				var pastedkeycol = document.getElementById("pastedkeycol");
+				if(enable) {
+					pastedkeycol.style.display = 'block';
+				} else {
+					pastedkeycol.style.display = 'none';
+				}
+			}
+			function enableUpload(enable) {
+				var uploadcol = document.getElementById("uploadcol");
+				if(enable) {
+					uploadcol.style.display = 'block';
+				} else {
+					uploadcol.style.display = 'none';
+				}
+			}
+			function toggleEncryption(encryption) {
+				var passwordcol = document.getElementById("passwordcol");
+				var ciphercol = document.getElementById("ciphercol");
+				if(encryption.checked) {
+					passwordcol.style.display = 'block';
+					ciphercol.style.display = 'block';
+				} else {
+					passwordcol.style.display = 'none';
+					ciphercol.style.display = 'none';
+				}
+			}
+			function togglePathLen(initial) {
+				var isca = document.getElementById("isca");
+				var pathlen1 = document.getElementById("pathlen1");
+				var pathlen2 = document.getElementById("pathlen2");
+				if(isca.options[isca.selectedIndex].value=="TRUE") {
+					pathlen1.style.display = 'block';
+					pathlen2.style.display = 'block';
+				} else {
+					pathlen1.style.display = 'none';
+					pathlen2.style.display = 'none';
+				}
+				if(!initial) {
+					$( "#basicconstraintssection" ).accordion("refresh");
+				}
+			}
+			function changePrivateKeyMethod(method) {
+				if(method.value=='generate') {
+					enableUpload(false);
+					enablePaste(false);
+					enableGenerate(true);
+				} else if(method.value=='paste') {
+					enableGenerate(false);
+					enableUpload(false);
+					enablePaste(true);
+				} else if(method.value=='upload') {
+					enableGenerate(false);
+					enablePaste(false);
+					enableUpload(true);
+				} else {
+					alert('Unrecognized option');
+				}
+			}
+			function generateCSR() {
+				var csr = {}
+				var subject = {}
+				
+				//add hash algorithm
+				
+				var hashalg = document.getElementById('hashalg');
+				csr['hash'] = hashalg.options[hashalg.selectedIndex].value;
+				
+				//add subject attributes
+				var addsubj = false;
+				for(var key in index) {
+					//index[key]['list']
+					//index[key]['input']
+					var list = document.getElementById(index[key]['list']);
+					var attr = [];
+					if(list.style.display != 'none') {
+						for(var i = 0; i <= list.childNodes.length - 1; i++) {
+							if(list.childNodes[i].childNodes.length > 1) {
+								attr.push(list.childNodes[i].childNodes[1].innerText);
+								//console.log(list.childNodes[i].childNodes[1].innerText);
+							}
+						}
+					} else {
+						var input = document.getElementById(index[key]['input']);
+						if(input.value != '') {
+							attr.push(input.value);
+						}
+					}
+					if(attr.length > 1) {
+						addsubj = true;
+						subject[key] = [];
+						for(var i = 0; i <= attr.length - 1; i++) {
+							subject[key].push(attr[i]);
+						}
+					} else if(attr.length==1) {
+						addsubj = true;
+						subject[key] = attr[0];
+					} else {
+						//attr not used
+					}
+				}
+				if(addsubj) {
+					csr['subject'] = subject
+				}
+				
+				//add SANS
+				var list = document.getElementById('sanlist');
+				var sans = {};
+				var addsan = false;
+				for(var i = 0; i <= list.childNodes.length - 1; i++) {
+					if(list.childNodes[i].childNodes.length > 1) {
+						addsan = true;
+						if(sans[list.childNodes[i].childNodes[1].innerText]) {
+							sans[list.childNodes[i].childNodes[1].innerText].push(list.childNodes[i].childNodes[3].innerText);
+						} else {
+							sans[list.childNodes[i].childNodes[1].innerText] = [list.childNodes[i].childNodes[3].innerText];
+						}
+					}
+				}
+				if(addsan) {
+					if(!csr['extensions']) {
+						csr['extensions'] = {}
+					}
+					csr['extensions']['SANs'] = sans
+				}
+				
+				//add key usage
+				var keyusage = document.getElementsByName('keyusagevals');
+				var ku = []
+				for(var i = 0; i <= keyusage.length - 1; i++) {
+					if(keyusage[i].checked) {
+						ku.push(keyusage[i].value);
+						//console.log(keyusage[i].value);
+					}
+				}
+				if(ku.length > 0) {
+					if(!csr['extensions']) {
+						csr['extensions'] = {}
+					}
+					csr['extensions']['keyusage'] = {
+						usages: ku
+					};
+					var keyusagecritical = document.getElementById('keyusagecritical');
+					if(keyusagecritical.checked) {
+						csr['extensions']['keyusage']['critical'] = true
+					} else {
+						csr['extensions']['keyusage']['critical'] = false;
+					}
+				}
+				
+				//add extended key usage
+				var extendedkeyusage = document.getElementsByName('extendedkeyusagevals');
+				var ku = []
+				for(var i = 0; i <= extendedkeyusage.length - 1; i++) {
+					if(extendedkeyusage[i].checked) {
+						ku.push(extendedkeyusage[i].value);
+						//console.log(extendedkeyusage[i].value);
+					}
+				}
+				if(ku.length > 0) {
+					if(!csr['extensions']) {
+						csr['extensions'] = {}
+					}
+					csr['extensions']['extendedkeyusage'] = {
+						usages: ku
+					};
+					var extendedkeyusagecritical = document.getElementById('extendedkeyusagecritical');
+					if(extendedkeyusagecritical.checked) {
+						csr['extensions']['extendedkeyusage']['critical'] = true
+					} else {
+						csr['extensions']['extendedkeyusage']['critical'] = false;
+					}
+				}
+				
+				//add basic constraints
+				
+				
+				console.log(csr);
+			}
+		</script>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+				<div class="col-lg-6 col-md-6 col-sm-8 col-xs-10">
+					<div class="row">
+						<div class="col">
+							<div class="row">
+								<div class="col">
+									<h2 class="text-center">{{title}}</h2>
+									
+									<div class="row">
+										<div class="col">
+											<h4>Private Key</h4>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-lg-3 col-md-4 col-sm-8 col-xs-8">
+											<select id="keymethod" onchange="changePrivateKeyMethod(this);" class="form-control">
+												<option value="generate">Generate New Private Key</option>
+												<option value="paste">Paste Existing PEM Private Key</option>
+												<option value="upload">Upload Existing Private Key</option>
+											</select>
+										</div>
+										<div id="keysizecol" class="col-lg-2 col-md-3 col-sm-4 col-xs-4">
+											<select id="keysize" class="form-control">
+												<option value="512">512 Bit</option>
+												<option value="1024">1024 Bit</option>
+												<option selected value="2048">2048 Bit</option>
+												<option value="4096">4096 Bit</option>
+											</select>
+										</div>
+										<div id="encryptcol" class="col-lg-1 col-md-2 col-sm-2 col-xs-3">
+											<label class="checkbox-inline"><input type="checkbox" id="encryption" onclick="toggleEncryption(this);" value="">Encrypt</label>
+										</div>
+										<div id="passwordcol" style="display: none;" class="col-lg-3 col-md-3 col-sm-5 col-xs-5">
+											<input id="password" class="form-control" type="password" placeholder="Password"/>
+										</div>
+										<div id="ciphercol" style="display: none;" class="col-lg-2 col-md-3 col-sm-5 col-xs-4">
+											<select id="cipher" class="form-control">
+												<option value="des3">Cipher...</option>
+												<option value="des3">DES3</option>
+												<option value="aes128">AES128</option>
+												<option value="aes192">AES192</option>
+												<option value="aes256">AES256</option>
+											</select>
+										</div>
+										<div id="uploadcol" style="display: none;" class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+											<input id="uploadedkey" type="file" />
+										</div>
+										<div id="pastedkeycol" style="display: none;" class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+											<textarea rows="5" class="form-control" style="white-space: pre; word-wrap: normal; overflow-wrap: normal; overflow-x: auto; font-family: Courier, monospace;" id="pastedkey" placeholder="-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDAv/hueVhGvyaz
+ogC55oZC38uTcbfsoPVFmSeY/prj8JyJWZkpF1VH86tDJ818Ud4hxDWmFdSKAhTA
+D8NXkjnrKZEh7zP6x6KTQCK/57xoUTYYpvRnFacwwmqpbxVLFgdFwp1YdM3ktsoN
+rFFS92WYBLt6MXe/87gmcvXp+yA7tJ5dCapurMEs1RXGf0IE0zPGqHb46jbqMrwG
+Pt8ZxbBRUzUjzvkAwbayuArBJt57weVDIn1D4bc/cwNzY3NpelJBwgWtsXgUA3CH
+T4qDYHRvNolbQHXVgRfe92ljIgnpcIu5f0E0PqSamB7aT8GO2OYsfZITPFzOUaOJ
+jE9J418tAgMBAAECggEAB2ucicw8HMUhHUtAUefRBWQON0fqd76ekqZZwucSWXIa
+5KLBZbaTPujfj/9JRt7z+ULPeexfOUzpNZelwopLloUMJE1MJ/xlgtu2OsMWGsH9
+nidXQ1yvCg6CArHXFQPtFb9vRUeB4aszziDzJImHrLmJ6iNbY9VjIn/MfcyAKiwx
+pg04MtkAAXnY/qqhwicCtmCRSLmmFHk3K5OpKMo1RdEZJqKPgeI66iawvBsR++bA
+r5j0HzW513vIfpVUMUA/ykhsTWzwbNcAr9IRx/zV+NHfI513V4a4pdg6CdX+qpRG
+w9wCpii9kMuTNo2l8IjDqG8I+yhenZpR4/FHUIl7oQKBgQD+Q3kD4RQcSyDUM1Z8
+g87XXdbBK6IY5yyw1dk1LPwxpH7ITjgDCEWVbrivpHkyG49oxkwzx5UZqXCNbt9g
++Ll48Pdrtj3rIlw+giQr6Co9wqNsuOgViGt9BmEFrcxfYk2y69Cd2/qZWpKLFiVw
+SdHc5uYz9MJxpGx46pIFANzoGQKBgQDCEPQp8gcn7ZcwX/ThBfYrXJ1jR6g5zR1q
+yqSzhL8jjkAvk1yAbWajtn3lbnruVPYN2ob3/ck2EaJF4qTeVExCe3y3nDVd4sur
+flhcEFfNlvpor0WB/R9T9wpGrrxmlqqS+w98qznS4b7As/HaISNtZjF0BCksnMMG
+EQJHqnQiNQKBgAx7IWiYVtVgtrbT4k3wZmnZ+F25F5bjWiVACg57K9IAAh0xAbzc
+XhYMvlIY374e7jY1ba4pAN+mmpjGtX5cFzahlXObGYT+RcrntoDVP6WSdVUz6miM
+LsKPWpndwyd3etrqim4FS1LVyFW9e478gKm4R9qLDDRp3s08rnhCZ5WZAoGANaB1
+uDmXXKM9CjMZ+iypj+Xx4ANnK0HRBTemN61RHEQs3Hi+MQcKO+cr9wCGm+GCdOWU
+MmdA+N36l5E/uehVgnGZTyutW5pWabdqN1aUzM0RuWflrzwBMjSr9EhI65hq3l7e
+MrcmLW4QRjPzezF5FrwMomCb+CYBhmWg2ajympkCgYEAt5ljkEpWX1fTU1R8NHRM
+kEoFeiBVjPc5PhXfp+EeSGx2xuT5k8ey0Rkozefkm3JbjVQz0E00Nn5BS4vQS35Z
+NcLWDb/NXY/hj1qMAvou5kYgw+inQ/r4FxHxlZoyB5yS9cNSZPp7Kg5NlRPRMs74
+dyzGibcJ0i4KVZzXKLIZ0Qw=
+-----END PRIVATE KEY-----"></textarea>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<div class="row">
+								<div class="col">
+									<div class="row">
+										<div class="col">
+											<h4>Subject Attributes</h4>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<div id="accordion">
+												<h3>Add / Remove Attributes</h3>
+												<div>
+													<div>
+														<p>Add and remove subject attributes:</p>
+													</div>
+													<div id="addremove">
+													
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div id="subject" class="col">
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">	
+							<div class="row">
+								<div class="col">
+									<div class="row">
+										<div class="col">
+											<h4>Subject Alternative Names</h4>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-lg-2 col-md-3 col-sm-4 col-xs-4">
+											<select id="typeinput" class="form-control">
+												<option value="DNS">DNS</option>
+												<option value="IP">IP</option>
+												<option value="URI">URI</option>
+												<option value="email">email</option>
+												<option value="otherName">otherName</option>
+											</select>
+										</div>
+										<div class="col-lg-8 col-md-7 col-sm-5 col-xs-5">
+											<input placeholder="certificatetools.com" type="text" maxlength="128" class="form-control" id="saninput" />
+										</div>
+										<div class="col-lg-2 col-md-2 col-sm-3 col-xs-3 rightbtn">
+											<button class="btn btn-primary" onclick="addSAN();" type="button">Add</button>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-lg-11 col-lg-11 col-sm-11 col-xs-12">
+											<ul id="sanlist" class="list-group">
+												<li class="list-group-item" style="border: medium none;"><span class="none">Add a subject alternative name</span></li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<div class="row">
+								<div class="col">
+									<div class="row">
+										<div class="col">
+											<h4>x509v3 Extensions</h4>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<div id="keyusagesection">
+												<h3>Key Usage</h3>
+												<div>
+													<div>
+														<p>Modify key usage:</p>
+													</div>
+													<div>
+														<label class="checkbox-inline"><input checked id="keyusagecritical" type="checkbox" value="critical" />Critical</label><br /><br />
+														<label class="checkbox-inline"><input checked name="keyusagevals" type="checkbox" value="digitalSignature" />Digital Signature</label><br />
+														<label class="checkbox-inline"><input checked name="keyusagevals" type="checkbox" value="keyEncipherment" />Key Encipherment</label><br />
+														<label class="checkbox-inline"><input name="keyusagevals" type="checkbox" value="nonRepudiation" />Non Repudiation</label><br />
+														<label class="checkbox-inline"><input name="keyusagevals" type="checkbox" value="dataEncipherment" />Data Encipherment</label><br />
+														<label class="checkbox-inline"><input name="keyusagevals" type="checkbox" value="keyAgreement" />Key Agreement</label><br />
+														<label class="checkbox-inline"><input name="keyusagevals" type="checkbox" value="keyCertSign" />Certificate Sign</label><br />
+														<label class="checkbox-inline"><input name="keyusagevals" type="checkbox" value="cRLSign" />CRL Sign</label><br />
+														<label class="checkbox-inline"><input name="keyusagevals" type="checkbox" value="encipherOnly" />Encipher Only</label><br />
+														<label class="checkbox-inline"><input name="keyusagevals" type="checkbox" value="decipherOnly" />Decipher Only</label>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<div id="extendedkeyusagesection">
+												<h3>Extended Key Usage</h3>
+												<div>
+													<div>
+														<p>Modify extended key usage:</p>
+													</div>
+													<div>
+														<label class="checkbox-inline"><input checked id="extendedkeyusagecritical" type="checkbox" value="critical" />Critical</label><br /><br />
+														<label class="checkbox-inline"><input checked name="extendedkeyusagevals" type="checkbox" value="serverAuth" />TLS Web Server Authentication</label><br />
+														<label class="checkbox-inline"><input checked name="extendedkeyusagevals" type="checkbox" value="clientAuth" />TLS Web Client Authentication</label><br />
+														<label class="checkbox-inline"><input name="extendedkeyusagevals" type="checkbox" value="codeSigning" />Code Signing</label><br />
+														<label class="checkbox-inline"><input name="extendedkeyusagevals" type="checkbox" value="emailProtection" />E-mail Protection</label><br />
+														<label class="checkbox-inline"><input name="extendedkeyusagevals" type="checkbox" value="timeStamping" />Time Stamping</label><br />
+														<label class="checkbox-inline"><input name="extendedkeyusagevals" type="checkbox" value="OCSPSigning" />OCSP Signing</label><br />
+														<label class="checkbox-inline"><input name="extendedkeyusagevals" type="checkbox" value="msCodeInd" />Microsoft Individual Code Signing</label><br />
+														<label class="checkbox-inline"><input name="extendedkeyusagevals" type="checkbox" value="msCodeCom" />Microsoft Commercial Code Signing</label><br />
+														<label class="checkbox-inline"><input name="extendedkeyusagevals" type="checkbox" value="msCTLSign" />Microsoft Trust List Signing</label><br />
+														<label class="checkbox-inline"><input name="extendedkeyusagevals" type="checkbox" value="msEFS" />Microsoft Encrypted File System</label>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<div id="basicconstraintssection">
+												<h3>Basic Constraints (CA)</h3>
+												<div>
+													<div>
+														<p>Modify basic constraints:</p>
+													</div>
+													<div>
+														<label class="checkbox-inline"><input checked name="bccritical" type="checkbox" value="critical" />Critical</label><br /><br />
+														<div class="container-fluid">
+															<div class="row">
+																<div class="col">
+																	Will this CSR be used as a certificate authority to sign other certificates? (CA)
+																</div>
+															</div>
+															<div class="row">
+																<div class="col-lg-6 col-lg-6 col-sm-8 col-xs-12">
+																	<select id="isca" onchange="togglePathLen(false);" class="form-control">
+																		<option value="FALSE">No</option>
+																		<option value="TRUE">Yes</option>
+																	</select>
+																</div>
+															</div>
+															<div id="pathlen1" class="row">
+																<div class="col">
+																	How long do you want to limit the certificate chain leading to this CA? (Path Length)
+																</div>
+															</div>
+															<div id="pathlen2" class="row">
+																<div class="col-lg-6 col-lg-6 col-sm-8 col-xs-12">
+																	<select class="form-control">
+																		<option value="None">No Limit</option>
+																		<option value="0">0</option>
+																		<option value="1">1</option>
+																		<option value="2">2</option>
+																		<option value="3">3</option>
+																		<option value="4">4</option>
+																		<option value="5">5</option>
+																		<option value="6">6</option>
+																		<option value="7">7</option>
+																		<option value="8">8</option>
+																		<option value="9">9</option>
+																		<option value="10">10</option>
+																	</select>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">	
+							<div class="row">
+								<div class="col">
+									<div class="row">
+										<div class="col">
+											<h4>CSR Options</h4>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-lg-5 col-md-6 col-sm-12 col-xs-12">
+											<button class="btn btn-primary" type="button">Use Existing Cert/CSR as a Template</button>
+										</div>
+										<div class="col-lg-4 col-md-3 col-sm-4 col-xs-4">
+											<label class="checkbox-inline"><input id="selfsign" type="checkbox" value=""/>Self-Sign Certificate</label>
+										</div>
+										<div class="col-lg-3 col-md-3 col-sm-8 col-xs-8">
+											<select id="hashalg" class="form-control">
+												<option value="sha256">Hash Algorithm...</option>
+												<option value="sha">SHA</option>
+												<option value="sha1">SHA1</option>
+												<option value="sha224">SHA224</option>
+												<option selected value="sha256">SHA256</option>
+												<option value="sha384">SHA384</option>
+												<option value="sha512">SHA512</option>
+											</select>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">	
+							<div class="row">
+								<div class="col">
+									<div class="row">
+										<div class="col text-center">
+											<button class="btn btn-primary" onclick="generateCSR();" type="button">Submit</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>	
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+			</div>
+		</div>
+		<script>
+			$( function() {
+				$( "#accordion" ).accordion({
+					collapsible: true,
+					active: false
+				});
+			} );
+			$( function() {
+				$( "#keyusagesection" ).accordion({
+					collapsible: true,
+					active: false
+				});
+			} );
+			$( function() {
+				$( "#extendedkeyusagesection" ).accordion({
+					collapsible: true,
+					active: false
+				});
+			} );
+			$( function() {
+				$( "#basicconstraintssection" ).accordion({
+					collapsible: true,
+					active: false
+				});
+			} );
+			addRemoveSubjectAttrs();
+			var keymethod = document.getElementById("keymethod");
+			changePrivateKeyMethod(keymethod);
+			togglePathLen(true);
+		</script>
+	</body>
+</html>
