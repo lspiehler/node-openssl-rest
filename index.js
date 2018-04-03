@@ -1,6 +1,7 @@
 //var openssl = require('./lib/openssl.js')
 var express_ssl = require('./lib/express_ssl.js')
 var express = require('express')
+var bodyParser = require('body-parser')
 //var https = require('https');
 var mustacheExpress = require('mustache-express');
 var app = express();
@@ -8,6 +9,8 @@ var app = express();
 express_ssl.getSSL(function(sslOptions) {
 	var server = require('https').createServer(sslOptions, app).listen(8443);
 });
+
+app.use(bodyParser.json());
 
 // Register '.mustache' extension with The Mustache Express
 app.engine('html', mustacheExpress());

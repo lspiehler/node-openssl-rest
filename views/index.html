@@ -488,7 +488,7 @@
 					alert('Unrecognized option');
 				}
 			}
-			function generateCSR() {
+			function getCSRParams() {
 				var csr = {}
 				var subject = {}
 				
@@ -607,6 +607,66 @@
 				
 				
 				console.log(csr);
+			}
+			
+			function getKeyParams() {
+				var rsakeyoptions = {};
+			
+				var keysizeinput = document.getElementById('keysize');
+				rsakeyoptions.rsa_keygen_bits = keysizeinput.options[keysizeinput.selectedIndex].value
+				
+				var encryptioninput = document.getElementById('encryption');
+				if(encryption.checked) {
+					rsakeyoptions.encryption = {};
+					var password = document.getElementById('password').value;
+					if(password == '') {
+						alert('Encrypted private key password cannot be blank!');
+						return false;
+					}
+					rsakeyoptions.encryption.password = document.getElementById('password').value;
+					var cipherinput = document.getElementById('cipher');
+					rsakeyoptions.encryption.cipher = cipherinput.options[cipherinput.selectedIndex].value
+				}
+				
+				generateKey(rsakeyoptions);
+			}
+			
+			function processForm() {
+				var keymethodinput = document.getElementById('keymethod');
+				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
+				
+				if(keymethod=='generate') {
+					getKeyParams();
+				} else if(keymethod=='paste') {
+				
+				} else if(keymethod=='upload') {
+				
+				} else {
+					alert('Unrecognized private key method');
+				}
+			}
+			
+			function generateKey(options) {
+				var request = new XMLHttpRequest();
+				request.open('POST', '/api/openssl/generateRSAPrivateKey', true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						var key = document.getElementById('key');
+						key.innerText = resp.command + '\r\n\r\n' + resp.key;
+					} else {
+						// We reached our target server, but it returned an error
+					}
+				};
+
+				request.onerror = function() {
+					// There was a connection error of some sort
+				};
+
+				request.send(JSON.stringify(options));
 			}
 		</script>
 	</head>
@@ -919,7 +979,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 								<div class="col">
 									<div class="row">
 										<div class="col text-center">
-											<button class="btn btn-primary" onclick="generateCSR();" type="button">Submit</button>
+											<button class="btn btn-primary" onclick="processForm();" type="button">Submit</button>
 										</div>
 									</div>
 								</div>
@@ -929,6 +989,14 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				</div>
 				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
 					
+				</div>
+			</div>
+			<div class="row">
+				<div id="key" style="font-family: Courier, monospace;" class="col">
+				
+				</div>
+				<div id="csr" class="col">
+				
 				</div>
 			</div>
 		</div>
