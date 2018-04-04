@@ -688,12 +688,62 @@
 						}
 					});
 				} else if(keymethod=='paste') {
-				
+					var pastedkey = document.getElementById('pastedkey');
+					var data = {
+						key: pastedkey.value,
+						password: false
+					}
+					pasteKey(data, function(err, response) {
+						if(err) {
+							console.log(err);
+						} else {
+							console.log(response);
+						}
+					});
 				} else if(keymethod=='upload') {
 				
 				} else {
 					alert('Unrecognized private key method');
 				}
+			}
+			
+			function getKeyPassword() {
+				var keymethodinput = document.getElementById('keymethod');
+				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
+				
+				if(keymethod=='generate') {
+					var password = document.getElementById('password').value;
+					if(password == '') {
+						return false;
+					} else {
+						return password;
+					}
+				}
+			}
+			
+			function pasteKey(data, callback) {
+				//console.log(data);
+				var request = new XMLHttpRequest();
+				request.open('POST', '/api/openssl/pasteKey', true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						callback(false, resp);
+					} else {
+						callback(request.responseText, false);
+						return;
+					}
+				};
+
+				request.onerror = function() {
+					callback(true, false);
+					return;
+				};
+
+				request.send(JSON.stringify(data));
 			}
 			
 			function openSSLRESTAPI(api, data, callback) {
@@ -724,113 +774,6 @@
 				};
 
 				request.send(JSON.stringify(data));
-			}
-			
-			function generateKey(options, callback) {
-				var request = new XMLHttpRequest();
-				request.open('POST', '/api/openssl/generateRSAPrivateKey', true);
-				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-				
-				request.onload = function() {
-					if (request.status >= 200 && request.status < 400) {
-						// Success!
-						callback(false, JSON.parse(request.responseText));
-						return;
-						//var key = document.getElementById('key');
-						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
-						//var csroptions = getCSRParams();
-						//generateCSR(resp.key, csroptions);
-					} else {
-						// We reached our target server, but it returned an error
-						callback(request.responseText, false);
-						return;
-					}
-				};
-
-				request.onerror = function() {
-					callback(true, false);
-					return;
-					// There was a connection error of some sort
-				};
-
-				request.send(JSON.stringify(options));
-			}
-			
-			function getKeyPassword() {
-				var keymethodinput = document.getElementById('keymethod');
-				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
-				
-				if(keymethod=='generate') {
-					var password = document.getElementById('password').value;
-					if(password == '') {
-						return false;
-					} else {
-						return password;
-					}
-				}
-			}
-			
-			function generateCSR(data, callback) {
-				/*var data = {
-					options: options,
-					key: key,
-					keypass: getKeyPassword()
-				}*/
-				//console.log(data);
-				var request = new XMLHttpRequest();
-				request.open('POST', '/api/openssl/generateCSR', true);
-				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-				
-				request.onload = function() {
-					if (request.status >= 200 && request.status < 400) {
-						// Success!
-						var resp = JSON.parse(request.responseText);
-						callback(false, resp);
-						return;
-						/*var csr = document.getElementById('csr');
-						csr.innerText = resp.command.files.config + '\r\n\r\n' + resp.command.command[0] + '\r\n\r\n' + resp.csr;
-						var selfsign = document.getElementById('selfsign');
-						if(selfsign.checked) {
-							selfSignCSR(data, resp.csr);
-						}*/
-					} else {
-						// We reached our target server, but it returned an error
-						callback(request.responseText, false);
-						return;
-					}
-				};
-
-				request.onerror = function() {
-					callback(true, false);
-					return;
-				};
-
-				request.send(JSON.stringify(data));
-			}
-			
-			function selfSignCSR(csrparams, callback) {
-				//console.log(data);
-				var request = new XMLHttpRequest();
-				request.open('POST', '/api/openssl/selfSignCSR', true);
-				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-				
-				request.onload = function() {
-					if (request.status >= 200 && request.status < 400) {
-						// Success!
-						var resp = JSON.parse(request.responseText);
-						callback(false, resp);
-					} else {
-						callback(request.responseText, false);
-						return;
-					}
-				};
-
-				request.onerror = function() {
-					callback(true, false);
-					return;
-				};
-
-				request.send(JSON.stringify(csrparams));
 			}
 		</script>
 	</head>

@@ -72,4 +72,26 @@ router.post('/selfSignCSR', function(req, res) {
 	});
 });
 
+router.post('/pasteKey', function(req, res) {
+	//console.log(req.body);
+	var key = req.body.key;
+	var password = req.body.password;
+	openssl.importRSAPrivateKey(key, password, function(err, key, cmd) {
+		if(err) {
+			var data = {
+				error: err,
+				key: key,
+				command: cmd
+			}
+		} else {
+			var data = {
+				error: false,
+				key: key,
+				command: cmd
+			}
+		}
+		res.json(data);
+	});
+});
+
 module.exports = router
