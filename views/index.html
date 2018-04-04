@@ -300,10 +300,10 @@
 					input.type = 'checkbox';
 					input.addEventListener('click', function(e) {
 						if(e.target.checked) {
-							console.log('add');
+							//console.log('add');
 							showSubjectAttr(e.target.value)
 						} else {
-							console.log('remove');
+							//console.log('remove');
 							hideSubjectAttr(e.target.value)
 						}
 					});
@@ -568,14 +568,14 @@
 					if(!csr['extensions']) {
 						csr['extensions'] = {}
 					}
-					csr['extensions']['keyusage'] = {
+					csr['extensions']['keyUsage'] = {
 						usages: ku
 					};
 					var keyusagecritical = document.getElementById('keyusagecritical');
 					if(keyusagecritical.checked) {
-						csr['extensions']['keyusage']['critical'] = true
+						csr['extensions']['keyUsage']['critical'] = true
 					} else {
-						csr['extensions']['keyusage']['critical'] = false;
+						csr['extensions']['keyUsage']['critical'] = false;
 					}
 				}
 				
@@ -592,21 +592,21 @@
 					if(!csr['extensions']) {
 						csr['extensions'] = {}
 					}
-					csr['extensions']['extendedkeyusage'] = {
+					csr['extensions']['extendedKeyUsage'] = {
 						usages: ku
 					};
 					var extendedkeyusagecritical = document.getElementById('extendedkeyusagecritical');
 					if(extendedkeyusagecritical.checked) {
-						csr['extensions']['extendedkeyusage']['critical'] = true
+						csr['extensions']['extendedKeyUsage']['critical'] = true
 					} else {
-						csr['extensions']['extendedkeyusage']['critical'] = false;
+						csr['extensions']['extendedKeyUsage']['critical'] = false;
 					}
 				}
 				
 				//add basic constraints
 				
 				
-				console.log(csr);
+				return csr;
 			}
 			
 			function getKeyParams() {
@@ -657,6 +657,8 @@
 						var resp = JSON.parse(request.responseText);
 						var key = document.getElementById('key');
 						key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						var csroptions = getCSRParams();
+						generateCSR(resp.key, csroptions);
 					} else {
 						// We reached our target server, but it returned an error
 					}
@@ -667,6 +669,83 @@
 				};
 
 				request.send(JSON.stringify(options));
+			}
+			
+			function getKeyPassword() {
+				var keymethodinput = document.getElementById('keymethod');
+				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
+				
+				if(keymethod=='generate') {
+					var password = document.getElementById('password').value;
+					if(password == '') {
+						return false;
+					} else {
+						return password;
+					}
+				}
+			}
+			
+			function generateCSR(key, options) {
+				var data = {
+					options: options,
+					key: key,
+					keypass: getKeyPassword()
+				}
+				//console.log(data);
+				var request = new XMLHttpRequest();
+				request.open('POST', '/api/openssl/generateCSR', true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						var csr = document.getElementById('csr');
+						csr.innerText = resp.command.files.config + '\r\n\r\n' + resp.command.command[0] + '\r\n\r\n' + resp.csr;
+						var selfsign = document.getElementById('selfsign');
+						if(selfsign.checked) {
+							selfSignCSR(data, resp.csr);
+						}
+					} else {
+						// We reached our target server, but it returned an error
+					}
+				};
+
+				request.onerror = function() {
+					// There was a connection error of some sort
+				};
+
+				request.send(JSON.stringify(data));
+			}
+			
+			function selfSignCSR(csrparams, csr) {
+				var data = {
+					options: csrparams.options,
+					key: csrparams.key,
+					keypass: csrparams.keypass,
+					csr: csr
+				}
+				//console.log(data);
+				var request = new XMLHttpRequest();
+				request.open('POST', '/api/openssl/selfSignCSR', true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						var cer = document.getElementById('cer');
+						cer.innerText = resp.command.files.config + '\r\n\r\n' + resp.command.command[0] + '\r\n\r\n' + resp.crt;
+					} else {
+						// We reached our target server, but it returned an error
+					}
+				};
+
+				request.onerror = function() {
+					// There was a connection error of some sort
+				};
+
+				request.send(JSON.stringify(data));
 			}
 		</script>
 	</head>
@@ -995,7 +1074,10 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				<div id="key" style="font-family: Courier, monospace;" class="col">
 				
 				</div>
-				<div id="csr" class="col">
+				<div id="csr" style="font-family: Courier, monospace;" class="col">
+				
+				</div>
+				<div id="cer" style="font-family: Courier, monospace;" class="col">
 				
 				</div>
 			</div>

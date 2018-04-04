@@ -21,15 +21,54 @@ router.post('/generateRSAPrivateKey', function(req, res) {
 	});
 });
 
-router.get('/generateRSAPrivateKey', function(req, res) {
+router.post('/generateCSR', function(req, res) {
+	var key = req.body.key;
+	var keypass = req.body.keypass;
+	var csroptions = req.body.options;
+	//console.log(csroptions);
 	//var username = req.body.username;
 	//var password = req.body.password;
-	openssl.generateRSAPrivateKey(rsakeyoptions, function(err, key, cmd) {
-		var data = {
-			key: key,
-			command: cmd
+	openssl.generateCSR(csroptions, key, keypass, function(err, csr, cmd) {
+		if(err) {
+			var data = {
+				error: err,
+				csr: csr,
+				command: cmd
+			}
+		} else {
+			var data = {
+				error: false,
+				csr: csr,
+				command: cmd
+			}
 		}
-		res.send(data);
+		res.json(data);
+	});
+});
+
+router.post('/selfSignCSR', function(req, res) {
+	var key = req.body.key;
+	var keypass = req.body.keypass;
+	var csroptions = req.body.options;
+	var csr = req.body.csr;
+	//console.log(req.body);
+	//var username = req.body.username;
+	//var password = req.body.password;
+	openssl.selfSignCSR(csr, csroptions, key, keypass, function(err, crt, cmd) {
+		if(err) {
+			var data = {
+				error: err,
+				crt: crt,
+				command: cmd
+			}
+		} else {
+			var data = {
+				error: false,
+				crt: crt,
+				command: cmd
+			}
+		}
+		res.json(data);
 	});
 });
 
