@@ -617,7 +617,7 @@
 					var pathleninput = document.getElementById('pathlen');
 					var pathlen = pathleninput.options[pathleninput.selectedIndex].value;
 					if(pathlen != 'None') {
-						csr['extensions']['basicConstraints']['pathlen'] = pathlen;
+						csr['extensions']['basicConstraints']['pathlen'] = parseInt(pathlen);
 					}
 					var bccritical = document.getElementById('bccritical');
 					if(bccritical.checked) {
