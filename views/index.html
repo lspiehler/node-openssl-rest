@@ -20,6 +20,8 @@
 			}
 		</style>
 		<script>
+			var x509 = [];
+		
 			var index = {
 				commonName: {
 					title: 'Common Names',
@@ -130,6 +132,7 @@
 					enabled: false
 				}
 			}
+			
 			function delItem(type, item) {
 				item.parentNode.parentNode.removeChild(item.parentNode);
 				var list = document.getElementById(index[type]['list']);
@@ -649,7 +652,7 @@
 					rsakeyoptions.encryption.cipher = cipherinput.options[cipherinput.selectedIndex].value
 				}
 				
-				generateKey(rsakeyoptions);
+				return rsakeyoptions;
 			}
 			
 			function processForm() {
@@ -657,7 +660,33 @@
 				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
 				
 				if(keymethod=='generate') {
-					getKeyParams();
+					var keyoptions = getKeyParams();
+					openSSLRESTAPI('generateRSAPrivateKey', keyoptions, function(err, response) {
+						if(err) {
+							console.log(response);
+						} else {
+							var key = document.getElementById('key');
+							key.innerText = response.command + '\r\n\r\n' + response.key;
+							var csroptions = getCSRParams();
+							var data = {
+								options: csroptions,
+								key: response.key,
+								keypass: getKeyPassword()
+							}
+							openSSLRESTAPI('generateCSR', data, function(error, response) {
+								var csr = document.getElementById('csr');
+								csr.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.csr;
+								var selfsign = document.getElementById('selfsign');
+								if(selfsign.checked) {
+									data.csr = response.csr;
+									openSSLRESTAPI('selfSignCSR', data, function(error, response) {
+										var cer = document.getElementById('cer');
+										cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
+									});
+								}
+							});
+						}
+					});
 				} else if(keymethod=='paste') {
 				
 				} else if(keymethod=='upload') {
@@ -667,7 +696,37 @@
 				}
 			}
 			
-			function generateKey(options) {
+			function openSSLRESTAPI(api, data, callback) {
+				var request = new XMLHttpRequest();
+				request.open('POST', '/api/openssl/' + api, true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						callback(false, JSON.parse(request.responseText));
+						return;
+						//var key = document.getElementById('key');
+						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						//var csroptions = getCSRParams();
+						//generateCSR(resp.key, csroptions);
+					} else {
+						// We reached our target server, but it returned an error
+						callback(request.responseText, false);
+						return;
+					}
+				};
+
+				request.onerror = function() {
+					callback(true, false);
+					return;
+					// There was a connection error of some sort
+				};
+
+				request.send(JSON.stringify(data));
+			}
+			
+			function generateKey(options, callback) {
 				var request = new XMLHttpRequest();
 				request.open('POST', '/api/openssl/generateRSAPrivateKey', true);
 				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -675,17 +734,22 @@
 				request.onload = function() {
 					if (request.status >= 200 && request.status < 400) {
 						// Success!
-						var resp = JSON.parse(request.responseText);
-						var key = document.getElementById('key');
-						key.innerText = resp.command + '\r\n\r\n' + resp.key;
-						var csroptions = getCSRParams();
-						generateCSR(resp.key, csroptions);
+						callback(false, JSON.parse(request.responseText));
+						return;
+						//var key = document.getElementById('key');
+						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						//var csroptions = getCSRParams();
+						//generateCSR(resp.key, csroptions);
 					} else {
 						// We reached our target server, but it returned an error
+						callback(request.responseText, false);
+						return;
 					}
 				};
 
 				request.onerror = function() {
+					callback(true, false);
+					return;
 					// There was a connection error of some sort
 				};
 
@@ -706,12 +770,12 @@
 				}
 			}
 			
-			function generateCSR(key, options) {
-				var data = {
+			function generateCSR(data, callback) {
+				/*var data = {
 					options: options,
 					key: key,
 					keypass: getKeyPassword()
-				}
+				}*/
 				//console.log(data);
 				var request = new XMLHttpRequest();
 				request.open('POST', '/api/openssl/generateCSR', true);
@@ -721,31 +785,30 @@
 					if (request.status >= 200 && request.status < 400) {
 						// Success!
 						var resp = JSON.parse(request.responseText);
-						var csr = document.getElementById('csr');
+						callback(false, resp);
+						return;
+						/*var csr = document.getElementById('csr');
 						csr.innerText = resp.command.files.config + '\r\n\r\n' + resp.command.command[0] + '\r\n\r\n' + resp.csr;
 						var selfsign = document.getElementById('selfsign');
 						if(selfsign.checked) {
 							selfSignCSR(data, resp.csr);
-						}
+						}*/
 					} else {
 						// We reached our target server, but it returned an error
+						callback(request.responseText, false);
+						return;
 					}
 				};
 
 				request.onerror = function() {
-					// There was a connection error of some sort
+					callback(true, false);
+					return;
 				};
 
 				request.send(JSON.stringify(data));
 			}
 			
-			function selfSignCSR(csrparams, csr) {
-				var data = {
-					options: csrparams.options,
-					key: csrparams.key,
-					keypass: csrparams.keypass,
-					csr: csr
-				}
+			function selfSignCSR(csrparams, callback) {
 				//console.log(data);
 				var request = new XMLHttpRequest();
 				request.open('POST', '/api/openssl/selfSignCSR', true);
@@ -755,18 +818,19 @@
 					if (request.status >= 200 && request.status < 400) {
 						// Success!
 						var resp = JSON.parse(request.responseText);
-						var cer = document.getElementById('cer');
-						cer.innerText = resp.command.files.config + '\r\n\r\n' + resp.command.command[0] + '\r\n\r\n' + resp.crt;
+						callback(false, resp);
 					} else {
-						// We reached our target server, but it returned an error
+						callback(request.responseText, false);
+						return;
 					}
 				};
 
 				request.onerror = function() {
-					// There was a connection error of some sort
+					callback(true, false);
+					return;
 				};
 
-				request.send(JSON.stringify(data));
+				request.send(JSON.stringify(csrparams));
 			}
 		</script>
 	</head>
