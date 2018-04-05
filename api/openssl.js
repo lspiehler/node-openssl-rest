@@ -13,9 +13,18 @@ router.post('/generateRSAPrivateKey', function(req, res) {
 	//var username = req.body.username;
 	//var password = req.body.password;
 	openssl.generateRSAPrivateKey(rsakeyoptions, function(err, key, cmd) {
-		var data = {
-			key: key,
-			command: cmd
+		if(err) {
+			var data = {
+				error: err,
+				key: key,
+				command: cmd
+			}
+		} else {
+			var data = {
+				error: false,
+				key: key,
+				command: cmd
+			}
 		}
 		res.json(data);
 	});

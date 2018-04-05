@@ -655,7 +655,39 @@
 				return rsakeyoptions;
 			}
 			
+			function processCSR(keyresponse, callback) {
+				var keyinput = document.getElementById('key');
+				keyinput.innerText = keyresponse.command + '\r\n\r\n' + keyresponse.key;
+				var csroptions = getCSRParams();
+				var data = {
+					options: csroptions,
+					key: keyresponse.key,
+					keypass: getKeyPassword()
+				}
+				openSSLRESTAPI('generateCSR', data, function(error, response) {
+					if(error) {
+						console.log(error);
+						callback(error);
+						return;
+					} else {
+						var csr = document.getElementById('csr');
+						csr.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.csr;
+						var selfsign = document.getElementById('selfsign');
+						callback(false);
+						if(selfsign.checked) {
+							data.csr = response.csr;
+							openSSLRESTAPI('selfSignCSR', data, function(error, response) {
+								var cer = document.getElementById('cer');
+								cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
+								callback(false);
+							});
+						}
+					}
+				});
+			}
+			
 			function processForm() {
+				$( "#dialog" ).dialog("close");
 				var keymethodinput = document.getElementById('keymethod');
 				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
 				
@@ -665,39 +697,39 @@
 						if(err) {
 							console.log(response);
 						} else {
-							var key = document.getElementById('key');
-							key.innerText = response.command + '\r\n\r\n' + response.key;
-							var csroptions = getCSRParams();
-							var data = {
-								options: csroptions,
-								key: response.key,
-								keypass: getKeyPassword()
-							}
-							openSSLRESTAPI('generateCSR', data, function(error, response) {
-								var csr = document.getElementById('csr');
-								csr.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.csr;
-								var selfsign = document.getElementById('selfsign');
-								if(selfsign.checked) {
-									data.csr = response.csr;
-									openSSLRESTAPI('selfSignCSR', data, function(error, response) {
-										var cer = document.getElementById('cer');
-										cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
-									});
-								}
+							processCSR(response, function(err) {
+							
 							});
 						}
 					});
 				} else if(keymethod=='paste') {
 					var pastedkey = document.getElementById('pastedkey');
+					var passwordprompt = document.getElementById('passwordprompt');
+					var password = false;
+					if(passwordprompt.value=='') {
+						if(pastedkey.value.indexOf('ENCRYPTED') >= 0) {
+							$( "#dialog" ).dialog("open");
+							return;
+						}
+					} else {
+						password = passwordprompt.value;
+					}
 					var data = {
 						key: pastedkey.value,
-						password: false
+						password: password
 					}
 					pasteKey(data, function(err, response) {
 						if(err) {
 							console.log(err);
+							$( "#dialog" ).dialog("open");
 						} else {
-							console.log(response);
+							var keydata = {
+								command: '#No command for key because it was provided',
+								key: pastedkey.value
+							}
+							processCSR(keydata, function(err) {
+							
+							});
 						}
 					});
 				} else if(keymethod=='upload') {
@@ -710,14 +742,16 @@
 			function getKeyPassword() {
 				var keymethodinput = document.getElementById('keymethod');
 				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
-				
+				var password;
 				if(keymethod=='generate') {
-					var password = document.getElementById('password').value;
-					if(password == '') {
-						return false;
-					} else {
-						return password;
-					}
+					password = document.getElementById('password').value;
+				} else {
+					password = document.getElementById('passwordprompt').value;
+				}
+				if(password == '') {
+					return false;
+				} else {
+					return password;
 				}
 			}
 			
@@ -731,7 +765,11 @@
 					if (request.status >= 200 && request.status < 400) {
 						// Success!
 						var resp = JSON.parse(request.responseText);
-						callback(false, resp);
+						if(resp.error) {
+							callback(resp.error, resp);
+						} else {
+							callback(false, resp);
+						}
 					} else {
 						callback(request.responseText, false);
 						return;
@@ -754,7 +792,12 @@
 				request.onload = function() {
 					if (request.status >= 200 && request.status < 400) {
 						// Success!
-						callback(false, JSON.parse(request.responseText));
+						var resp = JSON.parse(request.responseText);
+						if(resp.error) {
+							callback(resp.error, resp);
+						} else {
+							callback(false, resp);
+						}
 						return;
 						//var key = document.getElementById('key');
 						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
@@ -762,7 +805,7 @@
 						//generateCSR(resp.key, csroptions);
 					} else {
 						// We reached our target server, but it returned an error
-						callback(request.responseText, false);
+						callback(resp, false);
 						return;
 					}
 				};
@@ -1110,6 +1153,26 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				</div>
 			</div>
 		</div>
+		<div id="dialog" title="Encrypted Private Key">
+			<p>The private key is encrypted and requires a password</p>
+			<table>
+				<tr>
+					<td>Password:</td>
+					<td>&nbsp;</td>
+					<td>
+						<input id="passwordprompt" type="password" class="form-control" />
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td align="center" colspan="3">
+						<button class="btn btn-primary" onclick="processForm();" type="button">Submit</button>
+					</td>
+				</tr>
+			</table>
+		</div>
 		<script>
 			$( function() {
 				$( "#accordion" ).accordion({
@@ -1135,6 +1198,10 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 					active: false
 				});
 			} );
+			$( "#dialog" ).dialog({
+				modal: true,
+				autoOpen: false
+			});
 			addRemoveSubjectAttrs();
 			var keymethod = document.getElementById("keymethod");
 			changePrivateKeyMethod(keymethod);
