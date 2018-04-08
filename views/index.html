@@ -989,6 +989,9 @@
 					});
 				}
 			}
+			function openTemplateDialogue() {
+				$( "#template" ).dialog("open");
+			}
 		</script>
 	</head>
 	<body>
@@ -1009,7 +1012,7 @@
 									</div>
 									<div class="row">
 										<div class="col text-center">
-											<button class="btn btn-primary" type="button">Use Existing Cert/CSR as a Template</button>
+											<button onclick="openTemplateDialogue();" class="btn btn-primary" type="button">Use Existing Cert/CSR as a Template</button>
 										</div>
 									</div>	
 									<div class="row">
@@ -1450,7 +1453,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				}
 				$( "#template" ).dialog({
 					modal: true,
-					autoOpen: true,
+					autoOpen: false,
 					width: width + 'px'
 				});
 			});
