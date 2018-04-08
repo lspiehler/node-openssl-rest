@@ -1,6 +1,7 @@
 //var openssl = require('./lib/openssl.js')
 var express_ssl = require('./lib/express_ssl.js')
 var express = require('express')
+//var multer  = require('multer');
 var bodyParser = require('body-parser')
 //var https = require('https');
 var mustacheExpress = require('mustache-express');
@@ -11,6 +12,7 @@ express_ssl.getSSL(function(sslOptions) {
 });
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies.
 
 // Register '.mustache' extension with The Mustache Express
 app.engine('html', mustacheExpress());

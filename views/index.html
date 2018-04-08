@@ -655,6 +655,18 @@
 				return rsakeyoptions;
 			}
 			
+			function toggleSelfSign(elem) {
+				var timetype = document.getElementById('timetype');
+				var timelength = document.getElementById('timelength');
+				if(elem.checked) {
+					timetype.style.display = 'inline';
+					timelength.style.display = 'inline';
+				} else {
+					timetype.style.display = 'none';
+					timelength.style.display = 'none';
+				}
+			}
+			
 			function processCSR(keyresponse, callback) {
 				var keyinput = document.getElementById('key');
 				keyinput.innerText = keyresponse.command + '\r\n\r\n' + keyresponse.key;
@@ -676,6 +688,22 @@
 						callback(false);
 						if(selfsign.checked) {
 							data.csr = response.csr;
+							var timetypeinput = document.getElementById('timetype');
+							var timetype = timetypeinput.options[timetypeinput.selectedIndex].value;
+							var timelength = document.getElementById('timelength');
+							var days = 365;
+							if(timetype == 'day') {
+								days = timelength.value;
+							} else if(timetype == 'week') {
+								days = timelength.value * 7;
+							} else if(timetype == 'month') {
+								days = timelength.value * 30;
+							} else if(timetype == 'year') {
+								days = timelength.value * 365;
+							} else {
+								//invalid time
+							}
+							data.options.days = days;
 							openSSLRESTAPI('selfSignCSR', data, function(error, response) {
 								var cer = document.getElementById('cer');
 								cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
@@ -733,10 +761,66 @@
 						}
 					});
 				} else if(keymethod=='upload') {
-				
+					var passwordprompt = document.getElementById('passwordprompt');
+					var password = false;
+					if(passwordprompt.value!='') {
+						password = passwordprompt.value;
+					}
+					uploadKey(password, function(err, response) {
+						if(err) {
+							$( "#dialog" ).dialog("open");
+						} else {
+							var keydata = {
+								command: '#No command for key because it was provided',
+								key: response.key
+							}
+							processCSR(keydata, function(err) {
+							
+							});
+						}
+					});
 				} else {
 					alert('Unrecognized private key method');
 				}
+			}
+			
+			function uploadKey(pass, callback) {
+				var formData = new FormData(),
+					file = document.getElementById('uploadedkey').files[0],
+					password = pass,
+					request = new XMLHttpRequest();
+				
+				formData.append('file', file);
+				formData.append('password', password);
+				request.open('POST', '/api/openssl/uploadPrivateKey', true);
+				//request.setRequestHeader('Content-Disposition', 'attachment; filename="' + file + '"');
+				//request.setRequestHeader('Content-Type', file.type);
+				//request.setRequestHeader('Content-Type', 'multipart/form-data; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						//console.log();
+						if(resp.error) {
+							callback(resp.error, resp);
+						} else {
+							callback(false, resp);
+						}
+					} else {
+						callback(request.responseText, false);
+						//console.log("Error " + request.status + " occurred uploading your file.", request);
+						return;
+					}
+				};
+
+				request.onerror = function() {
+					//console.log("Error " + request.status + " occurred uploading your file.", request);
+					callback(true, false);
+					return;
+				};
+				
+				request.send(formData);
 			}
 			
 			function getKeyPassword() {
@@ -1101,12 +1185,6 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 										</div>
 									</div>
 									<div class="row">
-										<div class="col-lg-5 col-md-6 col-sm-12 col-xs-12">
-											<button class="btn btn-primary" type="button">Use Existing Cert/CSR as a Template</button>
-										</div>
-										<div class="col-lg-4 col-md-3 col-sm-4 col-xs-4">
-											<label class="checkbox-inline"><input id="selfsign" type="checkbox" value=""/>Self-Sign Certificate</label>
-										</div>
 										<div class="col-lg-3 col-md-3 col-sm-8 col-xs-8">
 											<select id="hashalg" class="form-control">
 												<option value="sha256">Hash Algorithm...</option>
@@ -1116,6 +1194,21 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 												<option selected value="sha256">SHA256</option>
 												<option value="sha384">SHA384</option>
 												<option value="sha512">SHA512</option>
+											</select>
+										</div>
+										<div class="col-lg-3 col-md-3 col-sm-4 col-xs-4">
+											<label class="checkbox-inline"><input id="selfsign" type="checkbox" onchange="toggleSelfSign(this);" value=""/>Self-Sign Certificate</label>
+										</div>
+										<div class="col-lg-1 col-md-2 col-sm-6 col-xs-6">
+											<!--<button class="btn btn-primary" type="button">Use Existing Cert/CSR as a Template</button>-->
+											<input value="1" id="timelength" type="text" class="form-control"  />
+										</div>
+										<div class="col-lg-3 col-md-3 col-sm-6 col-xs-6">
+											<select id="timetype" class="form-control">
+												<option value="year">Year(s)</option>
+												<option value="month">Month(s)</option>
+												<option value="week">Week(s)</option>
+												<option value="day">Day(s)</option>
 											</select>
 										</div>
 									</div>
@@ -1129,7 +1222,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 								<div class="col">
 									<div class="row">
 										<div class="col text-center">
-											<button class="btn btn-primary" onclick="processForm();" type="button">Submit</button>
+											<button class="btn btn-primary" style="margin-top: 10px;" onclick="processForm();" type="button">Submit</button>
 										</div>
 									</div>
 								</div>
@@ -1205,6 +1298,8 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			addRemoveSubjectAttrs();
 			var keymethod = document.getElementById("keymethod");
 			changePrivateKeyMethod(keymethod);
+			var selfsigncheckbox = document.getElementById('selfsign');
+			toggleSelfSign(selfsigncheckbox);
 			togglePathLen(true);
 		</script>
 	</body>

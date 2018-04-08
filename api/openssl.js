@@ -1,12 +1,36 @@
 var express = require('express'), 
 router = express.Router();
-var openssl = require('../lib/openssl.js')
+var openssl = require('../lib/openssl.js');
+var multer  = require('multer')
+var upload = multer();
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
 	rsa_keygen_pubexp: 65537,
 	format: 'PKCS8'
 }*/
+
+router.post('/uploadPrivateKey', upload.single('file'), function(req, res) {
+	//console.log(req.file);
+	var password = req.body.password;
+	var key = req.file.buffer;
+	//var username = req.body.username;
+	//var password = req.body.password;
+	openssl.importRSAPrivateKey(key, password, function(err, key, cmd) {
+		if(err) {
+			var data = {
+				error: err,
+				key: key
+			}
+		} else {
+			var data = {
+				error: false,
+				key: key
+			}
+		}
+		res.send(data);
+	});
+});
 
 router.post('/generateRSAPrivateKey', function(req, res) {
 	var rsakeyoptions = req.body;
