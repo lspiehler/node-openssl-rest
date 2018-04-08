@@ -31,6 +31,7 @@
 					note: 'Add a common name',
 					name: 'common name',
 					maxlength: 64,
+					defaultvalue: false,
 					placeholder: 'certificatetools.com',
 					multivalue: true,
 					enabled: true
@@ -43,6 +44,7 @@
 					note: 'Add a country',
 					name: 'country',
 					maxlength: 2,
+					defaultvalue: 'US',
 					placeholder: 'US',
 					multivalue: false,
 					enabled: true
@@ -55,6 +57,7 @@
 					note: 'Add a state',
 					name: 'state',
 					maxlength: 128,
+					defaultvalue: false,
 					placeholder: 'Louisiana',
 					multivalue: false,
 					enabled: true
@@ -67,6 +70,7 @@
 					note: 'Add a locality',
 					name: 'locality',
 					maxlength: 128,
+					defaultvalue: false,
 					placeholder: 'Slidell',
 					multivalue: false,
 					enabled: true
@@ -79,6 +83,7 @@
 					note: 'Add a street address',
 					name: 'street',
 					maxlength: 128,
+					defaultvalue: false,
 					placeholder: '555 Bird Ln.',
 					multivalue: false,
 					enabled: false
@@ -91,6 +96,7 @@
 					note: 'Add an organization',
 					name: 'organization',
 					maxlength: 64,
+					defaultvalue: false,
 					placeholder: 'Acme Inc.',
 					multivalue: false,
 					enabled: true
@@ -103,6 +109,7 @@
 					note: 'Add an organizational unit',
 					name: 'organizational unit',
 					maxlength: 64,
+					defaultvalue: false,
 					placeholder: 'Information Technology',
 					multivalue: false,
 					enabled: false
@@ -115,6 +122,7 @@
 					note: 'Add an postal code',
 					name: 'zipcode',
 					maxlength: 64,
+					defaultvalue: false,
 					placeholder: '70458',
 					multivalue: false,
 					enabled: false
@@ -127,6 +135,7 @@
 					note: 'Add an email address',
 					name: 'email',
 					maxlength: 128,
+					defaultvalue: false,
 					placeholder: 'email@gmail.com',
 					multivalue: false,
 					enabled: false
@@ -354,6 +363,9 @@
 				var row2input = document.createElement('input');
 				row2input.type = 'text';
 				row2input.placeholder = index[key]['placeholder'];
+				if(index[key]['defaultvalue']) {
+					row2input.value = index[key]['defaultvalue'];
+				}
 				row2input.maxLength = index[key]['maxlength'];
 				row2input.className = 'form-control';
 				row2input.id = index[key]['input'];
@@ -792,7 +804,7 @@
 				
 				formData.append('file', file);
 				formData.append('password', password);
-				request.open('POST', '/api/openssl/uploadPrivateKey', true);
+				request.open('POST', 'api/openssl/uploadPrivateKey', true);
 				//request.setRequestHeader('Content-Disposition', 'attachment; filename="' + file + '"');
 				//request.setRequestHeader('Content-Type', file.type);
 				//request.setRequestHeader('Content-Type', 'multipart/form-data; charset=UTF-8');
@@ -842,7 +854,7 @@
 			function pasteKey(data, callback) {
 				//console.log(data);
 				var request = new XMLHttpRequest();
-				request.open('POST', '/api/openssl/pasteKey', true);
+				request.open('POST', 'api/openssl/pasteKey', true);
 				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
 				
 				request.onload = function() {
@@ -870,7 +882,7 @@
 			
 			function openSSLRESTAPI(api, data, callback) {
 				var request = new XMLHttpRequest();
-				request.open('POST', '/api/openssl/' + api, true);
+				request.open('POST', 'api/openssl/' + api, true);
 				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
 				
 				request.onload = function() {
