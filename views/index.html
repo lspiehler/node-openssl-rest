@@ -914,6 +914,81 @@
 
 				request.send(JSON.stringify(data));
 			}
+			function templateMethod(elem) {
+				var method = elem.options[elem.selectedIndex].value;
+				var ssltlsinput = document.getElementById('ssltls');
+				var starttlsinput = document.getElementById('starttls');
+				if(method=='ssltls') {
+					ssltlsinput.style.display = 'inline';
+					starttlsinput.style.display = 'none';
+					changeProtocol(ssltlsinput);
+				} else if(method=='starttls') {
+					ssltlsinput.style.display = 'none';
+					starttlsinput.style.display = 'inline';
+					changeProtocol(starttlsinput);
+				} else {
+
+				}
+			}
+			function changeProtocol(elem) {
+				var protocol = elem.options[elem.selectedIndex].value;
+				var port = document.getElementById('port');
+				if(protocol=='https') {
+					port.value = '443';
+					port.readOnly = true;
+				} else if(protocol=='smtps') {
+					port.value = '465';
+					port.readOnly = true;
+				} else if(protocol=='pop3s') {
+					port.value = '995';
+					port.readOnly = true;
+				} else if(protocol=='imaps') {
+					port.value = '993';
+					port.readOnly = true;
+				} else if(protocol=='ftps') {
+					port.value = '990';
+					port.readOnly = true;
+				} else if(protocol=='ldaps') {
+					port.value = '636';
+					port.readOnly = true;
+				} else if(protocol=='smtp') {
+					port.readOnly = false;
+					port.focus();
+					port.value = '25';
+				} else {
+					port.readOnly = false;
+					port.value = '';
+					port.focus();
+				}
+			}
+			function importCert() {
+				var netcertoptions = {};
+			
+				var methodinput = document.getElementById('templatemethod');
+				var method = methodinput.options[methodinput.selectedIndex].value;
+				if(method != 'paste') {
+					var protocolinput = document.getElementById(method);
+					var protocol = protocolinput.options[protocolinput.selectedIndex].value;
+					var hostname = document.getElementById('hostname');
+					var port = document.getElementById('port');
+					netcertoptions.hostname = hostname.value;
+					netcertoptions.port = parseInt(port.value);
+					if(method=='starttls') {
+						netcertoptions.starttls = true;
+					} else {
+						netcertoptions.starttls = false;
+					}
+					netcertoptions.protocol = protocol;
+					openSSLRESTAPI('getCertFromNetwork', netcertoptions, function(error, response) {
+						if(error) {
+						
+						} else {
+							$( "#template" ).dialog("close");
+							console.log(response);
+						}
+					});
+				}
+			}
 		</script>
 	</head>
 	<body>
@@ -927,8 +1002,16 @@
 						<div class="col">
 							<div class="row">
 								<div class="col">
-									<h2 class="text-center">{{title}}</h2>
-									
+									<div class="row">
+										<div class="col">
+											<h2 class="text-center">{{title}}</h2>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col text-center">
+											<button class="btn btn-primary" type="button">Use Existing Cert/CSR as a Template</button>
+										</div>
+									</div>	
 									<div class="row">
 										<div class="col">
 											<h4>Private Key</h4>
@@ -1212,7 +1295,6 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 											<label class="checkbox-inline"><input id="selfsign" type="checkbox" onchange="toggleSelfSign(this);" value=""/>Self-Sign Certificate</label>
 										</div>
 										<div class="col-lg-1 col-md-2 col-sm-6 col-xs-6">
-											<!--<button class="btn btn-primary" type="button">Use Existing Cert/CSR as a Template</button>-->
 											<input value="1" id="timelength" type="text" class="form-control"  />
 										</div>
 										<div class="col-lg-3 col-md-3 col-sm-6 col-xs-6">
@@ -1278,6 +1360,59 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				</tr>
 			</table>
 		</div>
+		<div id="template" title="Use Existing Cert as a Template">
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<select onchange="templateMethod(this);" class="form-control" id="templatemethod" >
+							<option value="ssltls">SSL/TLS Download</option>
+							<option value="starttls">STARTTLS Download</option>
+							<option value="paste">Paste</option>
+						</select>
+					</div>
+				</div>
+				<div style="margin-top: 10px;" class="row">
+					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+						<select onchange="changeProtocol(this);" style="display: none;" class="form-control" id="starttls">
+							<option value="smtp">SMTP</option>
+							<option value="pop3">POP3</option>
+							<option value="imap">IMAP</option>
+							<option value="ftp">FTP</option>
+							<option value="xmpp">XMPP</option>
+							<option value="xmpp-server">XMPP-Server</option>
+							<option value="irc">IRC</option>
+							<option value="postgres">Postgres</option>
+							<option value="mysql">MySQL</option>
+							<option value="lmtp">LMTP</option>
+							<option value="nntp">NNTP</option>
+							<option value="sieve">Sieve</option>
+							<option value="ldap">LDAP</option>
+						</select>
+						<select onchange="changeProtocol(this);" class="form-control" id="ssltls">
+							<option value="https">HTTPS</option>
+							<option value="smtps">SMTPS</option>
+							<option value="pop3s">POP3S</option>
+							<option value="imaps">IMAPS</option>
+							<option value="ftps">FTPS</option>
+							<option value="ldaps">LDAPS</option>
+							<option value="other">Other</option>
+						</select>
+					</div>
+					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+						<input id='hostname' type="text" placeholder="google.com" class="form-control" /> 
+					</div>
+					<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"><span style="font-size: 20px;">:</span></div>
+					<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+						<input id="port" readonly type="text" placeholder="443" value="443" class="form-control" /> 
+					</div>
+				</div>
+				<div style="margin-top: 10px;" class="row">
+					<div class="col text-center">
+						<button onclick="importCert();" type="button" class="btn btn-primary">Submit</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		<script>
 			$( function() {
 				$( "#accordion" ).accordion({
@@ -1307,6 +1442,19 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				modal: true,
 				autoOpen: false
 			});
+			$( function() {
+				var browserwidth = document.body.offsetWidth;
+				var width = 600;
+				if(browserwidth < 400) {
+					width = browserwidth;
+				}
+				$( "#template" ).dialog({
+					modal: true,
+					autoOpen: true,
+					width: width + 'px'
+				});
+			});
+			//alert(document.body.offsetWidth);
 			addRemoveSubjectAttrs();
 			var keymethod = document.getElementById("keymethod");
 			changePrivateKeyMethod(keymethod);

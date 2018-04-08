@@ -10,6 +10,37 @@ var upload = multer();
 	format: 'PKCS8'
 }*/
 
+router.post('/getCertFromNetwork', function(req, res) {
+	var netcertoptions = req.body;
+	console.log(netcertoptions);
+	openssl.getCertFromNetwork(netcertoptions, function(err, cert, cmd) {
+		if(err) {
+			var data = {
+				error: err,
+				csroptions: cert
+			}
+			res.json(data);
+			return;
+		} else {
+			openssl.convertCertToCSR(cert, function(err,csroptions,cmd) {
+				if(err) {
+					var data = {
+						error: err,
+						csroptions: csroptions
+					}
+				} else {
+					var data = {
+						error: err,
+						csroptions: csroptions
+					}
+				}
+				console.log(data);
+				res.json(data);
+			});
+		}
+	});
+});
+
 router.post('/uploadPrivateKey', upload.single('file'), function(req, res) {
 	//console.log(req.file);
 	var password = req.body.password;
