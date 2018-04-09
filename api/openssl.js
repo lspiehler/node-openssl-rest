@@ -12,8 +12,11 @@ var upload = multer();
 
 router.post('/getCertFromNetwork', function(req, res) {
 	var netcertoptions = req.body;
-	console.log(netcertoptions);
+	var command = [];
+	//console.log(netcertoptions);
 	openssl.getCertFromNetwork(netcertoptions, function(err, cert, cmd) {
+		//console.log(cmd);
+		command.push(cmd);
 		if(err) {
 			var data = {
 				error: err,
@@ -23,18 +26,21 @@ router.post('/getCertFromNetwork', function(req, res) {
 			return;
 		} else {
 			openssl.convertCertToCSR(cert, function(err,csroptions,cmd) {
+				command.push(cmd);
 				if(err) {
 					var data = {
 						error: err,
-						csroptions: csroptions
+						csroptions: csroptions,
+						command: command
 					}
 				} else {
 					var data = {
 						error: err,
-						csroptions: csroptions
+						csroptions: csroptions,
+						command: command
 					}
 				}
-				console.log(data);
+				//console.log(data);
 				res.json(data);
 			});
 		}
