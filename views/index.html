@@ -99,7 +99,7 @@
 					defaultvalue: false,
 					placeholder: 'Acme Inc.',
 					multivalue: false,
-					enabled: true
+					enabled: false
 				},
 				organizationalUnitName: {
 					title: 'Organizational Unit',
@@ -185,7 +185,7 @@
 				saninput.value = item.parentNode.childNodes[3].innerText;
 				saninput.select();
 			}
-			function addSAN() {
+			function processSANInput() {
 				var list = document.getElementById('sanlist');
 				var items = list.getElementsByTagName('li');
 				var saninput = document.getElementById('saninput');
@@ -209,6 +209,11 @@
 						}
 					}
 				}
+				addSAN(typeinput.value, saninput.value);
+				saninput.select();
+			}
+			function addSAN(type, value) {
+				var list = document.getElementById('sanlist');
 				var li = document.createElement('li');
 				li.className = 'list-group-item';
 				li.style.border = 'none';
@@ -229,19 +234,17 @@
 					e.preventDefault();
 					delSAN(e.target);
 				}, false);
-				spantype.innerText = typeinput.value;
+				spantype.innerText = type;
 				spandelim.innerText = ' : ';
-				spanval.innerText = saninput.value;
+				spanval.innerText = value;
 				li.appendChild(spandel);
 				li.appendChild(spantype);
 				li.appendChild(spandelim);
 				li.appendChild(spanval);
 				list.appendChild(li);
-				saninput.select();
 			}
-			function addItem(type) {
-				//console.log(type);
-				
+			
+			function processItem(type) {
 				var list = document.getElementById(index[type]['list']);
 				var items = list.getElementsByTagName('li');
 				var input = document.getElementById(index[type]['input']);
@@ -261,6 +264,12 @@
 						}
 					}
 				}
+				addItem(type, input.value)
+				input.select();
+			}
+			
+			function addItem(type, value) {
+				var list = document.getElementById(index[type]['list']);
 				var li = document.createElement('li');
 				li.className = 'list-group-item';
 				li.style.border = 'none';
@@ -279,17 +288,16 @@
 					e.preventDefault();
 					delItem(type, e.target);
 				}, false);
-				spancn.innerText = input.value;
+				spancn.innerText = value;
 				li.appendChild(spandel);
 				li.appendChild(spancn);
 				list.appendChild(li);
-				input.select();
 			}
 			
 			function addEvent(elem, param) {
 				elem.addEventListener("click", function() {
 					//alert(param);
-					addItem(param);
+					processItem(param);
 				});
 			}
 			
@@ -309,8 +317,9 @@
 						input.checked = false;
 					}
 					input.value = key;
+					input.id = key + 'check';
 					input.type = 'checkbox';
-					input.addEventListener('click', function(e) {
+					input.addEventListener('change', function(e) {
 						if(e.target.checked) {
 							//console.log('add');
 							showSubjectAttr(e.target.value)
@@ -985,12 +994,63 @@
 						} else {
 							$( "#template" ).dialog("close");
 							console.log(response);
+							processImportedCert(response.csroptions);
 						}
 					});
 				}
 			}
 			function openTemplateDialogue() {
 				$( "#template" ).dialog("open");
+			}
+			function processImportedCert(csroptions) {
+				if(csroptions.extensions) {
+					//if sans exist, add them
+					if(csroptions.extensions.SANs) {
+						var list = document.getElementById('sanlist');
+						deleteAllAttr(list);
+						//return;
+						for(key in csroptions.extensions.SANs) {
+							for(var i = 0; i <= csroptions.extensions.SANs[key].length - 1; i++) {
+								addSAN(key, csroptions.extensions.SANs[key][i]);
+								//console.log(csroptions.extensions.SANs[key][i]);
+							}
+						}
+					}
+				}
+				//add all subject attributes
+				for(key in index) {
+					for(attr in csroptions.subject) {
+						if(key==attr) {
+							var enabled = document.getElementById(key + 'check');
+							if(!enabled.checked) {
+								enabled.checked = true;
+								showSubjectAttr(key);
+							}
+							if(!index[key]['multivalue']) {
+								var input = document.getElementById(index[key]['input']);
+								input.value = csroptions.subject[attr]
+							} else {
+								var list = document.getElementById(index[key]['list']);
+								deleteAllAttr(list);
+								if(typeof(csroptions.subject[attr]) != 'string') {
+									for(var i = 0; i <= csroptions.subject[attr].length - 1; i++) {
+										addItem(key, csroptions.subject[attr][i]);
+									}
+								} else {
+									addItem(key, csroptions.subject[attr]);
+								}
+							}
+						}
+					}
+				}
+			}
+			function deleteAllAttr(list) {
+				var items = list.getElementsByTagName('li');
+				//alert(items.length);
+				for(var i = items.length - 1; i >= 0; i--) {
+					//console.log(items[i]);
+					list.removeChild(items[i]);
+				}
 			}
 		</script>
 	</head>
@@ -1144,7 +1204,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 											<input placeholder="certificatetools.com" type="text" maxlength="128" class="form-control" id="saninput" />
 										</div>
 										<div class="col-lg-2 col-md-2 col-sm-3 col-xs-3 rightbtn">
-											<button class="btn btn-primary" onclick="addSAN();" type="button">Add</button>
+											<button class="btn btn-primary" onclick="processSANInput();" type="button">Add</button>
 										</div>
 									</div>
 									<div class="row">
