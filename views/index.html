@@ -498,7 +498,7 @@
 				}
 			}
 			function changePrivateKeyMethod(method) {
-				if(method.value=='generate') {
+				if(method.value=='PKCS1' || method.value=='PKCS8') {
 					enableUpload(false);
 					enablePaste(false);
 					enableGenerate(true);
@@ -742,8 +742,12 @@
 				var keymethodinput = document.getElementById('keymethod');
 				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
 				
-				if(keymethod=='generate') {
+				if(keymethod=='PKCS1' || keymethod=='PKCS8') {
 					var keyoptions = getKeyParams();
+					if(!keyoptions) {
+						return false;
+					}
+					keyoptions.format = keymethod;
 					openSSLRESTAPI('generateRSAPrivateKey', keyoptions, function(err, response) {
 						if(err) {
 							console.log(response);
@@ -850,7 +854,7 @@
 				var keymethodinput = document.getElementById('keymethod');
 				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
 				var password;
-				if(keymethod=='generate') {
+				if(keymethod=='PKCS1' || keymethod=='PKCS8') {
 					password = document.getElementById('password').value;
 				} else {
 					password = document.getElementById('passwordprompt').value;
@@ -1085,7 +1089,8 @@
 									<div class="row">
 										<div class="col-lg-3 col-md-4 col-sm-8 col-xs-8">
 											<select id="keymethod" onchange="changePrivateKeyMethod(this);" class="form-control">
-												<option value="generate">Generate New Private Key</option>
+												<option value="PKCS8">Generate PKCS#8 Private Key</option>
+												<option value="PKCS1">Generate PKCS#1 Private Key</option>
 												<option value="paste">Paste Existing PEM Private Key</option>
 												<option value="upload">Upload Existing Private Key</option>
 											</select>
@@ -1477,6 +1482,11 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 						<button onclick="importCert();" type="button" class="btn btn-primary">Submit</button>
 					</div>
 				</div>
+				<div style="margin-top: 10px;" class="row">
+					<div class="col">
+						<button onclick="importCert();" type="button" class="btn btn-primary">Submit</button>
+					</div>
+				</div>
 			</div>
 		</div>
 		<script>
@@ -1528,5 +1538,35 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			toggleSelfSign(selfsigncheckbox);
 			togglePathLen(true);
 		</script>
+		<div style="margin-top: 10px;" class="container-fluid">
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-0">
+					
+				</div>
+				<div class="col-lg-6 col-md-6 col-sm-8 col-xs-12">
+					<div id="disqus_thread"></div>
+					<script>
+						/**
+						*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+						*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+						
+						var disqus_config = function () {
+						this.page.url = 'https://certificatetools.com';  // Replace PAGE_URL with your page's canonical URL variable
+						this.page.identifier = 'csrgenerator'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+						};
+						
+						(function() { // DON'T EDIT BELOW THIS LINE
+							var d = document, s = d.createElement('script');
+							s.src = 'https://certificatetools.disqus.com/embed.js';
+							s.setAttribute('data-timestamp', +new Date());
+							(d.head || d.body).appendChild(s);
+						})();
+					</script>
+					<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-0">
+					
+				</div>
+			</div>
+		</div>
 	</body>
 </html>
