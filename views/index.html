@@ -20,8 +20,12 @@
 			}
 		</style>
 		<script>
-			var x509 = [];
-		
+			var generated = [];
+			var x509obj = function() {
+				this.key = {};
+				this.csr = {};
+				this.cert = {}
+			}
 			var index = {
 				commonName: {
 					title: 'Common Names',
@@ -691,8 +695,9 @@
 			}
 			
 			function processCSR(keyresponse, callback) {
-				var keyinput = document.getElementById('key');
-				keyinput.innerText = keyresponse.command + '\r\n\r\n' + keyresponse.key;
+				//console.log(generated);
+				//var keyinput = document.getElementById('key');
+				//keyinput.innerText = keyresponse.command + '\r\n\r\n' + keyresponse.key;
 				var csroptions = getCSRParams();
 				var data = {
 					options: csroptions,
@@ -705,10 +710,15 @@
 						callback(error);
 						return;
 					} else {
-						var csr = document.getElementById('csr');
-						csr.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.csr;
+						let index = generated.length - 1;
+						var generatedpointer = generated[index];
+						generatedpointer.csr.config = response.command.files.config;
+						generatedpointer.csr.json = data;
+						generatedpointer.csr.command = response.command.command;
+						generatedpointer.csr.data = response.csr;
+						//var csr = document.getElementById('csr');
+						//csr.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.csr;
 						var selfsign = document.getElementById('selfsign');
-						callback(false);
 						if(selfsign.checked) {
 							data.csr = response.csr;
 							var timetypeinput = document.getElementById('timetype');
@@ -728,10 +738,17 @@
 							}
 							data.options.days = days;
 							openSSLRESTAPI('selfSignCSR', data, function(error, response) {
-								var cer = document.getElementById('cer');
-								cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
-								callback(false);
+								generatedpointer.cert.config = response.command.files.config;
+								generatedpointer.cert.json = data;
+								generatedpointer.cert.command = response.command.command;
+								generatedpointer.cert.data = response.crt;
+								//var cer = document.getElementById('cer');
+								//cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
+								callback(false, generatedpointer, index);
 							});
+						} else {
+							generatedpointer.cert = false;
+							callback(false, generatedpointer, index);
 						}
 					}
 				});
@@ -741,23 +758,31 @@
 				$( "#dialog" ).dialog("close");
 				var keymethodinput = document.getElementById('keymethod');
 				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
-				
+				var x509 = new x509obj();
+				//x509.key.generated = false;
 				if(keymethod=='PKCS1' || keymethod=='PKCS8') {
 					var keyoptions = getKeyParams();
 					if(!keyoptions) {
 						return false;
 					}
+					x509.key = keyoptions;
+					x509.key.format = keymethod;
 					keyoptions.format = keymethod;
 					openSSLRESTAPI('generateRSAPrivateKey', keyoptions, function(err, response) {
 						if(err) {
 							console.log(response);
 						} else {
-							processCSR(response, function(err) {
-							
+							x509.key.generated = true;
+							x509.key.command = response.command;
+							x509.key.data = response.key;
+							generated.push(x509);
+							processCSR(response, function(err, x509, index) {
+								processCompleted(err, x509, index);
 							});
 						}
 					});
 				} else if(keymethod=='paste') {
+					x509.key.generated = false;
 					var pastedkey = document.getElementById('pastedkey');
 					var passwordprompt = document.getElementById('passwordprompt');
 					var password = false;
@@ -778,16 +803,21 @@
 							console.log(err);
 							$( "#dialog" ).dialog("open");
 						} else {
+							//x509.key.data = response.key;
+							x509.key.data = pastedkey.value;
+							x509.key.password = password;
+							generated.push(x509);
 							var keydata = {
 								command: '#No command for key because it was provided',
 								key: pastedkey.value
 							}
-							processCSR(keydata, function(err) {
-							
+							processCSR(keydata, function(err, x509, index) {
+								processCompleted(err, x509, index);
 							});
 						}
 					});
 				} else if(keymethod=='upload') {
+					x509.key.generated = false;
 					var passwordprompt = document.getElementById('passwordprompt');
 					var password = false;
 					if(passwordprompt.value!='') {
@@ -797,12 +827,17 @@
 						if(err) {
 							$( "#dialog" ).dialog("open");
 						} else {
+							x509.key.data = response.key;
+							x509.key.data = pastedkey.value;
+							x509.key.data = response.key;
+							x509.key.password = password;
+							generated.push(x509);
 							var keydata = {
 								command: '#No command for key because it was provided',
 								key: response.key
 							}
-							processCSR(keydata, function(err) {
-							
+							processCSR(keydata, function(err, x509, index) {
+								processCompleted(err, x509, index);
 							});
 						}
 					});
@@ -810,7 +845,177 @@
 					alert('Unrecognized private key method');
 				}
 			}
-			
+			function downloadText(text, filename) {
+				//alert(text);
+				var form = document.getElementById('downloadtext');
+				form.action = 'api/openssl/returnDownload';
+				form.method = 'POST';
+				var datainput = document.createElement('textarea');
+				datainput.name = "data"
+				datainput.innerHTML = text;
+				datainput.style.display = "none";
+				var filenameinput = document.createElement('input');
+				filenameinput.name = "filename"
+				filenameinput.value = filename;
+				filenameinput.type = "hidden";
+				form.appendChild(datainput);
+				form.appendChild(filenameinput);
+				form.submit();
+				
+				form.removeChild(datainput);
+				form.removeChild(filenameinput);
+			}
+			function getCommands(x509, index) {
+				var commandoutput = [];
+				commandoutput.push('#generate the RSA private key');
+				commandoutput.push(x509.key.command[0]);
+				if(x509.key.command.length > 1) {
+					commandoutput.push('#Convert the private key to PKCS#1');
+					commandoutput.push(x509.key.command[1]);
+				}
+				commandoutput.push('');
+				commandoutput.push('#Create the CSR (Click csrconfig.txt in the command below to download config)');
+				commandoutput.push(x509.csr.command[0].replace('csrconfig.txt', '<a href="javascript: downloadText(generated[' + index + '].csr.config, \'csrconfig.txt\');">csrconfig.txt</a>'));
+				if(x509.cert) {
+					commandoutput.push('');
+					commandoutput.push('#Self-sign your CSR (Click certconfig.txt in the command below to download config)');
+					commandoutput.push(x509.cert.command[0].replace('certconfig.txt', '<a href="javascript: downloadText(generated[' + index + '].cert.config, \'certconfig.txt\');">certconfig.txt</a>'));
+				}
+				console.log(commandoutput)
+				return commandoutput.join('\r\n')
+			}
+			function returnDownloadLinks(x509, index) {
+				var div = document.createElement('div');
+				var keydownload = document.createElement('a');
+				keydownload.href = 'javascript: downloadText(generated[' + index + '].key.data, \'cert.key\');';
+				keydownload.innerText = 'Private Key';
+				
+				var csrdownload = document.createElement('a');
+				csrdownload.href = 'javascript: downloadText(generated[' + index + '].csr.data, \'cert.csr\');';
+				csrdownload.innerText = 'Certificate Signing Request';
+				
+				div.appendChild(keydownload);
+				div.appendChild(document.createElement('br'));
+				div.appendChild(csrdownload);
+				
+				if(x509.cert) {
+					var certdownload = document.createElement('a');
+					certdownload.href = 'javascript: downloadText(generated[' + index + '].cert.data, \'cert.crt\');';
+					certdownload.innerText = 'Certificate';
+					div.appendChild(document.createElement('br'));
+					div.appendChild(certdownload);
+				}
+				
+				return div;
+			}
+			function x509Accordion(x509, index) {
+				var x509body = document.createElement('div');
+				x509body.className = 'accordion';
+				//var keydiv = document.createElement('div');
+				let downloadtitle = document.createElement('h3');
+				downloadtitle.innerText = 'Download';
+				let downloadbody = document.createElement('div');
+				downloadbody.appendChild(returnDownloadLinks(x509, index));
+				let keytitle = document.createElement('h3');
+				keytitle.innerText = 'Private Key';
+				let keybody = document.createElement('div');
+				keybody.appendChild(x509Text(x509.key.data));
+				let csrtitle = document.createElement('h3');
+				csrtitle.innerText = 'Certificate Signing Request';
+				let csrbody = document.createElement('div');
+				csrbody.appendChild(x509Text(x509.csr.data));
+				let csrconfigtitle = document.createElement('h3');
+				csrconfigtitle.innerText = 'OpenSSL CSR Config';
+				let csrconfigbody = document.createElement('div');
+				csrconfigbody.appendChild(x509Text(x509.csr.config));
+				let opensslcommandtitle = document.createElement('h3');
+				opensslcommandtitle.innerText = 'OpenSSL Commands';
+				let opensslcommandbody = document.createElement('div');
+				opensslcommandbody.appendChild(x509Text(getCommands(x509, index)));
+				//keydiv.appendChild(keytitle);
+				//keydiv.appendChild(keybody);
+				x509body.appendChild(downloadtitle);
+				x509body.appendChild(downloadbody);
+				x509body.appendChild(keytitle);
+				x509body.appendChild(keybody);
+				x509body.appendChild(opensslcommandtitle);
+				x509body.appendChild(opensslcommandbody);
+				x509body.appendChild(csrtitle);
+				x509body.appendChild(csrbody);
+				x509body.appendChild(csrconfigtitle);
+				x509body.appendChild(csrconfigbody);
+				if(x509.cert) {
+					let certtitle = document.createElement('h3');
+					certtitle.innerText = 'Certificate';
+					let certbody = document.createElement('div');
+					certbody.appendChild(x509Text(x509.cert.data));
+					let certconfigtitle = document.createElement('h3');
+					certconfigtitle.innerText = 'OpenSSL CSR Config';
+					let certconfigbody = document.createElement('div');
+					certconfigbody.appendChild(x509Text(x509.csr.config));
+					x509body.appendChild(certtitle);
+					x509body.appendChild(certbody);
+					x509body.appendChild(certconfigtitle);
+					x509body.appendChild(certconfigbody);
+				}
+				//getCommands(x509, index);
+				
+				$( x509body ).accordion({
+					collapsible: true,
+					active: 0,
+					heightStyle: 'content'
+				});
+				
+				return x509body;
+			}
+			function x509Text(text) {
+				var xtext = document.createElement('pre');
+				xtext.innerHTML = text;
+				return xtext;
+			}
+			function processCompleted(err, x509, index) {
+				if(err) {
+					
+				} else {
+					var output = document.getElementById('output');
+					if(output.childNodes.length <= 0) {
+						var accordiondiv = document.createElement('div');
+						accordiondiv.id = 'accordionoutput';
+						let title = document.createElement('h3');
+						title.innerText = 'CSR ' + index;
+						let body = document.createElement('div');
+						let csr = x509Accordion(x509, index);
+						body.appendChild(csr);
+						accordiondiv.appendChild(title);
+						accordiondiv.appendChild(body);
+						output.appendChild(accordiondiv);
+						/*$( csr ).accordion({
+							collapsible: true,
+							active: 0,
+							heightStyle: 'content'
+						});*/
+						/*$( '.accordion' ).accordion({
+							collapsible: true,
+							active: false,
+							//autoHeight:false
+						});*/
+						$( accordiondiv ).accordion({
+							collapsible: true,
+							active: 0,
+							heightStyle: 'content'
+							//autoHeight:false
+						});
+					} else {
+						$( '#accordionoutput' ).accordion();
+						$( "<h3>CSR " + index + "</h3>" ).appendTo( "#accordionoutput" );
+						$( x509Accordion(x509, index) ).appendTo( "#accordionoutput" );
+						//$( "<div>" + x509.key.data + "</div>" ).appendTo( "#accordionoutput" );
+						$( "#accordionoutput" ).accordion( "refresh" );
+						$( "#accordionoutput" ).accordion( "option", "active", -1 );
+					}
+					console.log(x509);
+				}
+			}
 			function uploadKey(pass, callback) {
 				var formData = new FormData(),
 					file = document.getElementById('uploadedkey').files[0],
@@ -1393,13 +1598,24 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 								</div>
 							</div>
 						</div>
-					</div>	
+					</div>
+					<div class="row">
+						<div class="col">	
+							<div class="row">
+								<div class="col">
+									<div class="row">
+										<div id="output" class="col"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
 					
 				</div>
 			</div>
-			<div class="row">
+			<!--<div class="row">
 				<div id="key" style="font-family: Courier, monospace;" class="col">
 				
 				</div>
@@ -1409,7 +1625,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				<div id="cer" style="font-family: Courier, monospace;" class="col">
 				
 				</div>
-			</div>
+			</div>-->
 		</div>
 		<div id="dialog" title="Encrypted Private Key">
 			<p>The private key is encrypted and requires a password</p>
@@ -1479,11 +1695,6 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				</div>
 				<div style="margin-top: 10px;" class="row">
 					<div class="col text-center">
-						<button onclick="importCert();" type="button" class="btn btn-primary">Submit</button>
-					</div>
-				</div>
-				<div style="margin-top: 10px;" class="row">
-					<div class="col">
 						<button onclick="importCert();" type="button" class="btn btn-primary">Submit</button>
 					</div>
 				</div>
@@ -1568,5 +1779,6 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				</div>
 			</div>
 		</div>
+		<form id="downloadtext"></form>
 	</body>
 </html>

@@ -47,6 +47,14 @@ router.post('/getCertFromNetwork', function(req, res) {
 	});
 });
 
+router.post('/returnDownload', function(req, res) {
+	//console.log(req.body);
+	res.setHeader('Content-disposition', 'attachment; filename=' + req.body.filename);
+	res.setHeader('Content-type', 'text/plain');
+	res.charset = 'UTF-8';
+	res.send(req.body.data);
+});
+
 router.post('/uploadPrivateKey', upload.single('file'), function(req, res) {
 	//console.log(req.file);
 	var password = req.body.password;
