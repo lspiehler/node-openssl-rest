@@ -49,8 +49,22 @@ router.post('/getCertFromNetwork', function(req, res) {
 
 router.post('/returnDownload', function(req, res) {
 	//console.log(req.body);
+	var mimetype;
+	switch(req.body.filename.split('.')[1]) {
+		case "key":
+			mimetype = 'application/pkcs8';
+			break;
+		case "csr":
+			mimetype = 'application/pkcs10';
+			break;
+		case "crt":
+			mimetype = 'application/x-x509-user-cert';
+			break;
+		default:
+			mimetype = 'text/plain';
+	}
 	res.setHeader('Content-disposition', 'attachment; filename=' + req.body.filename);
-	res.setHeader('Content-type', 'text/plain');
+	res.setHeader('Content-type', mimetype);
 	res.charset = 'UTF-8';
 	res.send(req.body.data);
 });

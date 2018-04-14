@@ -694,7 +694,7 @@
 				}
 			}
 			
-			function processCSR(keyresponse, callback) {
+			function processCSR(keyresponse, x509, callback) {
 				//console.log(generated);
 				//var keyinput = document.getElementById('key');
 				//keyinput.innerText = keyresponse.command + '\r\n\r\n' + keyresponse.key;
@@ -706,16 +706,17 @@
 				}
 				openSSLRESTAPI('generateCSR', data, function(error, response) {
 					if(error) {
-						console.log(error);
+						//console.log(error);
+						alert('OpenSSL Error:\r\n\r\n' + error);
 						callback(error);
 						return;
 					} else {
-						let index = generated.length - 1;
-						var generatedpointer = generated[index];
-						generatedpointer.csr.config = response.command.files.config;
-						generatedpointer.csr.json = data;
-						generatedpointer.csr.command = response.command.command;
-						generatedpointer.csr.data = response.csr;
+						//let index = generated.length - 1;
+						//var x509 = generated[index];
+						x509.csr.config = response.command.files.config;
+						x509.csr.json = data;
+						x509.csr.command = response.command.command;
+						x509.csr.data = response.csr;
 						//var csr = document.getElementById('csr');
 						//csr.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.csr;
 						var selfsign = document.getElementById('selfsign');
@@ -738,17 +739,19 @@
 							}
 							data.options.days = days;
 							openSSLRESTAPI('selfSignCSR', data, function(error, response) {
-								generatedpointer.cert.config = response.command.files.config;
-								generatedpointer.cert.json = data;
-								generatedpointer.cert.command = response.command.command;
-								generatedpointer.cert.data = response.crt;
+								x509.cert.config = response.command.files.config;
+								x509.cert.json = data;
+								x509.cert.command = response.command.command;
+								x509.cert.data = response.crt;
 								//var cer = document.getElementById('cer');
 								//cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
-								callback(false, generatedpointer, index);
+								generated.push(x509);
+								callback(false, x509, generated.length - 1);
 							});
 						} else {
-							generatedpointer.cert = false;
-							callback(false, generatedpointer, index);
+							x509.cert = false;
+							generated.push(x509);
+							callback(false, x509, generated.length - 1);
 						}
 					}
 				});
@@ -775,8 +778,8 @@
 							x509.key.generated = true;
 							x509.key.command = response.command;
 							x509.key.data = response.key;
-							generated.push(x509);
-							processCSR(response, function(err, x509, index) {
+							//generated.push(x509);
+							processCSR(response, x509, function(err, x509, index) {
 								processCompleted(err, x509, index);
 							});
 						}
@@ -806,12 +809,12 @@
 							//x509.key.data = response.key;
 							x509.key.data = pastedkey.value;
 							x509.key.password = password;
-							generated.push(x509);
+							//generated.push(x509);
 							var keydata = {
-								command: '#No command for key because it was provided',
+								command: false,
 								key: pastedkey.value
 							}
-							processCSR(keydata, function(err, x509, index) {
+							processCSR(keydata, x509, function(err, x509, index) {
 								processCompleted(err, x509, index);
 							});
 						}
@@ -831,12 +834,12 @@
 							x509.key.data = pastedkey.value;
 							x509.key.data = response.key;
 							x509.key.password = password;
-							generated.push(x509);
+							//generated.push(x509);
 							var keydata = {
-								command: '#No command for key because it was provided',
+								command: false,
 								key: response.key
 							}
-							processCSR(keydata, function(err, x509, index) {
+							processCSR(keydata, x509, function(err, x509, index) {
 								processCompleted(err, x509, index);
 							});
 						}
@@ -867,13 +870,16 @@
 			}
 			function getCommands(x509, index) {
 				var commandoutput = [];
-				commandoutput.push('#generate the RSA private key');
-				commandoutput.push(x509.key.command[0]);
-				if(x509.key.command.length > 1) {
-					commandoutput.push('#Convert the private key to PKCS#1');
-					commandoutput.push(x509.key.command[1]);
+				if(x509.key.command) {
+					commandoutput.push('#generate the RSA private key');
+					commandoutput.push(x509.key.command[0]);
+					if(x509.key.command.length > 1) {
+						commandoutput.push('');
+						commandoutput.push('#Convert the private key to PKCS#1');
+						commandoutput.push(x509.key.command[1]);
+					}
+					commandoutput.push('');
 				}
-				commandoutput.push('');
 				commandoutput.push('#Create the CSR (Click csrconfig.txt in the command below to download config)');
 				commandoutput.push(x509.csr.command[0].replace('csrconfig.txt', '<a href="javascript: downloadText(generated[' + index + '].csr.config, \'csrconfig.txt\');">csrconfig.txt</a>'));
 				if(x509.cert) {
@@ -881,7 +887,7 @@
 					commandoutput.push('#Self-sign your CSR (Click certconfig.txt in the command below to download config)');
 					commandoutput.push(x509.cert.command[0].replace('certconfig.txt', '<a href="javascript: downloadText(generated[' + index + '].cert.config, \'certconfig.txt\');">certconfig.txt</a>'));
 				}
-				console.log(commandoutput)
+				//console.log(commandoutput)
 				return commandoutput.join('\r\n')
 			}
 			function returnDownloadLinks(x509, index) {
@@ -1013,7 +1019,7 @@
 						$( "#accordionoutput" ).accordion( "refresh" );
 						$( "#accordionoutput" ).accordion( "option", "active", -1 );
 					}
-					console.log(x509);
+					//console.log(x509);
 				}
 			}
 			function uploadKey(pass, callback) {
@@ -1204,7 +1210,7 @@
 						
 						} else {
 							$( "#template" ).dialog("close");
-							console.log(response);
+							//console.log(response);
 							processImportedCert(response.csroptions);
 						}
 					});
