@@ -866,6 +866,46 @@
 				form.removeChild(datainput);
 				form.removeChild(filenameinput);
 			}
+			
+			function downloadPFX(index, filename) {
+				//alert(text);
+				var form = document.getElementById('downloadtext');
+				form.action = 'api/openssl/downloadPFX';
+				form.method = 'POST';
+				var certinput = document.createElement('textarea');
+				certinput.name = "crt"
+				certinput.innerHTML = generated[index].cert.data;
+				certinput.style.display = "none";
+				var keyinput = document.createElement('textarea');
+				keyinput.name = "key"
+				keyinput.innerHTML = generated[index].key.data;
+				keyinput.style.display = "none";
+				var passin = document.createElement('input');
+				passin.name = "passin"
+				if(generated[index].key.generated) {
+					if(generated[index].key.encryption) {
+						passin.value = generated[index].key.encryption.password;
+					} else {
+						passin.value = '';
+					}
+				} else {
+					if(generated[index].key.password) {
+						passin.value = generated[index].key.password;
+					} else {
+						passin.value = '';
+					}
+				}
+				passin.type = "hidden";
+				form.appendChild(certinput);
+				form.appendChild(keyinput);
+				form.appendChild(passin);
+				form.submit();
+				
+				form.removeChild(certinput);
+				form.removeChild(keyinput);
+				form.removeChild(passin);
+			}
+			
 			function getCommands(x509, index) {
 				var commandoutput = [];
 				if(x509.key.command) {
@@ -905,9 +945,15 @@
 				if(x509.cert) {
 					var certdownload = document.createElement('a');
 					certdownload.href = 'javascript: downloadText(generated[' + index + '].cert.data, \'cert.crt\');';
-					certdownload.innerText = 'Certificate';
+					certdownload.innerText = 'PEM Certificate';
 					div.appendChild(document.createElement('br'));
 					div.appendChild(certdownload);
+					
+					var pfxdownload = document.createElement('a');
+					pfxdownload.href = 'javascript: downloadPFX(' + index + ');';
+					pfxdownload.innerText = 'PKCS#12 Certificate';
+					div.appendChild(document.createElement('br'));
+					div.appendChild(pfxdownload);
 				}
 				
 				return div;
