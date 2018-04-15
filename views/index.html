@@ -867,8 +867,9 @@
 				form.removeChild(filenameinput);
 			}
 			
-			function downloadPFX(index, filename) {
+			function downloadPFX(index, password) {
 				//alert(text);
+				$( "#pkcs12dialog" ).dialog( "close" );
 				var form = document.getElementById('downloadtext');
 				form.action = 'api/openssl/downloadPFX';
 				form.method = 'POST';
@@ -895,15 +896,27 @@
 						passin.value = '';
 					}
 				}
+				var passout = document.createElement('input');
+				passout.name = "passout"
+				passout.type = "hidden";
+				if(password) {
+					var password = document.getElementById('pkcs12password');
+					passout.value = password.value;
+					password.value = '';
+				} else {
+					passout.value = '';
+				}
 				passin.type = "hidden";
 				form.appendChild(certinput);
 				form.appendChild(keyinput);
 				form.appendChild(passin);
+				form.appendChild(passout);
 				form.submit();
 				
 				form.removeChild(certinput);
 				form.removeChild(keyinput);
 				form.removeChild(passin);
+				form.removeChild(passout);
 			}
 			
 			function getCommands(x509, index) {
@@ -950,7 +963,7 @@
 					div.appendChild(certdownload);
 					
 					var pfxdownload = document.createElement('a');
-					pfxdownload.href = 'javascript: downloadPFX(' + index + ');';
+					pfxdownload.href = 'javascript: pfxPasswordPrompt(' + index + ');';
 					pfxdownload.innerText = 'PKCS#12 Certificate';
 					div.appendChild(document.createElement('br'));
 					div.appendChild(pfxdownload);
@@ -958,6 +971,19 @@
 				
 				return div;
 			}
+			
+			function pfxPasswordPrompt(index) {
+				var submit = document.getElementById('pkcs12submit');
+				var cancel = document.getElementById('pkcs12cancel');
+				submit.onclick = function() {
+					downloadPFX(index, true);
+				}
+				cancel.onclick = function() {
+					downloadPFX(index, false);
+				}
+				$( "#pkcs12dialog" ).dialog( "open" );
+			}
+			
 			function x509Accordion(x509, index) {
 				var x509body = document.createElement('div');
 				x509body.className = 'accordion';
@@ -1642,7 +1668,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 								<div class="col">
 									<div class="row">
 										<div class="col text-center">
-											<button class="btn btn-primary" style="margin-top: 10px;" onclick="processForm();" type="button">Submit</button>
+											<button class="btn btn-primary" style="margin-top: 10px; margin-bottom: 10px;" onclick="processForm();" type="button">Submit</button>
 										</div>
 									</div>
 								</div>
@@ -1655,6 +1681,48 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 								<div class="col">
 									<div class="row">
 										<div id="output" class="col"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">	
+							<div class="row">
+								<div class="col">
+									<div class="row">
+										<div style="margin-top: 10px; margin-bottom: 20px;" id="developedby" class="col text-center">Developed by Lyas Spiehler</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">	
+							<div class="row">
+								<div class="col">
+									<div class="row">
+										<div id="chat" style="margin-top: 20px;" class="col">
+											<div id="disqus_thread"></div>
+											<script>
+												/**
+												*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+												*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+												
+												var disqus_config = function () {
+												this.page.url = 'https://certificatetools.com';  // Replace PAGE_URL with your page's canonical URL variable
+												this.page.identifier = 'csrgenerator'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+												};
+												
+												(function() { // DON'T EDIT BELOW THIS LINE
+													var d = document, s = d.createElement('script');
+													s.src = 'https://certificatetools.disqus.com/embed.js';
+													s.setAttribute('data-timestamp', +new Date());
+													(d.head || d.body).appendChild(s);
+												})();
+											</script>
+											<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -1693,6 +1761,27 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				<tr>
 					<td align="center" colspan="3">
 						<button class="btn btn-primary" onclick="processForm();" type="button">Submit</button>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id="pkcs12dialog" title="Encrypt PKCS#12 Certificate">
+			<p>The private key is included in the PKCS#12 format certificate. Enter a password if you'd like to encrypt it, or click cancel to proceed without a password.</p>
+			<table>
+				<tr>
+					<td>Password:</td>
+					<td>&nbsp;</td>
+					<td>
+						<input id="pkcs12password" type="password" class="form-control" />
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td align="center" colspan="3">
+						<button id="pkcs12submit" class="btn btn-primary" type="button">Submit</button>
+						<button id="pkcs12cancel" class="btn btn-primary" type="button">Cancel</button>
 					</td>
 				</tr>
 			</table>
@@ -1779,6 +1868,10 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				modal: true,
 				autoOpen: false
 			});
+			$( "#pkcs12dialog" ).dialog({
+				modal: true,
+				autoOpen: false
+			});
 			$( function() {
 				var browserwidth = document.body.offsetWidth;
 				var width = 600;
@@ -1799,36 +1892,6 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			toggleSelfSign(selfsigncheckbox);
 			togglePathLen(true);
 		</script>
-		<div style="margin-top: 10px;" class="container-fluid">
-			<div class="row">
-				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-0">
-					
-				</div>
-				<div class="col-lg-6 col-md-6 col-sm-8 col-xs-12">
-					<div id="disqus_thread"></div>
-					<script>
-						/**
-						*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
-						*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
-						
-						var disqus_config = function () {
-						this.page.url = 'https://certificatetools.com';  // Replace PAGE_URL with your page's canonical URL variable
-						this.page.identifier = 'csrgenerator'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
-						};
-						
-						(function() { // DON'T EDIT BELOW THIS LINE
-							var d = document, s = d.createElement('script');
-							s.src = 'https://certificatetools.disqus.com/embed.js';
-							s.setAttribute('data-timestamp', +new Date());
-							(d.head || d.body).appendChild(s);
-						})();
-					</script>
-					<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-0">
-					
-				</div>
-			</div>
-		</div>
 		<form id="downloadtext"></form>
 	</body>
 </html>

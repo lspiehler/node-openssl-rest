@@ -71,7 +71,7 @@ router.post('/returnDownload', function(req, res) {
 
 router.post('/downloadPFX', function(req, res) {
 	//console.log(req.body);
-	openssl.createPKCS12(req.body.crt, req.body.key, req.body.passin, false, false, function(err, pfx, command) {
+	openssl.createPKCS12(req.body.crt, req.body.key, req.body.passin, req.body.passout, false, function(err, pfx, command) {
 		if (err) console.log(err);
 		var mimetype = 'application/x-pkcs12';
 		res.setHeader('Content-disposition', 'attachment; filename=cert.pfx');
