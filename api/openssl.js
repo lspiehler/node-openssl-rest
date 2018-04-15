@@ -77,8 +77,26 @@ router.post('/downloadPFX', function(req, res) {
 		res.setHeader('Content-disposition', 'attachment; filename=cert.pfx');
 		res.setHeader('Content-type', mimetype);
 		res.charset = 'UTF-8';
-		console.log(command);
+		//console.log(command);
 		res.send(pfx);
+	});
+});
+
+router.post('/downloadPKCS7', function(req, res) {
+	//console.log(req.body);
+	var certs = [];
+	for(var key in req.body) {
+		certs.push(req.body[key]);
+	}
+	openssl.createPKCS7(certs, function(err, pkcs7, command) {
+		if (err) console.log(err);
+		var mimetype = 'application/x-pkcs7-certificates';
+		res.setHeader('Content-disposition', 'attachment; filename=cert.p7b');
+		res.setHeader('Content-type', mimetype);
+		res.charset = 'UTF-8';
+		console.log(command);
+		console.log(pkcs7);
+		res.send(pkcs7);
 	});
 });
 
@@ -160,6 +178,34 @@ router.post('/selfSignCSR', function(req, res) {
 	//var username = req.body.username;
 	//var password = req.body.password;
 	openssl.selfSignCSR(csr, csroptions, key, keypass, function(err, crt, cmd) {
+		if(err) {
+			var data = {
+				error: err,
+				crt: crt,
+				command: cmd
+			}
+		} else {
+			var data = {
+				error: false,
+				crt: crt,
+				command: cmd
+			}
+		}
+		res.json(data);
+	});
+});
+
+router.post('/CASignCSR', function(req, res) {
+	var key = req.body.key;
+	var keypass = req.body.keypass;
+	var csroptions = req.body.options;
+	var csr = req.body.csr;
+	//console.log(req.body);
+	//res.json(req.body);
+	//return;
+	//var username = req.body.username;
+	//var password = req.body.password;
+	openssl.CASignCSR(req.body.csr, req.body.options, req.body.ca.cert ,req.body.ca.key, req.body.ca.keypass, function(err, crt, cmd) {
 		if(err) {
 			var data = {
 				error: err,

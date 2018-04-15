@@ -683,15 +683,54 @@
 			}
 			
 			function toggleSelfSign(elem) {
+				var value = elem.options[elem.options.selectedIndex].value;
 				var timetype = document.getElementById('timetype');
 				var timelength = document.getElementById('timelength');
-				if(elem.checked) {
+				if(value!='nosign') {
 					timetype.style.display = 'inline';
 					timelength.style.display = 'inline';
 				} else {
 					timetype.style.display = 'none';
 					timelength.style.display = 'none';
 				}
+			}
+			
+			function appendCAToSignList(index) {
+				var signcert = document.getElementById('signcert');
+				var option = document.createElement('option');
+				option.innerText = 'Sign with Certificate Authority ' + index;
+				option.value = index;
+				signcert.add(option);
+			}
+			
+			function checkCAAttributes(x509) {
+				var isca = document.getElementById('isca');
+				var iscavalue = isca.options[isca.options.selectedIndex].value
+				if(iscavalue=="TRUE") {
+					//appendCAToSignList(x509);
+					return true;
+				} else {
+					return false;
+				}
+			}
+			
+			function getdays() {
+				var timetypeinput = document.getElementById('timetype');
+				var timetype = timetypeinput.options[timetypeinput.selectedIndex].value;
+				var timelength = document.getElementById('timelength');
+				var days = 365;
+				if(timetype == 'day') {
+					days = timelength.value;
+				} else if(timetype == 'week') {
+					days = timelength.value * 7;
+				} else if(timetype == 'month') {
+					days = timelength.value * 30;
+				} else if(timetype == 'year') {
+					days = timelength.value * 365;
+				} else {
+					//invalid time
+				}
+				return days;
 			}
 			
 			function processCSR(keyresponse, x509, callback) {
@@ -719,39 +758,71 @@
 						x509.csr.data = response.csr;
 						//var csr = document.getElementById('csr');
 						//csr.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.csr;
-						var selfsign = document.getElementById('selfsign');
-						if(selfsign.checked) {
+						var signcert = document.getElementById('signcert');
+						var signvalue = signcert.options[signcert.options.selectedIndex].value
+						if(signvalue=="selfsign") {
 							data.csr = response.csr;
-							var timetypeinput = document.getElementById('timetype');
-							var timetype = timetypeinput.options[timetypeinput.selectedIndex].value;
-							var timelength = document.getElementById('timelength');
-							var days = 365;
-							if(timetype == 'day') {
-								days = timelength.value;
-							} else if(timetype == 'week') {
-								days = timelength.value * 7;
-							} else if(timetype == 'month') {
-								days = timelength.value * 30;
-							} else if(timetype == 'year') {
-								days = timelength.value * 365;
-							} else {
-								//invalid time
-							}
-							data.options.days = days;
+							data.options.days = getdays();
 							openSSLRESTAPI('selfSignCSR', data, function(error, response) {
+								x509.cert.signingca = -1;
 								x509.cert.config = response.command.files.config;
 								x509.cert.json = data;
 								x509.cert.command = response.command.command;
 								x509.cert.data = response.crt;
 								//var cer = document.getElementById('cer');
 								//cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
+								x509.cert.isca = checkCAAttributes(x509);
 								generated.push(x509);
-								callback(false, x509, generated.length - 1);
+								var certindex = generated.length - 1;
+								if(x509.cert.isca) {
+									appendCAToSignList(certindex);
+								}
+								callback(false, x509, certindex);
 							});
-						} else {
+						} else if(signvalue=='nosign') {
 							x509.cert = false;
 							generated.push(x509);
 							callback(false, x509, generated.length - 1);
+						} else {
+							//data.csr = response.csr;
+							data.csr = response.csr;
+							data.options.days = getdays()
+							//console.log(parseInt(signvalue));
+							var certindex = parseInt(signvalue);
+							x509.cert.signingca = certindex;
+							var capassword = false;
+							if(generated[certindex].key.generated) {
+								if(generated[certindex].key.encryption) {
+									capassword = generated[certindex].key.encryption.password;
+								}
+							} else {
+								if(generated[certindex].key.password) {
+									capassword = generated[certindex].key.password;
+								}
+							}
+							data.ca = {}
+							data.ca.key = generated[certindex].key.data;
+							data.ca.keypass = capassword;
+							data.ca.cert = generated[certindex].cert.data
+							openSSLRESTAPI('CASignCSR', data, function(err, response) {
+								if(err) {
+									console.log(cer);
+								} else {
+									x509.cert.config = response.command.files.config;
+									x509.cert.json = data;
+									x509.cert.command = response.command.command;
+									x509.cert.data = response.crt;
+									//var cer = document.getElementById('cer');
+									//cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
+									x509.cert.isca = checkCAAttributes(x509);
+									generated.push(x509);
+									var certindex = generated.length - 1;
+									if(x509.cert.isca) {
+										appendCAToSignList(certindex);
+									}
+									callback(false, x509, certindex);
+									}
+							});
 						}
 					}
 				});
@@ -867,6 +938,39 @@
 				form.removeChild(filenameinput);
 			}
 			
+			function downloadPKCS7(index) {
+				//alert(text);
+				var form = document.getElementById('downloadtext');
+				form.action = 'api/openssl/downloadPKCS7';
+				form.method = 'POST';
+				//var x5090 = generated[index].cert.data;
+				//var cert0 = document.createElement('textarea');
+				//cert0.name = "data0"
+				//cert0.innerHTML = x5090;
+				//cert0.style.display = "none";
+				var chain = true;
+				var certindex = index;
+				var remove = [];
+				while(chain) {
+					var cert = document.createElement('textarea');
+					cert.name = "data" + certindex
+					cert.innerHTML = generated[certindex].cert.data;
+					cert.style.display = "none";
+					remove.push(cert);
+					form.appendChild(cert);
+					if(generated[certindex].cert.signingca < 0) {
+						chain = false;
+					} else {
+						certindex = generated[certindex].cert.signingca;
+					}
+				}
+				form.submit();
+				
+				for(var i = 0; i <= remove.length - 1; i++) {
+					form.removeChild(remove[i]);
+				}
+			}
+			
 			function downloadPFX(index, password) {
 				//alert(text);
 				$( "#pkcs12dialog" ).dialog( "close" );
@@ -964,9 +1068,15 @@
 					
 					var pfxdownload = document.createElement('a');
 					pfxdownload.href = 'javascript: pfxPasswordPrompt(' + index + ');';
-					pfxdownload.innerText = 'PKCS#12 Certificate';
+					pfxdownload.innerText = 'PKCS#12 Certificate and Key';
 					div.appendChild(document.createElement('br'));
 					div.appendChild(pfxdownload);
+					
+					var pkcs7download = document.createElement('a');
+					pkcs7download.href = 'javascript: downloadPKCS7(' + index + ');';
+					pkcs7download.innerText = 'PKCS#7 Certificate(s)';
+					div.appendChild(document.createElement('br'));
+					div.appendChild(pkcs7download);
 				}
 				
 				return div;
@@ -1058,7 +1168,15 @@
 						var accordiondiv = document.createElement('div');
 						accordiondiv.id = 'accordionoutput';
 						let title = document.createElement('h3');
-						title.innerText = 'CSR ' + index;
+						if(x509.cert) {
+							if(x509.cert.isca) {
+								title.innerText = 'Certificate Authority ' + index;
+							} else {
+								title.innerText = 'Certificate ' + index;
+							}
+						} else {
+							title.innerText = 'Certificate Signing Request ' + index;
+						}
 						let body = document.createElement('div');
 						let csr = x509Accordion(x509, index);
 						body.appendChild(csr);
@@ -1083,7 +1201,15 @@
 						});
 					} else {
 						$( '#accordionoutput' ).accordion();
-						$( "<h3>CSR " + index + "</h3>" ).appendTo( "#accordionoutput" );
+						if(x509.cert) {
+							if(x509.cert.isca) {
+								$( "<h3>Certificate Authority " + index + "</h3>" ).appendTo( "#accordionoutput" );
+							} else {
+								$( "<h3>Certificate " + index + "</h3>" ).appendTo( "#accordionoutput" );
+							}
+						} else {
+							$( "<h3>Certificate Signing Request " + index + "</h3>" ).appendTo( "#accordionoutput" );
+						}
 						$( x509Accordion(x509, index) ).appendTo( "#accordionoutput" );
 						//$( "<div>" + x509.key.data + "</div>" ).appendTo( "#accordionoutput" );
 						$( "#accordionoutput" ).accordion( "refresh" );
@@ -1644,7 +1770,11 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 											</select>
 										</div>
 										<div class="col-lg-3 col-md-3 col-sm-4 col-xs-4">
-											<label class="checkbox-inline"><input id="selfsign" type="checkbox" onchange="toggleSelfSign(this);" value=""/>Self-Sign Certificate</label>
+											<!--<label class="checkbox-inline"><input id="selfsign" type="checkbox" onchange="toggleSelfSign(this);" value=""/>Self-Sign Certificate</label>-->
+											<select id="signcert" class="form-control" onchange="toggleSelfSign(this);">
+												<option value="nosign">CSR Only</option>
+												<option value="selfsign">Self-Sign</option>
+											</select>
 										</div>
 										<div class="col-lg-1 col-md-2 col-sm-6 col-xs-6">
 											<input value="1" id="timelength" type="text" class="form-control"  />
@@ -1888,8 +2018,8 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			addRemoveSubjectAttrs();
 			var keymethod = document.getElementById("keymethod");
 			changePrivateKeyMethod(keymethod);
-			var selfsigncheckbox = document.getElementById('selfsign');
-			toggleSelfSign(selfsigncheckbox);
+			var signcert = document.getElementById('signcert');
+			toggleSelfSign(signcert);
 			togglePathLen(true);
 		</script>
 		<form id="downloadtext"></form>
