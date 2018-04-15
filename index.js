@@ -22,7 +22,7 @@ app.set('views', __dirname + '/views');
 //app.use(express.static('files'))app.use('/api/auth', require('./api/auth'));
 	
 app.get('/', function(req, res) {
-	res.render('index.html', {"title": "CertificateTools.com CSR Generator"});
+	res.render('index.html', {"title": "CertificateTools.com CSR/Certificate Generator"});
 });
 
 app.use(function(req, res, next) {
