@@ -226,9 +226,10 @@
 				var spandelim = document.createElement('span');
 				var spanval = document.createElement('span');
 				spandel.style.color = '#a31d00';
-				spandel.style.fontFamily = 'Arial Black, Gadget, sans-serif';
-				spandel.style.fontWeight = 'bold';
-				spandel.fontWeight = 'bold';
+				spandel.style.fontFamily = 'Verdana';
+				spandel.style.fontWeight = 'bolder';
+				spandel.style.fontSize = '17px';
+				//spandel.fontWeight = 'bold';
 				spandel.innerText = 'X ';
 				spandel.style.cursor = 'pointer';
 				spandel.onclick = function(e) {
@@ -281,9 +282,9 @@
 				var spandel = document.createElement('span');
 				var spancn = document.createElement('span');
 				spandel.style.color = '#a31d00';
-				spandel.style.fontFamily = 'Arial Black, Gadget, sans-serif';
-				spandel.style.fontWeight = 'bold';
-				spandel.fontWeight = 'bold';
+				spandel.style.fontFamily = 'Verdana';
+				spandel.style.fontWeight = 'bolder';
+				spandel.style.fontSize = '17px';
 				spandel.innerText = 'X ';
 				spandel.style.cursor = 'pointer';
 				spandel.onclick = function(e) {
@@ -563,7 +564,12 @@
 				if(addsubj) {
 					csr['subject'] = subject
 				}
-				
+				if(!csr.subject.commonName) {
+					var proceed = confirm('You have not added any common names. Click OK to proceed anyway or cancel to go back and add a common name.');
+					if(!proceed) {
+						return false;
+					}
+				}
 				//add SANS
 				var list = document.getElementById('sanlist');
 				var sans = {};
@@ -584,7 +590,12 @@
 					}
 					csr['extensions']['SANs'] = sans
 				}
-				
+				if(!csr.extensions) {
+					var proceed = confirm('You have not added any subject alternative names. Click OK to proceed anyway or cancel to go back and add a subject alternative name.');
+					if(!proceed) {
+						return false;
+					}
+				}
 				//add key usage
 				var keyusage = document.getElementsByName('keyusagevals');
 				var ku = []
@@ -738,6 +749,9 @@
 				//var keyinput = document.getElementById('key');
 				//keyinput.innerText = keyresponse.command + '\r\n\r\n' + keyresponse.key;
 				var csroptions = getCSRParams();
+				if(!csroptions) {
+					return false;
+				}
 				var data = {
 					options: csroptions,
 					key: keyresponse.key,
@@ -1300,6 +1314,59 @@
 				};
 
 				request.send(JSON.stringify(data));
+			}
+			
+			function populateSubject() {
+				ipAPI(function(err, data) {
+					if(err) {
+						console.log(err);
+					} else {
+						console.log(data);
+						var country = document.getElementById('cinput');
+						var state = document.getElementById('stateinput');
+						var city = document.getElementById('linput');
+						var zipcode = document.getElementById('zipinput');
+						country.value = data.country;
+						state.value = data.region;
+						city.value = data.city;
+						zipcode.value = data.postal;
+					}
+				});
+			}
+			
+			function ipAPI(callback) {
+				var request = new XMLHttpRequest();
+				request.open('GET', 'https://ipapi.co//json/', true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						if(resp.reserved) {
+							callback(resp, resp);
+						} else {
+							callback(false, resp);
+						}
+						return;
+						//var key = document.getElementById('key');
+						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						//var csroptions = getCSRParams();
+						//generateCSR(resp.key, csroptions);
+					} else {
+						// We reached our target server, but it returned an error
+						callback(resp, false);
+						return;
+					}
+				};
+
+				request.onerror = function() {
+					callback(true, false);
+					return;
+					// There was a connection error of some sort
+				};
+
+				request.send();
 			}
 			
 			function openSSLRESTAPI(api, data, callback) {
@@ -2021,6 +2088,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			var signcert = document.getElementById('signcert');
 			toggleSelfSign(signcert);
 			togglePathLen(true);
+			populateSubject();
 		</script>
 		<form id="downloadtext"></form>
 	</body>
