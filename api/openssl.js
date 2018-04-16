@@ -95,14 +95,18 @@ router.post('/downloadPKCS7', function(req, res) {
 		res.setHeader('Content-type', mimetype);
 		res.charset = 'UTF-8';
 		console.log(command);
-		console.log(pkcs7);
+		//console.log(pkcs7);
 		res.send(pkcs7);
 	});
 });
 
 router.post('/uploadPrivateKey', upload.single('file'), function(req, res) {
 	//console.log(req.file);
-	var password = req.body.password;
+	if(req.body.password=='false' || req.body.password==false) {
+		var password = false;
+	} else {
+		var password = req.body.password;
+	}
 	var key = req.file.buffer;
 	//var username = req.body.username;
 	//var password = req.body.password;

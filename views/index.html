@@ -18,6 +18,13 @@
 			.list-group {
 				margin-bottom: 5px;
 			}
+			.content pre {
+				white-space: -moz-pre-wrap;
+				white-space: -pre-wrap;
+				white-space: -o-pre-wrap;
+				white-space: pre-wrap; 
+				word-wrap: break-word; /* Internet Explorer 5.5+ */  
+			}
 		</style>
 		<script>
 			var generated = [];
@@ -1053,7 +1060,11 @@
 				commandoutput.push(x509.csr.command[0].replace('csrconfig.txt', '<a href="javascript: downloadText(generated[' + index + '].csr.config, \'csrconfig.txt\');">csrconfig.txt</a>'));
 				if(x509.cert) {
 					commandoutput.push('');
-					commandoutput.push('#Self-sign your CSR (Click certconfig.txt in the command below to download config)');
+					if(x509.cert.signingca >= 0) {
+						commandoutput.push('#Sign your CSR with a root CA cert. You will need to download the CA certs your previously generated. (Click certconfig.txt in the command below to download config)');
+					} else {
+						commandoutput.push('#Self-sign your CSR (Click certconfig.txt in the command below to download config)');
+					}
 					commandoutput.push(x509.cert.command[0].replace('certconfig.txt', '<a href="javascript: downloadText(generated[' + index + '].cert.config, \'certconfig.txt\');">certconfig.txt</a>'));
 				}
 				//console.log(commandoutput)
