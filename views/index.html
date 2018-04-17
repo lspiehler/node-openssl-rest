@@ -809,7 +809,7 @@
 							data.csr = response.csr;
 							data.options.days = getdays()
 							//console.log(parseInt(signvalue));
-							if(x509.ca.path) {
+							if(x509.ca) {
 								data.ca = {}
 								data.ca.path = x509.ca.path;
 								data.ca.keypass = x509.ca.keypass;

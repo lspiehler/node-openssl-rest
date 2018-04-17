@@ -30,9 +30,9 @@ router.get('/getCAs', function(req, res) {
 			})
 		} else if(err.code == 'ENOENT') {
 			// file does not exist
-			console.log('does not exist');
+			//console.log('does not exist');
 		} else {
-			console.log('Some other error: ', err.code);
+			//console.log('Some other error: ', err.code);
 		}
 	});
 });
@@ -259,24 +259,55 @@ router.post('/CASignCSR', function(req, res) {
 		fs.readFile(cadir + '/' + req.body.ca.path + '.key', function(err, key) {
 			//console.log(data);
 			fs.readFile(cadir + '/' + req.body.ca.path + '.crt', function(err, cacrt) {
-			//console.log(data);
-				openssl.CASignCSR(req.body.csr, req.body.options, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
-					if(err) {
-						var data = {
-							error: err,
-							cacrt: cacrt.toString(),
-							crt: crt,
-							command: cmd
-						}
+				fs.stat(cadir + '/' + req.body.ca.path + '.chain', function(err, stat) {
+					if(err == null) {
+						fs.readFile(cadir + '/' + req.body.ca.path + '.chain', function (err, chain) {
+							openssl.CASignCSR(req.body.csr, req.body.options, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
+								if(err) {
+									var data = {
+										error: err,
+										cacrt: cacrt.toString() + chain.toString(),
+										crt: crt,
+										command: cmd
+									}
+								} else {
+									var data = {
+										error: false,
+										cacrt: cacrt.toString() + chain.toString(),
+										crt: crt,
+										command: cmd
+									}
+								}
+								res.json(data);
+								//return;
+							});
+						})
+					} else if(err.code == 'ENOENT') {
+						// file does not exist
+						//console.log('does not exist');
+						openssl.CASignCSR(req.body.csr, req.body.options, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
+							if(err) {
+								var data = {
+									error: err,
+									cacrt: cacrt.toString(),
+									crt: crt,
+									command: cmd
+								}
+							} else {
+								var data = {
+									error: false,
+									cacrt: cacrt.toString(),
+									crt: crt,
+									command: cmd
+								}
+							}
+							res.json(data);
+							//return;
+						});
 					} else {
-						var data = {
-							error: false,
-							cacrt: cacrt.toString(),
-							crt: crt,
-							command: cmd
-						}
+						//console.log('Some other error: ', err.code);
 					}
-					res.json(data);
+					//console.log(data);
 				});
 			});
 		});
