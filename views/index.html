@@ -809,22 +809,29 @@
 							data.csr = response.csr;
 							data.options.days = getdays()
 							//console.log(parseInt(signvalue));
-							var certindex = parseInt(signvalue);
-							x509.cert.signingca = certindex;
-							var capassword = false;
-							if(generated[certindex].key.generated) {
-								if(generated[certindex].key.encryption) {
-									capassword = generated[certindex].key.encryption.password;
-								}
+							if(x509.ca.path) {
+								data.ca = {}
+								data.ca.path = x509.ca.path;
+								data.ca.keypass = x509.ca.keypass;
+								x509.cert.signingca = -1;
 							} else {
-								if(generated[certindex].key.password) {
-									capassword = generated[certindex].key.password;
+								var certindex = parseInt(signvalue);
+								x509.cert.signingca = certindex;
+								var capassword = false;
+								if(generated[certindex].key.generated) {
+									if(generated[certindex].key.encryption) {
+										capassword = generated[certindex].key.encryption.password;
+									}
+								} else {
+									if(generated[certindex].key.password) {
+										capassword = generated[certindex].key.password;
+									}
 								}
+								data.ca = {}
+								data.ca.key = generated[certindex].key.data;
+								data.ca.keypass = capassword;
+								data.ca.cert = generated[certindex].cert.data
 							}
-							data.ca = {}
-							data.ca.key = generated[certindex].key.data;
-							data.ca.keypass = capassword;
-							data.ca.cert = generated[certindex].cert.data
 							openSSLRESTAPI('CASignCSR', data, function(err, response) {
 								if(err) {
 									console.log(cer);
@@ -833,6 +840,10 @@
 									x509.cert.json = data;
 									x509.cert.command = response.command.command;
 									x509.cert.data = response.crt;
+									if(response.cacrt) {
+										x509.ca.data = response.cacrt;
+										x509.ca.keypass = null;
+									}
 									//var cer = document.getElementById('cer');
 									//cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
 									x509.cert.isca = checkCAAttributes(x509);
@@ -849,11 +860,71 @@
 				});
 			}
 			
+			function checkCAPassword(data, callback) {
+				var request = new XMLHttpRequest();
+				request.open('POST', 'api/openssl/checkCAKey', true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						callback(resp);
+						return;
+						//var key = document.getElementById('key');
+						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						//var csroptions = getCSRParams();
+						//generateCSR(resp.key, csroptions);
+					} else {
+						// We reached our target server, but it returned an error
+						callback(false);
+						return;
+					}
+				};
+
+				request.onerror = function() {
+					callback(false);
+					return;
+					// There was a connection error of some sort
+				};
+
+				request.send(JSON.stringify(data));
+			}
+			
 			function processForm() {
+				$( "#capassword" ).dialog("close");
+				var signcert = document.getElementById('signcert');
+				//console.log(signcert.options[signcert.selectedIndex].value[0]);
+				if(signcert.options[signcert.selectedIndex].innerText[0] == '*') {
+					var data = {
+						ca: signcert.options[signcert.selectedIndex].value.replace('* '),
+						password: document.getElementById('capasswordinput').value
+					}
+					checkCAPassword(data, function(result) {
+						if(result) {
+							$( "#capassword" ).dialog("close");
+							var x509 = new x509obj();
+							x509.ca = {};
+							x509.ca.keypass = document.getElementById('capasswordinput').value;
+							x509.ca.path = result.path;
+							document.getElementById('capasswordinput').value
+							processFormNext(x509);
+						} else {
+							$( "#capassword" ).dialog("open");
+						}
+					});
+					return false;
+				} else {
+					var x509 = new x509obj();
+					processFormNext(x509);
+				}
+			}
+			
+			function processFormNext(x509) {
 				$( "#dialog" ).dialog("close");
 				var keymethodinput = document.getElementById('keymethod');
 				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
-				var x509 = new x509obj();
+				//var x509 = new x509obj();
 				//x509.key.generated = false;
 				if(keymethod=='PKCS1' || keymethod=='PKCS8') {
 					var keyoptions = getKeyParams();
@@ -985,6 +1056,16 @@
 						certindex = generated[certindex].cert.signingca;
 					}
 				}
+				
+				if(generated[index].ca) {
+					var cert = document.createElement('textarea');
+					cert.name = "dataca"
+					cert.innerHTML = generated[index].ca.data;
+					cert.style.display = "none";
+					remove.push(cert);
+					form.appendChild(cert);
+				}
+				
 				form.submit();
 				
 				for(var i = 0; i <= remove.length - 1; i++) {
@@ -1348,6 +1429,58 @@
 			function ipAPI(callback) {
 				var request = new XMLHttpRequest();
 				request.open('GET', 'https://ipapi.co//json/', true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						if(resp.reserved) {
+							callback(resp, resp);
+						} else {
+							callback(false, resp);
+						}
+						return;
+						//var key = document.getElementById('key');
+						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						//var csroptions = getCSRParams();
+						//generateCSR(resp.key, csroptions);
+					} else {
+						// We reached our target server, but it returned an error
+						callback(resp, false);
+						return;
+					}
+				};
+
+				request.onerror = function() {
+					callback(true, false);
+					return;
+					// There was a connection error of some sort
+				};
+
+				request.send();
+			}
+			
+			function listCAs() {
+				getCAs(function(err, resp) {
+					if(err) {
+						console.log(err);
+					} else {
+						let cas = document.getElementById('signcert');
+						for(var i = 0; i <= resp.length - 1; i++) {
+							let option = document.createElement('option');
+							option.value = resp[i];
+							option.innerText = '* ' + resp[i];
+							cas.add(option);
+						}
+						//console.log(resp);
+					}
+				});
+			}
+			
+			function getCAs(callback) {
+				var request = new XMLHttpRequest();
+				request.open('GET', 'api/openssl/getCAs', true);
 				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
 				
 				request.onload = function() {
@@ -1973,6 +2106,26 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				</tr>
 			</table>
 		</div>
+		<div id="capassword" title="CA Password">
+			<p>Enter the password for the selected certificate authority</p>
+			<table>
+				<tr>
+					<td>Password:</td>
+					<td>&nbsp;</td>
+					<td>
+						<input id="capasswordinput" type="password" class="form-control" />
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td align="center" colspan="3">
+						<button class="btn btn-primary" onclick="processForm();" type="button">Submit</button>
+					</td>
+				</tr>
+			</table>
+		</div>
 		<div id="pkcs12dialog" title="Encrypt PKCS#12 Certificate">
 			<p>The private key is included in the PKCS#12 format certificate. Enter a password if you'd like to encrypt it, or click cancel to proceed without a password.</p>
 			<table>
@@ -2080,6 +2233,10 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				modal: true,
 				autoOpen: false
 			});
+			$( "#capassword" ).dialog({
+				modal: true,
+				autoOpen: false
+			});
 			$( function() {
 				var browserwidth = document.body.offsetWidth;
 				var width = 600;
@@ -2099,6 +2256,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			var signcert = document.getElementById('signcert');
 			toggleSelfSign(signcert);
 			togglePathLen(true);
+			listCAs();
 			populateSubject();
 		</script>
 		<form id="downloadtext"></form>

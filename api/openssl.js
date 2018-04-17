@@ -3,12 +3,39 @@ router = express.Router();
 var openssl = require('../lib/openssl.js');
 var multer  = require('multer')
 var upload = multer();
+var fs = require('fs');
+var cadir = './ca';
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
 	rsa_keygen_pubexp: 65537,
 	format: 'PKCS8'
 }*/
+
+router.get('/getCAs', function(req, res) {
+	let CAs = [];
+	fs.stat(cadir, function(err, stat) {
+		if(err == null) {
+			fs.readdir(cadir, function (err, files) {
+				files.forEach(file => {
+					let splitfile = file.split('.');
+					//console.log(file);
+					//console.log(splitfile[splitfile.length - 1]);
+					if(splitfile[splitfile.length - 1].toUpperCase()=='CRT') {
+						splitfile.pop()
+						CAs.push(splitfile.join(''));
+					}
+				});
+				res.json(CAs);
+			})
+		} else if(err.code == 'ENOENT') {
+			// file does not exist
+			console.log('does not exist');
+		} else {
+			console.log('Some other error: ', err.code);
+		}
+	});
+});
 
 router.post('/getCertFromNetwork', function(req, res) {
 	var netcertoptions = req.body;
@@ -126,6 +153,32 @@ router.post('/uploadPrivateKey', upload.single('file'), function(req, res) {
 	});
 });
 
+router.post('/checkCAKey', function(req, res) {
+	//console.log(req.file);
+	if(req.body.password=='false' || req.body.password==false) {
+		var password = false;
+	} else {
+		var password = req.body.password;
+	}
+	var capath = req.body.ca;
+	fs.readFile(cadir + '/' + capath + '.key', function(err, data) {
+		//console.log(data);
+		openssl.importRSAPrivateKey(data, password, function(err, key, cmd) {
+			//console.log(key);
+			if(err) {
+				var data = false;
+			} else {
+				var data = {
+					path: capath
+				}
+			}
+			res.send(data);
+		});
+	});
+	//var username = req.body.username;
+	//var password = req.body.password;
+});
+
 router.post('/generateRSAPrivateKey', function(req, res) {
 	var rsakeyoptions = req.body;
 	//var username = req.body.username;
@@ -200,31 +253,58 @@ router.post('/selfSignCSR', function(req, res) {
 });
 
 router.post('/CASignCSR', function(req, res) {
-	var key = req.body.key;
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
-	var csr = req.body.csr;
-	//console.log(req.body);
-	//res.json(req.body);
-	//return;
-	//var username = req.body.username;
-	//var password = req.body.password;
-	openssl.CASignCSR(req.body.csr, req.body.options, req.body.ca.cert ,req.body.ca.key, req.body.ca.keypass, function(err, crt, cmd) {
-		if(err) {
-			var data = {
-				error: err,
-				crt: crt,
-				command: cmd
+	if(req.body.ca.path) {
+		fs.readFile(cadir + '/' + req.body.ca.path + '.key', function(err, key) {
+			//console.log(data);
+			fs.readFile(cadir + '/' + req.body.ca.path + '.crt', function(err, cacrt) {
+			//console.log(data);
+				openssl.CASignCSR(req.body.csr, req.body.options, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
+					if(err) {
+						var data = {
+							error: err,
+							cacrt: cacrt.toString(),
+							crt: crt,
+							command: cmd
+						}
+					} else {
+						var data = {
+							error: false,
+							cacrt: cacrt.toString(),
+							crt: crt,
+							command: cmd
+						}
+					}
+					res.json(data);
+				});
+			});
+		});
+	} else {
+		var key = req.body.key;
+		var csr = req.body.csr;
+		//console.log(req.body);
+		//res.json(req.body);
+		//return;
+		//var username = req.body.username;
+		//var password = req.body.password;
+		openssl.CASignCSR(req.body.csr, req.body.options, req.body.ca.cert ,req.body.ca.key, req.body.ca.keypass, function(err, crt, cmd) {
+			if(err) {
+				var data = {
+					error: err,
+					crt: crt,
+					command: cmd
+				}
+			} else {
+				var data = {
+					error: false,
+					crt: crt,
+					command: cmd
+				}
 			}
-		} else {
-			var data = {
-				error: false,
-				crt: crt,
-				command: cmd
-			}
-		}
-		res.json(data);
-	});
+			res.json(data);
+		});
+	}
 });
 
 router.post('/pasteKey', function(req, res) {
