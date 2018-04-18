@@ -1200,7 +1200,7 @@
 				$( "#pkcs12dialog" ).dialog( "open" );
 			}
 			
-			function x509Accordion(x509, index) {
+			function x509Accordion(x509, index, active) {
 				var x509body = document.createElement('div');
 				x509body.className = 'accordion';
 				//var keydiv = document.createElement('div');
@@ -1254,7 +1254,7 @@
 				
 				$( x509body ).accordion({
 					collapsible: true,
-					active: 0,
+					active: active,
 					heightStyle: 'content'
 				});
 				
@@ -1270,6 +1270,7 @@
 					
 				} else {
 					var output = document.getElementById('output');
+					let active = 0;
 					if(output.childNodes.length <= 0) {
 						var accordiondiv = document.createElement('div');
 						accordiondiv.id = 'accordionoutput';
@@ -1281,10 +1282,11 @@
 								title.innerText = 'Certificate ' + index;
 							}
 						} else {
+							active = 3;
 							title.innerText = 'Certificate Signing Request ' + index;
 						}
 						let body = document.createElement('div');
-						let csr = x509Accordion(x509, index);
+						let csr = x509Accordion(x509, index, active);
 						body.appendChild(csr);
 						accordiondiv.appendChild(title);
 						accordiondiv.appendChild(body);
