@@ -1317,8 +1317,9 @@
 							}
 						} else {
 							$( "<h3>Certificate Signing Request " + index + "</h3>" ).appendTo( "#accordionoutput" );
+							active = 3;
 						}
-						$( x509Accordion(x509, index) ).appendTo( "#accordionoutput" );
+						$( x509Accordion(x509, index, active) ).appendTo( "#accordionoutput" );
 						//$( "<div>" + x509.key.data + "</div>" ).appendTo( "#accordionoutput" );
 						$( "#accordionoutput" ).accordion( "refresh" );
 						$( "#accordionoutput" ).accordion( "option", "active", -1 );
