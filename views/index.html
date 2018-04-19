@@ -907,7 +907,7 @@
 							x509.ca = {};
 							x509.ca.keypass = document.getElementById('capasswordinput').value;
 							x509.ca.path = result.path;
-							document.getElementById('capasswordinput').value
+							document.getElementById('capasswordinput').value = '';
 							processFormNext(x509);
 						} else {
 							$( "#capassword" ).dialog("open");
