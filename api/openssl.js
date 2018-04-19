@@ -4,7 +4,7 @@ var openssl = require('../lib/openssl.js');
 var multer  = require('multer')
 var upload = multer();
 var fs = require('fs');
-var cadir = './ca';
+var config = require('../config.js')
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
@@ -12,27 +12,50 @@ var cadir = './ca';
 	format: 'PKCS8'
 }*/
 
+var getCADir = function(req) {
+	let cadir;
+	//console.log(req.headers);
+	if(config.caIPDir) {
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress.replace(/:/g,'-');
+		cadir = './ca/' + ip;
+		return cadir;
+	} else {
+		cadir = './ca/global';
+		return cadir;
+	}
+}
+
 router.get('/getCAs', function(req, res) {
 	let CAs = [];
+	let cadir = getCADir(req);
+	console.log(cadir);
 	fs.stat(cadir, function(err, stat) {
 		if(err == null) {
 			fs.readdir(cadir, function (err, files) {
 				files.forEach(file => {
-					let splitfile = file.split('.');
+					//let splitfile = file.split('.');
 					//console.log(file);
 					//console.log(splitfile[splitfile.length - 1]);
-					if(splitfile[splitfile.length - 1].toUpperCase()=='CRT') {
-						splitfile.pop()
-						CAs.push(splitfile.join(''));
+					//if(splitfile[splitfile.length - 1].toUpperCase()=='CRT') {
+					//console.log(file.substring(0, 2));
+					if(fs.statSync(cadir + '/' + file).isDirectory()) {
+						CAs.push(file);
 					}
+					//if(file.isDirectory()) {	
+						//splitfile.pop()
+					//	CAs.push(file.join(''));
+					//}
 				});
 				res.json(CAs);
+				return;
 			})
 		} else if(err.code == 'ENOENT') {
 			// file does not exist
 			//console.log('does not exist');
+			res.json(false);
 		} else {
 			//console.log('Some other error: ', err.code);
+			res.json(false);
 		}
 	});
 });
@@ -155,13 +178,14 @@ router.post('/uploadPrivateKey', upload.single('file'), function(req, res) {
 
 router.post('/checkCAKey', function(req, res) {
 	//console.log(req.file);
+	let cadir = getCADir(req);
 	if(req.body.password=='false' || req.body.password==false) {
 		var password = false;
 	} else {
 		var password = req.body.password;
 	}
 	var capath = req.body.ca;
-	fs.readFile(cadir + '/' + capath + '.key', function(err, data) {
+	fs.readFile(cadir + '/' + capath + '/' + capath + '.key', function(err, data) {
 		//console.log(data);
 		openssl.importRSAPrivateKey(data, password, function(err, key, cmd) {
 			//console.log(key);
@@ -255,13 +279,14 @@ router.post('/selfSignCSR', function(req, res) {
 router.post('/CASignCSR', function(req, res) {
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
+	let cadir = getCADir(req);
 	if(req.body.ca.path) {
-		fs.readFile(cadir + '/' + req.body.ca.path + '.key', function(err, key) {
+		fs.readFile(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.key', function(err, key) {
 			//console.log(data);
-			fs.readFile(cadir + '/' + req.body.ca.path + '.crt', function(err, cacrt) {
-				fs.stat(cadir + '/' + req.body.ca.path + '.chain', function(err, stat) {
+			fs.readFile(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.crt', function(err, cacrt) {
+				fs.stat(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.chain', function(err, stat) {
 					if(err == null) {
-						fs.readFile(cadir + '/' + req.body.ca.path + '.chain', function (err, chain) {
+						fs.readFile(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.chain', function (err, chain) {
 							openssl.CASignCSR(req.body.csr, req.body.options, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
 								if(err) {
 									var data = {
@@ -357,6 +382,66 @@ router.post('/pasteKey', function(req, res) {
 			}
 		}
 		res.json(data);
+	});
+});
+
+var createCADir = function(cadir, param) {
+	try {
+		if(fs.statSync(cadir + '/' + param.name)) {
+			console.log('CA Name Exists.');
+			return true;
+		}
+		//fs.mkdirSync(cadir + '/' + param.name);
+	} catch(e) {
+		//this should happen because the file shouldn't exist
+		//console.log(e);
+		//return true;
+	}
+	fs.mkdirSync(cadir + '/' + param.name);
+	fs.writeFile(cadir + '/' + param.name + '/' + param.name + '.key', param.key, function(err) {
+		if(err) {
+			return true;
+		} else {
+			fs.writeFile(cadir + '/' + param.name + '/' + param.name + '.crt', param.cert, function(err) {
+				if(err) {
+					return true;
+				} else {
+					fs.writeFile(cadir + '/' + param.name + '/' + param.name + '.chain', param.chain, function(err) {
+						if(err) {
+							return true;
+						} else {
+							return false;
+						}
+					});
+				}
+			});
+		}
+	});
+}
+
+router.post('/saveCA', function(req, res) {
+	//console.log(req.body);
+	let cadir = getCADir(req);
+	var name = req.body.name;
+	var key = req.body.key;
+	var cert = req.body.cert;
+	var chain = req.body.chain;
+	var response = {
+		error: false,
+		data: req.body
+	}
+	fs.stat(cadir, function(err, stat) {
+		if(err == null) {
+			response.error = createCADir(cadir, req.body);
+			res.json(response);
+		} else if(err.code == 'ENOENT') {
+			fs.mkdirSync(cadir);
+			response.error = createCADir(cadir, req.body);
+			res.json(response);
+		} else {
+			//console.log('Some other error: ', err.code);
+			//res.json(false);
+		}
 	});
 });
 

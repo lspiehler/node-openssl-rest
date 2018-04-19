@@ -6,8 +6,8 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-		<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 		<style>
 			.list-group-item {
 				padding: 3px 10px;
@@ -1030,6 +1030,88 @@
 				form.removeChild(filenameinput);
 			}
 			
+			function nameCA(index) {
+				var caindex = document.getElementById('caindex');
+				caindex.value = index;
+				$( "#saveca" ).dialog( "open" );
+			}
+			
+			function saveCA() {
+				var caindex = document.getElementById('caindex');
+				
+				var chain = true;
+				var certindex = caindex.value;
+				var loop = 0;
+				var cert;
+				var cachain = [];
+				while(chain) {
+					//var cert = document.createElement('textarea');
+					//cert.name = "data" + certindex
+					//cert.innerHTML = generated[certindex].cert.data;
+					//cert.style.display = "none";
+					//remove.push(cert);
+					//form.appendChild(cert);
+					if(generated[certindex].cert.signingca < 0) {
+						chain = false;
+					} else {
+						certindex = generated[certindex].cert.signingca;
+					}
+					if(loop==0) {
+						cert = generated[certindex].cert.data;
+					} else {
+						cachain.push(generated[certindex].cert.data);
+					}
+					loop++;
+				}
+				
+				if(generated[caindex.value].ca) {
+					/*var cert = document.createElement('textarea');
+					cert.name = "dataca"
+					cert.innerHTML = generated[index].ca.data;
+					cert.style.display = "none";
+					remove.push(cert);
+					form.appendChild(cert);*/
+					cachain.push(generated[certindex].ca.data);
+				}
+				//console.log(generated[certindex].key.data);
+				//console.log(cert);
+				let rootchain;
+				if(cachain.length > 0) {
+					rootchain = cachain.join('');
+				} else {
+					rootchain = false;
+				}
+				var caname = document.getElementById('caname');
+				fileName = caname.value.replace(/[^ A-Za-z0-9\\-]/, "");
+				var data = {
+					name: fileName,
+					key: generated[certindex].key.data,
+					cert: cert,
+					chain: rootchain
+				}
+				openSSLRESTAPI('saveCA', data, function(error, response) {
+					if(error) {
+						alert('This name already exists on the server.');
+					} else {
+						$( "#saveca" ).dialog( "close" );
+						updateCAName(caindex.value, data);
+					}
+				});
+			}
+			
+			function updateCAName(index, data) {
+				var signcert = document.getElementById('signcert');
+				console.log(signcert.options);
+				for(var i = 0; i <= signcert.options.length - 1; i++) {
+					console.log(index);
+					if(signcert.options[i].value==index) {
+						//console.log('match');
+						signcert.options[i].value = data.name;
+						signcert.options[i].innerText = '* ' + data.name;
+					}
+				}
+			}
+			
 			function downloadPKCS7(index) {
 				//alert(text);
 				var form = document.getElementById('downloadtext');
@@ -1183,6 +1265,16 @@
 					pkcs7download.innerText = 'PKCS#7 Certificate(s)';
 					div.appendChild(document.createElement('br'));
 					div.appendChild(pkcs7download);
+					
+					if(x509.cert.isca) {
+						var saveca = document.createElement('a');
+						saveca.href = 'javascript: nameCA(' + index + ');';
+						saveca.innerText = 'Make this CA Persistent';
+						saveca.title = 'This will save a copy of the CA on the server so you can sign more certificates with it later.';
+						div.appendChild(document.createElement('br'));
+						div.appendChild(document.createElement('br'));
+						div.appendChild(saveca);
+					}
 				}
 				
 				return div;
@@ -2109,6 +2201,26 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				</tr>
 			</table>
 		</div>
+		<div id="saveca" title="Save Certificate Authority">
+			<p>Enter a name for this certificate authority</p>
+			<table>
+				<tr>
+					<td>Name:</td>
+					<td>&nbsp;</td>
+					<td>
+						<input id="caname" type="text" class="form-control" /><input type="hidden" id="caindex" />
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td align="center" colspan="3">
+						<button class="btn btn-primary" onclick="saveCA();" type="button">Submit</button>
+					</td>
+				</tr>
+			</table>
+		</div>
 		<div id="capassword" title="CA Password">
 			<p>Enter the password for the selected certificate authority</p>
 			<table>
@@ -2237,6 +2349,10 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				autoOpen: false
 			});
 			$( "#capassword" ).dialog({
+				modal: true,
+				autoOpen: false
+			});
+			$( "#saveca" ).dialog({
 				modal: true,
 				autoOpen: false
 			});
