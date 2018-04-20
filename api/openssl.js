@@ -257,8 +257,8 @@ var usageData = function(data) {
 		
 		let mailOptions = config.nodemailermailoptions
 		
-		mailOptions.html = JSON.stringify(data);
-		mailOptions.text = JSON.stringify(data);
+		//mailOptions.html = JSON.stringify(data, null, 4);
+		mailOptions.text = JSON.stringify(data, null, 4);
 		
 		transporter.sendMail(mailOptions, (error, info) => {
 			if (error) {
