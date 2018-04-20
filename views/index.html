@@ -755,6 +755,7 @@
 				//console.log(generated);
 				//var keyinput = document.getElementById('key');
 				//keyinput.innerText = keyresponse.command + '\r\n\r\n' + keyresponse.key;
+				var signvalue = signcert.options[signcert.options.selectedIndex].value;
 				var csroptions = getCSRParams();
 				if(!csroptions) {
 					return false;
@@ -762,7 +763,8 @@
 				var data = {
 					options: csroptions,
 					key: keyresponse.key,
-					keypass: getKeyPassword()
+					keypass: getKeyPassword(),
+					sign: signvalue
 				}
 				openSSLRESTAPI('generateCSR', data, function(error, response) {
 					if(error) {
@@ -780,7 +782,6 @@
 						//var csr = document.getElementById('csr');
 						//csr.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.csr;
 						var signcert = document.getElementById('signcert');
-						var signvalue = signcert.options[signcert.options.selectedIndex].value
 						if(signvalue=="selfsign") {
 							data.csr = response.csr;
 							data.options.days = getdays();

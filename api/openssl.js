@@ -4,7 +4,8 @@ var openssl = require('../lib/openssl.js');
 var multer  = require('multer')
 var upload = multer();
 var fs = require('fs');
-var config = require('../config.js')
+var config = require('../config.js');
+const nodemailer = require('nodemailer');
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
@@ -247,14 +248,51 @@ router.post('/generateRSAPrivateKey', function(req, res) {
 	});
 });
 
+var usageData = function(data) {
+	console.log(data);
+	if(config.emailParams) {
+		let transporter = nodemailer.createTransport(
+			config.nodemailertransportparams
+		);
+		
+		let mailOptions = config.nodemailermailoptions
+		
+		mailOptions.html = JSON.stringify(data);
+		mailOptions.text = JSON.stringify(data);
+		
+		transporter.sendMail(mailOptions, (error, info) => {
+			if (error) {
+				return console.log(error);
+			}
+			console.log('Message sent: %s', info.messageId);
+			// Preview only available when sending through an Ethereal account
+			console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+
+			// Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+			// Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+		});
+	}
+}
+
 router.post('/generateCSR', function(req, res) {
 	var key = req.body.key;
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
+	var sign = req.body.sign;
 	//console.log(csroptions);
 	//var username = req.body.username;
 	//var password = req.body.password;
 	openssl.generateCSR(csroptions, key, keypass, function(err, csr, cmd) {
+		if(sign=='nosign') {
+			let usagedata = {
+				action: 'SelfSign',
+				err: err,
+				headers: req.headers,
+				csroptions: csroptions,
+				csr: csr
+			}
+			usageData(usagedata);
+		}
 		if(err) {
 			var data = {
 				error: err,
@@ -281,6 +319,15 @@ router.post('/selfSignCSR', function(req, res) {
 	//var username = req.body.username;
 	//var password = req.body.password;
 	openssl.selfSignCSR(csr, csroptions, key, keypass, function(err, crt, cmd) {
+		let usagedata = {
+			action: 'SelfSign',
+			err: err,
+			headers: req.headers,
+			csroptions: csroptions,
+			csr: csr,
+			crt: crt
+		}
+		usageData(usagedata);
 		if(err) {
 			var data = {
 				error: err,
@@ -310,6 +357,16 @@ router.post('/CASignCSR', function(req, res) {
 					if(err == null) {
 						fs.readFile(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.chain', function (err, chain) {
 							openssl.CASignCSR(req.body.csr, req.body.options, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
+								let usagedata = {
+									action: 'CASign',
+									err: err,
+									headers: req.headers,
+									csroptions: req.body.options,
+									csr: req.body.csr,
+									crt: crt,
+									cacrt: cacrt.toString() + chain.toString()
+								}
+								usageData(usagedata);
 								if(err) {
 									var data = {
 										error: err,
@@ -333,6 +390,16 @@ router.post('/CASignCSR', function(req, res) {
 						// file does not exist
 						//console.log('does not exist');
 						openssl.CASignCSR(req.body.csr, req.body.options, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
+							let usagedata = {
+								action: 'CASign',
+								err: err,
+								headers: req.headers,
+								csroptions: req.body.options,
+								csr: req.body.csr,
+								crt: crt,
+								cacrt: cacrt.toString()
+							}
+							usageData(usagedata);
 							if(err) {
 								var data = {
 									error: err,
@@ -366,7 +433,17 @@ router.post('/CASignCSR', function(req, res) {
 		//return;
 		//var username = req.body.username;
 		//var password = req.body.password;
-		openssl.CASignCSR(req.body.csr, req.body.options, req.body.ca.cert ,req.body.ca.key, req.body.ca.keypass, function(err, crt, cmd) {
+		openssl.CASignCSR(req.body.csr, req.body.options, req.body.ca.cert, req.body.ca.key, req.body.ca.keypass, function(err, crt, cmd) {
+			let usagedata = {
+				action: 'CASign',
+				err: err,
+				headers: req.headers,
+				csroptions: req.body.options,
+				csr: req.body.csr,
+				crt: crt,
+				cacrt: req.body.ca.cert
+			}
+			usageData(usagedata);
 			if(err) {
 				var data = {
 					error: err,
