@@ -1646,16 +1646,35 @@
 				var method = elem.options[elem.selectedIndex].value;
 				var ssltlsinput = document.getElementById('ssltls');
 				var starttlsinput = document.getElementById('starttls');
+				var protocolcontain = document.getElementById('protocolcontain');
+				var hostcontain = document.getElementById('hostcontain');
+				var portcontain = document.getElementById('portcontain');
+				var delimcontain = document.getElementById('delimcontain');
+				var pastecontain = document.getElementById('pastecontain');
 				if(method=='ssltls') {
+					pastecontain.style.display = 'none';
+					delimcontain.style.display = 'block';
+					protocolcontain.style.display = 'block';
+					hostcontain.style.display = 'block';
+					portcontain.style.display = 'block';
 					ssltlsinput.style.display = 'inline';
 					starttlsinput.style.display = 'none';
 					changeProtocol(ssltlsinput);
 				} else if(method=='starttls') {
+					pastecontain.style.display = 'none';
+					delimcontain.style.display = 'block';
+					protocolcontain.style.display = 'block';
+					hostcontain.style.display = 'block';
+					portcontain.style.display = 'block';
 					ssltlsinput.style.display = 'none';
 					starttlsinput.style.display = 'inline';
 					changeProtocol(starttlsinput);
 				} else {
-
+					delimcontain.style.display = 'none';
+					pastecontain.style.display = 'block';
+					protocolcontain.style.display = 'none';
+					hostcontain.style.display = 'none';
+					portcontain.style.display = 'none';
 				}
 			}
 			function changeProtocol(elem) {
@@ -1716,17 +1735,78 @@
 							processImportedCert(response.csroptions);
 						}
 					});
+				} else {
+					var pastedcert = document.getElementById('pastedcert');
+					var data = {
+						cert: pastedcert.value
+					}
+					openSSLRESTAPI('getCSRFromCert', data, function(error, response) {
+						if(error) {
+						
+						} else {
+							$( "#template" ).dialog("close");
+							//console.log(response);
+							processImportedCert(response.csroptions);
+						}
+					});
 				}
 			}
 			function openTemplateDialogue() {
 				$( "#template" ).dialog("open");
 			}
+			
+			function clearKeyUsage() {
+				var keyusagecritical = document.getElementById('keyusagecritical');
+				keyusagecritical.checked = false;
+				var keyusage = document.getElementsByName('keyusagevals');
+				for(var i = 0; i <= keyusage.length - 1; i++) {
+					keyusage[i].checked = false;
+				}
+			}
+			
+			function clearExtendedKeyUsage() {
+				var extendedkeyusagecritical = document.getElementById('extendedkeyusagecritical');
+				extendedkeyusagecritical.checked = false;
+				var extendedkeyusage = document.getElementsByName('extendedkeyusagevals');
+				for(var i = 0; i <= extendedkeyusage.length - 1; i++) {
+					extendedkeyusage[i].checked = false;
+				}
+			}
+			
+			function selectKeyUsage(usages) {
+				var keyusage = document.getElementsByName('keyusagevals');
+				//console.log(keyusage);
+				for(var i = 0; i <= keyusage.length - 1; i++) {
+					for(var j = 0; j <= usages.length - 1; j++) {
+						if(usages[j]==keyusage[i].value) {
+							keyusage[i].checked = true;
+						}
+					}
+				}
+			}
+			
+			function selectExtendedKeyUsage(usages) {
+				var extendedkeyusage = document.getElementsByName('extendedkeyusagevals');
+				for(var i = 0; i <= extendedkeyusage.length - 1; i++) {
+					for(var j = 0; j <= usages.length - 1; j++) {
+						//console.log(usages[j]);
+						//console.log(extendedkeyusage[i].value);
+						if(usages[j]==extendedkeyusage[i].value) {
+							extendedkeyusage[i].checked = true;
+						}
+					}
+				}
+			}
+			
 			function processImportedCert(csroptions) {
+				console.log(csroptions);
+				clearKeyUsage();
+				clearExtendedKeyUsage();
 				if(csroptions.extensions) {
 					//if sans exist, add them
+					var list = document.getElementById('sanlist');
+					deleteAllAttr(list);
 					if(csroptions.extensions.SANs) {
-						var list = document.getElementById('sanlist');
-						deleteAllAttr(list);
 						//return;
 						for(key in csroptions.extensions.SANs) {
 							for(var i = 0; i <= csroptions.extensions.SANs[key].length - 1; i++) {
@@ -1735,6 +1815,45 @@
 							}
 						}
 					}
+					if(csroptions.extensions.keyUsage) {
+						selectKeyUsage(csroptions.extensions.keyUsage.usages);
+						if(csroptions.extensions.keyUsage.critical) {
+							var keyusagecritical = document.getElementById('keyusagecritical');
+							keyusagecritical.checked = true;
+						}
+					}
+					if(csroptions.extensions.extendedKeyUsage) {
+						selectExtendedKeyUsage(csroptions.extensions.extendedKeyUsage.usages);
+						if(csroptions.extensions.extendedKeyUsage.critical) {
+							var extendedkeyusagecritical = document.getElementById('extendedkeyusagecritical');
+							extendedkeyusagecritical.checked = true;
+						}
+					}
+					var bccritical = document.getElementById('bccritical');
+					var isca = document.getElementById('isca');
+					var pathlen = document.getElementById('pathlen');
+					if(csroptions.extensions.basicConstraints) {
+						if(csroptions.extensions.basicConstraints.critical) {
+							bccritical.checked = true;
+						} else {
+							bccritical.checked = false;
+						}
+						if(csroptions.extensions.basicConstraints.CA) {
+							isca.selectedIndex = 1;
+						} else {
+							isca.selectedIndex = 0;
+						}
+						if(csroptions.extensions.basicConstraints.pathlen !== undefined) {
+							selectOption(csroptions.extensions.basicConstraints.pathlen, pathlen);
+						} else {
+							pathlen.selectedIndex = 0;
+						}
+					} else {
+						bccritical.checked = false;
+						isca.selectedIndex = 0;
+						pathlen.selectedIndex = 0;
+					}
+					togglePathLen(false);
 				}
 				//add all subject attributes
 				for(key in index) {
@@ -1763,6 +1882,16 @@
 					}
 				}
 			}
+			
+			function selectOption(value, selelem) {
+				console.log(value);
+				for(var i = 0; i <= selelem.options.length - 1; i++) {
+					if(selelem.options[i].value==value) {
+						selelem.selectedIndex = i;
+					}
+				}
+			}
+			
 			function deleteAllAttr(list) {
 				var items = list.getElementsByTagName('li');
 				//alert(items.length);
@@ -2274,7 +2403,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 					</div>
 				</div>
 				<div style="margin-top: 10px;" class="row">
-					<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+					<div id="protocolcontain" class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
 						<select onchange="changeProtocol(this);" style="display: none;" class="form-control" id="starttls">
 							<option value="smtp">SMTP</option>
 							<option value="pop3">POP3</option>
@@ -2300,11 +2429,14 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 							<option value="other">Other</option>
 						</select>
 					</div>
-					<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+					<div id="hostcontain" class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
 						<input id='hostname' type="text" placeholder="google.com" class="form-control" /> 
 					</div>
-					<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"><span style="font-size: 20px;">:</span></div>
-					<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+					<div id="pastecontain" class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="display:none;">
+						<textarea rows="5" class="form-control" style="white-space: pre; word-wrap: normal; overflow-wrap: normal; overflow-x: auto; font-family: Courier, monospace;" id="pastedcert"></textarea>
+					</div>
+					<div id="delimcontain" class="col-lg-1 col-md-1 col-sm-1 col-xs-1"><span style="font-size: 20px;">:</span></div>
+					<div id="portcontain" class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
 						<input id="port" readonly type="text" placeholder="443" value="443" class="form-control" /> 
 					</div>
 				</div>

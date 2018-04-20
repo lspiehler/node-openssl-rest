@@ -97,6 +97,28 @@ router.post('/getCertFromNetwork', function(req, res) {
 	});
 });
 
+router.post('/getCSRFromCert', function(req, res) {
+	var cert = req.body.cert;
+	openssl.convertCertToCSR(cert, function(err,csroptions,cmd) {
+		//command.push(cmd);
+		if(err) {
+			var data = {
+				error: err,
+				csroptions: csroptions,
+				command: cmd
+			}
+		} else {
+			var data = {
+				error: err,
+				csroptions: csroptions,
+				command: cmd
+			}
+		}
+		//console.log(data);
+		res.json(data);
+	});
+});
+
 router.post('/returnDownload', function(req, res) {
 	//console.log(req.body);
 	var mimetype;
