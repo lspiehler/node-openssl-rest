@@ -322,6 +322,8 @@
 					mainspan.style.display = 'block';
 					var titlespan = document.createElement('span');
 					titlespan.innerText = ' ' + index[key]['title'];
+					var label = document.createElement('label');
+					label.className = 'checkbox-inline';
 					var input = document.createElement('input');
 					if(index[key]['enabled']) {
 						addSubjectAttr(key, true);
@@ -342,8 +344,10 @@
 							hideSubjectAttr(e.target.value)
 						}
 					});
-					mainspan.appendChild(input);
-					mainspan.appendChild(titlespan);
+					label.appendChild(input);
+					label.appendChild(titlespan);
+					mainspan.appendChild(label);
+					//mainspan.appendChild(titlespan);
 					addremove.appendChild(mainspan);
 				}
 			}
@@ -551,8 +555,11 @@
 						}
 					} else {
 						var input = document.getElementById(index[key]['input']);
+						let enabled = document.getElementById(key + 'check');
 						if(input.value != '') {
-							attr.push(input.value);
+							if(enabled.checked) {
+								attr.push(input.value);
+							}
 						}
 					}
 					if(attr.length > 1) {
