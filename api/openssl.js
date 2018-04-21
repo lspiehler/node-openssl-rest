@@ -356,7 +356,9 @@ router.post('/CASignCSR', function(req, res) {
 				fs.stat(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.chain', function(err, stat) {
 					if(err == null) {
 						fs.readFile(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.chain', function (err, chain) {
-							openssl.CASignCSR(req.body.csr, req.body.options, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
+							var serial = cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.srl';
+							var serialpath = process.cwd() + serial.substr(1, serial.length);
+							openssl.CASignCSR(req.body.csr, req.body.options, serialpath, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
 								let usagedata = {
 									action: 'CASign',
 									err: err,
@@ -389,7 +391,9 @@ router.post('/CASignCSR', function(req, res) {
 					} else if(err.code == 'ENOENT') {
 						// file does not exist
 						//console.log('does not exist');
-						openssl.CASignCSR(req.body.csr, req.body.options, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
+						var serial = cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.srl';
+						var serialpath = process.cwd() + serial.substr(1, serial.length);
+						openssl.CASignCSR(req.body.csr, req.body.options, serialpath, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
 							let usagedata = {
 								action: 'CASign',
 								err: err,
@@ -433,7 +437,7 @@ router.post('/CASignCSR', function(req, res) {
 		//return;
 		//var username = req.body.username;
 		//var password = req.body.password;
-		openssl.CASignCSR(req.body.csr, req.body.options, req.body.ca.cert, req.body.ca.key, req.body.ca.keypass, function(err, crt, cmd) {
+		openssl.CASignCSR(req.body.csr, req.body.options, false, req.body.ca.cert, req.body.ca.key, req.body.ca.keypass, function(err, crt, cmd) {
 			let usagedata = {
 				action: 'CASign',
 				err: err,

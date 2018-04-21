@@ -842,7 +842,7 @@
 							}
 							openSSLRESTAPI('CASignCSR', data, function(err, response) {
 								if(err) {
-									console.log(cer);
+									console.log(response);
 								} else {
 									x509.cert.config = response.command.files.config;
 									x509.cert.json = data;
@@ -1090,7 +1090,7 @@
 					rootchain = false;
 				}
 				var caname = document.getElementById('caname');
-				fileName = caname.value.replace(/[^ A-Za-z0-9\\-]/, "");
+				fileName = caname.value.replace(/[^A-Za-z0-9\-_]/g, "");
 				var data = {
 					name: fileName,
 					key: generated[certindex].key.data,
