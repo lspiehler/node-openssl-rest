@@ -2455,6 +2455,52 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				</div>
 			</div>
 		</div>
+		<div class="modal fade" id="features" role="dialog">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Welcome</h4>
+					</div>
+					<div class="modal-body">
+						<h4>Welcome to the new certificatetools.com UI. Here are a few things the new tool can do:</h4>
+						<ul>
+							<li>Generate certificate signing requests (CSR)</li>
+							<li>Supports multiple common names and subject alternative names</li>
+							<li>Generate self-signed certificates</li>
+							<li>Generate RSA Keys in multiple formats with optional encryption</li>
+							<li>Import existing RSA keys by pasting or uploading</li>
+							<li>Use an existing certificate as a template by pasting it or automatically downloading it via SSL or STARTTLS</li>
+							<li>See all OpenSSL commands and configurations so that you can do everything offline</li>
+							<li>Supports x509v3 extensions:</li>
+								<ul>
+									<li>Key Usage</li>
+									<li>Extended Key Usage</li>
+									<li>Basic Constraints</li>
+									<li>Subject alternative Names</li>
+								</ul>
+							<li>Download keys and certificates in multiple formats including:</li>
+								<ul>
+									<li>PEM</li>
+									<li>DER</li>
+									<li>PKCS#12 (PFX)</li>
+									<li>PKCS#7 (P7B)</li>
+									<li>PKCS#1</li>
+									<li>PKCS#8</li>
+								</ul>
+							<li>Create certificate authorities and optionally save them for later use</li>
+							<li>Sign certificates with certificate authorities you've created</li>
+						</ul>
+					</div>
+					<div class="modal-footer">
+						<p class="text-center">
+							Please report bugs by commenting below. All feedback is appreciated.<br /><br />
+							<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
 		<script>
 			$( function() {
 				$( "#accordion" ).accordion({
@@ -2493,9 +2539,10 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				autoOpen: false
 			});
 			$( "#saveca" ).dialog({
-				modal: true,
+				modal: false,
 				autoOpen: false
 			});
+			$('#features').modal('show');
 			$( function() {
 				var browserwidth = document.body.offsetWidth;
 				var width = 600;

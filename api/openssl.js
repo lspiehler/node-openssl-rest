@@ -279,7 +279,7 @@ router.post('/generateCSR', function(req, res) {
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
 	var sign = req.body.sign;
-	console.log(csroptions);
+	console.log(JSON.stringify(csroptions));
 	//var username = req.body.username;
 	//var password = req.body.password;
 	openssl.generateCSR(csroptions, key, keypass, function(err, csr, cmd) {
