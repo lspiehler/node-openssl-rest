@@ -249,7 +249,7 @@ router.post('/generateRSAPrivateKey', function(req, res) {
 });
 
 var usageData = function(data) {
-	console.log(data);
+	//console.log(data);
 	if(config.emailParams) {
 		let transporter = nodemailer.createTransport(
 			config.nodemailertransportparams
@@ -279,7 +279,7 @@ router.post('/generateCSR', function(req, res) {
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
 	var sign = req.body.sign;
-	//console.log(csroptions);
+	console.log(csroptions);
 	//var username = req.body.username;
 	//var password = req.body.password;
 	openssl.generateCSR(csroptions, key, keypass, function(err, csr, cmd) {
