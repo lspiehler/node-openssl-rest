@@ -17,8 +17,8 @@ var getCADir = function(req) {
 	let cadir;
 	//console.log(req.headers);
 	if(config.caIPDir) {
-		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress.replace(/:/g,'-');
-		cadir = './ca/' + ip;
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		cadir = './ca/' + ip.replace(/:/g,'-');
 		return cadir;
 	} else {
 		cadir = './ca/global';
