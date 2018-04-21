@@ -285,7 +285,7 @@ router.post('/generateCSR', function(req, res) {
 	openssl.generateCSR(csroptions, key, keypass, function(err, csr, cmd) {
 		if(sign=='nosign') {
 			let usagedata = {
-				action: 'SelfSign',
+				action: 'CSROnly',
 				err: err,
 				headers: req.headers,
 				csroptions: csroptions,
