@@ -66,7 +66,7 @@ var convertCertToCSR = function(download, certs, index, callback) {
 	openssl.convertCertToCSR(certs[index], function(err,csr,cmd) {
 		if(err) {
 			//console.log(err);
-			callback(true, download, cmd);
+			callback("Unable to download certificates.", download, cmd);
 		} else {
 			var cert = {
 				cert: certs[index],

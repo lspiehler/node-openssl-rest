@@ -1779,7 +1779,7 @@
 					} else {
 						openSSLRESTAPI('getCertFromNetwork', netcertoptions, function(error, response) {
 							if(error) {
-							
+								alert(error);
 							} else {
 								$( "#template" ).dialog("close");
 								//console.log(response);
