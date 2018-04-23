@@ -61,6 +61,29 @@ router.get('/getCAs', function(req, res) {
 	});
 });
 
+var convertCertToCSR = function(download, certs, index, callback) {
+	//console.log(index);
+	openssl.convertCertToCSR(certs[index], function(err,csr,cmd) {
+		if(err) {
+			//console.log(err);
+			callback(true, download, cmd);
+		} else {
+			var cert = {
+				cert: certs[index],
+				options: csr
+			}
+			download.push(cert);
+			if(index==certs.length - 1) {
+				callback(err, download, cmd);
+				//console.log(csroptions);
+				return;
+			} else {
+				convertCertToCSR(download, certs, index + 1, callback);
+			}
+		}
+	});
+}
+
 router.post('/getCertFromNetwork', function(req, res) {
 	var netcertoptions = req.body;
 	var command = [];
@@ -76,7 +99,25 @@ router.post('/getCertFromNetwork', function(req, res) {
 			res.json(data);
 			return;
 		} else {
-			openssl.convertCertToCSR(cert, function(err,csroptions,cmd) {
+			var certs = [];
+			convertCertToCSR(certs, cert, 0, function(err, csroptions, cmd) {
+				console.log(csroptions);
+				if(err) {
+					var data = {
+						error: err,
+						csroptions: csroptions,
+						command: command
+					}
+				} else {
+					var data = {
+						error: err,
+						csroptions: csroptions,
+						command: command
+					}
+				}
+				res.json(data);
+			});
+			/*openssl.convertCertToCSR(cert[0], function(err,csroptions,cmd) {
 				command.push(cmd);
 				if(err) {
 					var data = {
@@ -93,7 +134,7 @@ router.post('/getCertFromNetwork', function(req, res) {
 				}
 				//console.log(data);
 				res.json(data);
-			});
+			});*/
 		}
 	});
 });

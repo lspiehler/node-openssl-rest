@@ -27,6 +27,10 @@
 			}
 		</style>
 		<script>
+			var downloadedcerts = {
+				lastparams: '',
+				certs: []
+			}
 			var generated = [];
 			var x509obj = function() {
 				this.key = {};
@@ -1716,6 +1720,37 @@
 					port.focus();
 				}
 			}
+			
+			function showDownloadedCerts(certs) {
+				if(certs) {
+					var downloadedcerts = document.getElementById('downloadedcerts');
+					for(var i = downloadedcerts.options.length - 1; i >= 0; i--) {
+						downloadedcerts.remove(i);
+					}
+					for(var i = 0; i <= certs.length - 1; i++) {
+						var option = document.createElement('option');
+						option.value = i;
+						if(certs[i].options.subject.commonName) {
+							if(typeof(certs[i].options.subject.commonName)=='object') {
+								option.innerText = certs[i].options.subject.commonName[0];
+							} else {
+								option.innerText = certs[i].options.subject.commonName
+							}
+						} else {
+							option.innerText = 'Certificate' + i;
+						}
+						downloadedcerts.add(option);
+					}
+				}
+				$( "#choosecert" ).dialog("open");
+			}
+			
+			function getSelectedCert() {
+				var downloadedcert = document.getElementById('downloadedcerts');
+				var cert = downloadedcert.options[downloadedcert.selectedIndex].value;
+				processImportedCert(downloadedcerts.certs[cert].options);
+			}
+			
 			function importCert() {
 				var netcertoptions = {};
 			
@@ -1734,15 +1769,31 @@
 						netcertoptions.starttls = false;
 					}
 					netcertoptions.protocol = protocol;
-					openSSLRESTAPI('getCertFromNetwork', netcertoptions, function(error, response) {
-						if(error) {
-						
+					if(downloadedcerts.lastparams == JSON.stringify(netcertoptions)) {
+						$( "#template" ).dialog("close");
+						if(downloadedcerts.certs.length == 1 ) {
+							processImportedCert(downloadedcerts.certs[0].options);
 						} else {
-							$( "#template" ).dialog("close");
-							//console.log(response);
-							processImportedCert(response.csroptions);
+							showDownloadedCerts(false);
 						}
-					});
+					} else {
+						openSSLRESTAPI('getCertFromNetwork', netcertoptions, function(error, response) {
+							if(error) {
+							
+							} else {
+								$( "#template" ).dialog("close");
+								//console.log(response);
+								downloadedcerts.certs.length = 0;
+								downloadedcerts.lastparams = JSON.stringify(netcertoptions);
+								downloadedcerts.certs = response.csroptions;
+								if(response.csroptions.length == 1 ) {
+									processImportedCert(response.csroptions[0].options);
+								} else {
+									showDownloadedCerts(response.csroptions);
+								}
+							}
+						});
+					}
 				} else {
 					var pastedcert = document.getElementById('pastedcert');
 					var data = {
@@ -1807,6 +1858,7 @@
 			}
 			
 			function processImportedCert(csroptions) {
+				$( "#choosecert" ).dialog("close");
 				console.log(csroptions);
 				clearKeyUsage();
 				clearExtendedKeyUsage();
@@ -2399,6 +2451,13 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				</tr>
 			</table>
 		</div>
+		<div id="choosecert" title="Select a Certificate">
+			<p>The query returned a chain of multiple certificates. Please select the one you'd like to use from the dropdown:</p>
+			<p><select class="form-control" id="downloadedcerts">
+			</select></p>
+			<p class="text-center"><button onclick="getSelectedCert();" type="button" class="btn btn-primary">Submit</button></p>
+			
+		</div>
 		<div id="template" title="Use Existing Cert as a Template">
 			<div class="container-fluid">
 				<div class="row">
@@ -2539,6 +2598,10 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				autoOpen: false
 			});
 			$( "#saveca" ).dialog({
+				modal: false,
+				autoOpen: false
+			});
+			$( "#choosecert" ).dialog({
 				modal: false,
 				autoOpen: false
 			});
