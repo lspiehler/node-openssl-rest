@@ -321,7 +321,50 @@
 			
 			function addRemoveSubjectAttrs() {
 				var addremove = document.getElementById('addremove');
+				var table = document.createElement('table');
 				for(var key in index) {
+					var row = table.insertRow();
+					var col = row.insertCell(0);
+					var col2 = row.insertCell(1);
+					
+					var mainspanmv = document.createElement('span');
+					mainspanmv.style.display = 'block';
+					var titlespanmv = document.createElement('span');
+					titlespanmv.innerText = ' Multi-value';
+					var labelmv = document.createElement('label');
+					labelmv.className = 'checkbox-inline';
+					var inputmv = document.createElement('input');
+					if(index[key]['multivalue']) {
+						//addSubjectAttr(key, true);
+						inputmv.checked = true;
+					} else {
+						//addSubjectAttr(key, false);
+						inputmv.checked = false;
+					}
+					if(index[key]['enabled']) {
+						inputmv.disabled = false;
+					} else {
+						inputmv.disabled = true;
+					}
+					inputmv.value = key;
+					inputmv.id = key + 'mvcheck';
+					inputmv.type = 'checkbox';
+					inputmv.addEventListener('change', function(e) {
+						if(e.target.checked) {
+							//console.log('add');
+							enableMultiValue(e.target.value)
+						} else {
+							//console.log('remove');
+							disableMultiValue(e.target.value)
+						}
+					});
+					
+					labelmv.appendChild(inputmv);
+					labelmv.appendChild(titlespanmv);
+					mainspanmv.appendChild(labelmv);
+					//mainspan.appendChild(titlespan);
+					col2.appendChild(mainspanmv);
+					
 					var mainspan = document.createElement('span');
 					mainspan.style.display = 'block';
 					var titlespan = document.createElement('span');
@@ -352,20 +395,46 @@
 					label.appendChild(titlespan);
 					mainspan.appendChild(label);
 					//mainspan.appendChild(titlespan);
-					addremove.appendChild(mainspan);
+					col.appendChild(mainspan);
+					//addremove.appendChild();
 				}
+				addremove.appendChild(table);
+			}
+			
+			function enableMultiValue(key) {
+				var row = document.getElementById(index[key]['name'] + 'multivaluerow');
+				var button = document.getElementById(index[key]['name'] + 'multivaluebutton');
+				var list = document.getElementById(index[key]['list']);
+				
+				row.style.display = 'block';
+				button.style.display = 'block';
+				list.style.display = 'block';
+			}
+			
+			function disableMultiValue(key) {
+				var row = document.getElementById(index[key]['name'] + 'multivaluerow');
+				var button = document.getElementById(index[key]['name'] + 'multivaluebutton');
+				var list = document.getElementById(index[key]['list']);
+				
+				row.style.display = 'none';
+				button.style.display = 'none';
+				list.style.display = 'none';
 			}
 			
 			function hideSubjectAttr(key) {
 				//var subject = document.getElementById('subject');
 				var attr = document.getElementById(index[key]['section']);
 				attr.style.display = 'none';
+				var multicheck = document.getElementById(key + 'mvcheck');
+				multicheck.disabled = true;
 			}
 			
 			function showSubjectAttr(key) {
 				//var subject = document.getElementById('subject');
 				var attr = document.getElementById(index[key]['section']);
 				attr.style.display = 'block';
+				var multicheck = document.getElementById(key + 'mvcheck');
+				multicheck.disabled = false;
 			}
 			
 			function addSubjectAttr(key, enabled) {
@@ -409,29 +478,36 @@
 				concol.appendChild(row2);
 				
 				var row3 = document.createElement('div');
+				row3.id = index[key]['name'] + 'multivaluerow';
+				
 				var list = document.createElement('ul');
 				
+				var row2col2 = document.createElement('div');
+				row2col2.className = 'col-lg-2 col-lg-2 col-sm-3 col-xs-3 rightbtn';
+				row2col2.id = index[key]['name'] + 'multivaluebutton';
+				var row2btn = document.createElement('button');
+				row2btn.className = 'btn btn-primary';
+				row2btn.type = 'button';
+				row2btn.innerText = 'Add';
+				/*row2btn.addEventListener("click", () => {
+					alert(id);
+					addItem(id);
+				});*/
+				addEvent(row2btn, key);
+				
 				if(index[key]['multivalue']) {
-					var row2col2 = document.createElement('div');
-					row2col2.className = 'col-lg-2 col-lg-2 col-sm-3 col-xs-3 rightbtn';
-					var row2btn = document.createElement('button');
-					row2btn.className = 'btn btn-primary';
-					row2btn.type = 'button';
-					row2btn.innerText = 'Add';
-					/*row2btn.addEventListener("click", () => {
-						alert(id);
-						addItem(id);
-					});*/
-					addEvent(row2btn, key);
-					row2col2.appendChild(row2btn);
-					
-//					row2.appendChild(row2col1);
-					row2.appendChild(row2col2);
 					
 				} else {
+					row2col2.style.display = 'none';
 					row3.style.display = 'none';
 					list.style.display = 'none';
 				}
+				
+				row2col2.appendChild(row2btn);
+				
+//					row2.appendChild(row2col1);
+				row2.appendChild(row2col2);
+					
 				row3.className = 'row';
 				
 				var row3col1 = document.createElement('div');
@@ -1920,11 +1996,19 @@
 					for(attr in csroptions.subject) {
 						if(key==attr) {
 							var enabled = document.getElementById(key + 'check');
+							var multivalue = document.getElementById(key + 'mvcheck');
 							if(!enabled.checked) {
 								enabled.checked = true;
 								showSubjectAttr(key);
 							}
-							if(!index[key]['multivalue']) {
+							
+							//if multivalued, make sure multivalue is enabled
+							if(typeof(csroptions.subject[attr]) != 'string') {
+								multivalue.checked = true;
+								enableMultiValue(key);
+							}
+							
+							if(!multivalue.checked) {
 								var input = document.getElementById(index[key]['input']);
 								input.value = csroptions.subject[attr]
 							} else {
