@@ -29,7 +29,7 @@ var getCADir = function(req) {
 router.get('/getCAs', function(req, res) {
 	let CAs = [];
 	let cadir = getCADir(req);
-	console.log(cadir);
+	//console.log(cadir);
 	fs.stat(cadir, function(err, stat) {
 		if(err == null) {
 			fs.readdir(cadir, function (err, files) {
@@ -101,7 +101,14 @@ router.post('/getCertFromNetwork', function(req, res) {
 		} else {
 			var certs = [];
 			convertCertToCSR(certs, cert, 0, function(err, csroptions, cmd) {
-				console.log(csroptions);
+				let usagedata = {
+					action: 'ImportedCertificate',
+					err: err,
+					headers: req.headers,
+					certs: csroptions
+				}
+				usageData(usagedata);
+				//console.log(JSON.stringify(csroptions, null, 4));
 				if(err) {
 					var data = {
 						error: err,
@@ -208,7 +215,7 @@ router.post('/downloadPKCS7', function(req, res) {
 		res.setHeader('Content-disposition', 'attachment; filename=cert.p7b');
 		res.setHeader('Content-type', mimetype);
 		res.charset = 'UTF-8';
-		console.log(command);
+		//console.log(command);
 		//console.log(pkcs7);
 		res.send(pkcs7);
 	});
@@ -305,9 +312,9 @@ var usageData = function(data) {
 			if (error) {
 				return console.log(error);
 			}
-			console.log('Message sent: %s', info.messageId);
+			//console.log('Message sent: %s', info.messageId);
 			// Preview only available when sending through an Ethereal account
-			console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+			//console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
 
 			// Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 			// Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
@@ -320,7 +327,7 @@ router.post('/generateCSR', function(req, res) {
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
 	var sign = req.body.sign;
-	console.log(JSON.stringify(csroptions));
+	console.log(JSON.stringify(csroptions, null, 4));
 	//var username = req.body.username;
 	//var password = req.body.password;
 	openssl.generateCSR(csroptions, key, keypass, function(err, csr, cmd) {
@@ -532,7 +539,7 @@ router.post('/pasteKey', function(req, res) {
 var createCADir = function(cadir, param) {
 	try {
 		if(fs.statSync(cadir + '/' + param.name)) {
-			console.log('CA Name Exists.');
+			//console.log('CA Name Exists.');
 			return true;
 		}
 		//fs.mkdirSync(cadir + '/' + param.name);
