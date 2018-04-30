@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:16.04
 MAINTAINER Lyas Spiehler
 
 RUN apt -y update
