@@ -741,14 +741,20 @@
 				//add basic constraints
 				var iscainput = document.getElementById('isca');
 				var isca = iscainput.options[iscainput.selectedIndex].value;
-				if(isca == 'FALSE') {
+				if(isca == 'undefined') {
 					// do nothing
 				} else {
 					if(!csr['extensions']) {
 						csr['extensions'] = {}
 					}
+					var cavalue;
+					if(isca == 'TRUE') {
+						cavalue = true;
+					} else {
+						cavalue = false;
+					}
 					csr['extensions']['basicConstraints'] = {};
-					csr['extensions']['basicConstraints']['CA'] = true;
+					csr['extensions']['basicConstraints']['CA'] = cavalue;
 					var pathleninput = document.getElementById('pathlen');
 					var pathlen = pathleninput.options[pathleninput.selectedIndex].value;
 					if(pathlen != 'None') {
@@ -1170,7 +1176,7 @@
 					rootchain = false;
 				}
 				var caname = document.getElementById('caname');
-				fileName = caname.value.replace(/[^A-Za-z0-9\-_]/g, "");
+				fileName = caname.value.replace(/[^A-Za-z0-9\-_ ]/g, "");
 				var data = {
 					name: fileName,
 					key: generated[certindex].key.data,
@@ -1975,9 +1981,9 @@
 							bccritical.checked = false;
 						}
 						if(csroptions.extensions.basicConstraints.CA) {
-							isca.selectedIndex = 1;
+							isca.selectedIndex = 2;
 						} else {
-							isca.selectedIndex = 0;
+							isca.selectedIndex = 1;
 						}
 						if(csroptions.extensions.basicConstraints.pathlen !== undefined) {
 							selectOption(csroptions.extensions.basicConstraints.pathlen, pathlen);
@@ -2288,6 +2294,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 															<div class="row">
 																<div class="col-lg-6 col-lg-6 col-sm-8 col-xs-12">
 																	<select id="isca" onchange="togglePathLen(false);" class="form-control">
+																		<option value="undefined">Undefined</option>
 																		<option value="FALSE">No</option>
 																		<option value="TRUE">Yes</option>
 																	</select>
