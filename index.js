@@ -22,6 +22,8 @@ app.engine('html', mustacheExpress());
 app.set('view engine', 'html');
 app.set('views', __dirname + '/views');
 
+app.use('/bower_components',  express.static(__dirname + '/bower_components'));
+
 //app.use(express.static('files'))app.use('/api/auth', require('./api/auth'));
 	
 app.get('/', function(req, res) {

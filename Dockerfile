@@ -17,6 +17,10 @@ WORKDIR /root/node-openssl-rest
 
 RUN npm install
 
+RUN npm install bower -g
+
+RUN bower install eonasdan-bootstrap-datetimepicker#latest bootstrap@3 jquery-ui
+
 EXPOSE 8443
 
 CMD ["node", "index.js"]

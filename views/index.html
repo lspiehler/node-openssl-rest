@@ -3,11 +3,14 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="/bower_components/jquery/dist/jquery.min.js"></script>
+		<link rel="stylesheet" href="/bower_components/jquery-ui/themes/base/jquery-ui.css">
+		<script src="/bower_components/jquery-ui/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="/bower_components/moment/min/moment.min.js"></script>
+		<script type="text/javascript" src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="/bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+		<link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="/bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
 		<style>
 			.list-group-item {
 				padding: 3px 10px;
@@ -794,15 +797,37 @@
 			}
 			
 			function toggleSelfSign(elem) {
-				var value = elem.options[elem.options.selectedIndex].value;
+				var signcert = elem.options[elem.options.selectedIndex];
 				var timetype = document.getElementById('timetype');
 				var timelength = document.getElementById('timelength');
-				if(value!='nosign') {
-					timetype.style.display = 'inline';
-					timelength.style.display = 'inline';
+				//var date1 = document.getElementById('date1');
+				//var date2 = document.getElementById('date2');
+				if(signcert.value!='nosign') {
+					if(signcert.innerText[0] == '*') {
+						timetype.style.display = 'none';
+						timelength.style.display = 'none';
+						//date1.style.display = 'block';
+						//date2.style.display = 'block';
+						$('#datetimepicker1').datetimepicker().show();
+						$('#datetimepicker1').data("DateTimePicker").date(new Date());
+						$('#datetimepicker2').datetimepicker().show();
+						$('#datetimepicker2').data("DateTimePicker").date(moment(new Date()).add(1, 'years'));
+						//console.log($('#datetimepicker2').data("DateTimePicker").date().toDate());
+					} else {
+						timetype.style.display = 'inline';
+						timelength.style.display = 'inline';
+						//date1.style.display = 'none';
+						//date2.style.display = 'none';
+						$('#datetimepicker1').datetimepicker().hide();
+						$('#datetimepicker2').datetimepicker().hide();
+					}
 				} else {
 					timetype.style.display = 'none';
 					timelength.style.display = 'none';
+					//date1.style.display = 'none';
+					//date2.style.display = 'none';
+					$('#datetimepicker1').datetimepicker().hide();
+					$('#datetimepicker2').datetimepicker().hide();
 				}
 			}
 			
@@ -901,7 +926,13 @@
 						} else {
 							//data.csr = response.csr;
 							data.csr = response.csr;
-							data.options.days = getdays()
+							if($('#datetimepicker1').data("DateTimePicker").date()) {
+								data.options.startdate = $('#datetimepicker1').data("DateTimePicker").date().toDate();
+								data.options.enddate = $('#datetimepicker2').data("DateTimePicker").date().toDate();
+							} else {
+								data.options.days = getdays();
+							}
+							data.options.days = getdays();
 							//console.log(parseInt(signvalue));
 							if(x509.ca) {
 								data.ca = {}
@@ -990,6 +1021,10 @@
 				var signcert = document.getElementById('signcert');
 				//console.log(signcert.options[signcert.selectedIndex].value[0]);
 				if(signcert.options[signcert.selectedIndex].innerText[0] == '*') {
+					if(!$('#datetimepicker1').data("DateTimePicker").date() || !$('#datetimepicker2').data("DateTimePicker").date()) {
+						alert("You must specify a valid start and end date for the certificate.");
+						return false;
+					}
 					var data = {
 						ca: signcert.options[signcert.selectedIndex].value.replace('* '),
 						password: document.getElementById('capasswordinput').value
@@ -2373,6 +2408,38 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 												<option value="day">Day(s)</option>
 											</select>
 										</div>
+										<div id="date1" class='col-lg-3 col-md-3 col-sm-6 col-xs-6'>
+											<div class="form-group">
+												<div class='input-group date' id='datetimepicker1'>
+													<input placeholder="Start Date" type='text' class="form-control" />
+													<span class="input-group-addon">
+														<span class="glyphicon glyphicon-calendar"></span>
+													</span>
+												</div>
+											</div>
+										</div>
+										<script type="text/javascript">
+											$(function () {
+												$('#datetimepicker1').datetimepicker({
+													defaultDate: new Date()
+												});
+											});
+										</script>
+										<div id="date2" class='col-lg-3 col-md-3 col-sm-6 col-xs-6'>
+											<div class="form-group">
+												<div class='input-group date' id='datetimepicker2'>
+													<input placeholder="End Date" type='text' class="form-control" />
+													<span class="input-group-addon">
+														<span class="glyphicon glyphicon-calendar"></span>
+													</span>
+												</div>
+											</div>
+										</div>
+										<script type="text/javascript">
+											$(function () {
+												$('#datetimepicker2').datetimepicker();
+											});
+										</script>
 									</div>
 								</div>
 							</div>
