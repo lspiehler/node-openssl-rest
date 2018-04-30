@@ -1430,7 +1430,7 @@
 					let certconfigtitle = document.createElement('h3');
 					certconfigtitle.innerText = 'OpenSSL Certificate Config';
 					let certconfigbody = document.createElement('div');
-					certconfigbody.appendChild(x509Text(x509.csr.config));
+					certconfigbody.appendChild(x509Text(x509.cert.config));
 					x509body.appendChild(certtitle);
 					x509body.appendChild(certbody);
 					x509body.appendChild(certconfigtitle);
