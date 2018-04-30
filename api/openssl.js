@@ -256,7 +256,7 @@ router.post('/checkCAKey', function(req, res) {
 		var password = req.body.password;
 	}
 	var capath = req.body.ca;
-	fs.readFile(cadir + '/' + capath + '/' + capath + '.key', function(err, data) {
+	fs.readFile(cadir + '/' + capath + '/ca.key', function(err, data) {
 		//console.log(data);
 		openssl.importRSAPrivateKey(data, password, function(err, key, cmd) {
 			//console.log(key);
@@ -398,15 +398,15 @@ router.post('/CASignCSR', function(req, res) {
 	var csroptions = req.body.options;
 	let cadir = getCADir(req);
 	if(req.body.ca.path) {
-		fs.readFile(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.key', function(err, key) {
+		fs.readFile(cadir + '/' + req.body.ca.path + '/ca.key', function(err, key) {
 			//console.log(data);
-			fs.readFile(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.crt', function(err, cacrt) {
-				fs.stat(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.chain', function(err, stat) {
+			fs.readFile(cadir + '/' + req.body.ca.path + '/ca.crt', function(err, cacrt) {
+				fs.stat(cadir + '/' + req.body.ca.path + '/ca.chain', function(err, stat) {
 					if(err == null) {
-						fs.readFile(cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.chain', function (err, chain) {
-							var serial = cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.srl';
-							var serialpath = process.cwd() + serial.substr(1, serial.length);
-							openssl.CASignCSR(req.body.csr, req.body.options, serialpath, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
+						fs.readFile(cadir + '/' + req.body.ca.path + '/ca.chain', function (err, chain) {
+							var capath = cadir + '/' + req.body.ca.path;
+							//var serialpath = process.cwd() + serial.substr(1, serial.length);
+							openssl.CASignCSR(req.body.csr, req.body.options, capath, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
 								let usagedata = {
 									action: 'CASign',
 									err: err,
@@ -439,9 +439,9 @@ router.post('/CASignCSR', function(req, res) {
 					} else if(err.code == 'ENOENT') {
 						// file does not exist
 						//console.log('does not exist');
-						var serial = cadir + '/' + req.body.ca.path + '/' + req.body.ca.path + '.srl';
-						var serialpath = process.cwd() + serial.substr(1, serial.length);
-						openssl.CASignCSR(req.body.csr, req.body.options, serialpath, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
+						var capath = cadir + '/' + req.body.ca.path;
+						//var serialpath = process.cwd() + serial.substr(1, serial.length);
+						openssl.CASignCSR(req.body.csr, req.body.options, capath, cacrt.toString(), key.toString(), req.body.ca.keypass, function(err, crt, cmd) {
 							let usagedata = {
 								action: 'CASign',
 								err: err,
@@ -549,19 +549,34 @@ var createCADir = function(cadir, param) {
 		//return true;
 	}
 	fs.mkdirSync(cadir + '/' + param.name);
-	fs.writeFile(cadir + '/' + param.name + '/' + param.name + '.key', param.key, function(err) {
+	fs.writeFile(cadir + '/' + param.name + '/ca.key', param.key, function(err) {
 		if(err) {
 			return true;
 		} else {
-			fs.writeFile(cadir + '/' + param.name + '/' + param.name + '.crt', param.cert, function(err) {
+			fs.writeFile(cadir + '/' + param.name + '/ca.crt', param.cert, function(err) {
 				if(err) {
 					return true;
 				} else {
-					fs.writeFile(cadir + '/' + param.name + '/' + param.name + '.chain', param.chain, function(err) {
+					fs.writeFile(cadir + '/' + param.name + '/index.txt', '', function(err) {
 						if(err) {
 							return true;
 						} else {
-							return false;
+							fs.writeFile(cadir + '/' + param.name + '/index.txt.attr', '', function(err) {
+								if(err) {
+									return true;
+								} else {
+									if(param.chain) {
+										fs.writeFile(cadir + '/' + param.name + '/ca.chain', param.chain, function(err) {
+											if(err) {
+												return true;
+											} else {
+												return false;
+											}
+										});
+									}
+								}
+								fs.mkdirSync(cadir + '/' + param.name + '/certs');
+							});
 						}
 					});
 				}
