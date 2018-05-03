@@ -799,8 +799,8 @@
 			
 			function toggleSelfSign(elem) {
 				var signcert = elem.options[elem.options.selectedIndex];
-				var timetype = document.getElementById('timetype');
-				var timelength = document.getElementById('timelength');
+				var timetype = document.getElementById('timetypecol');
+				var timelength = document.getElementById('timelengthcol');
 				//var date1 = document.getElementById('date1');
 				//var date2 = document.getElementById('date2');
 				if(signcert.value!='nosign') {
@@ -2402,7 +2402,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 										</div>
 									</div>
 									<div class="row">
-										<div class="col-lg-3 col-md-3 col-sm-8 col-xs-8">
+										<div class="col-lg-2 col-md-3 col-sm-8 col-xs-8">
 											<select id="hashalg" class="form-control">
 												<option value="sha256">Hash Algorithm...</option>
 												<option value="sha">SHA</option>
@@ -2421,10 +2421,10 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 												<option value="selfsign">Self-Sign</option>
 											</select>
 										</div>
-										<div class="col-lg-1 col-md-2 col-sm-6 col-xs-6">
+										<div id="timelengthcol" class="col-lg-1 col-md-2 col-sm-6 col-xs-6">
 											<input value="1" id="timelength" type="text" class="form-control"  />
 										</div>
-										<div class="col-lg-3 col-md-3 col-sm-6 col-xs-6">
+										<div id="timetypecol" class="col-lg-3 col-md-3 col-sm-6 col-xs-6">
 											<select id="timetype" class="form-control">
 												<option value="year">Year(s)</option>
 												<option value="month">Month(s)</option>
