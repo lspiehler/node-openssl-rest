@@ -30,6 +30,7 @@
 			}
 		</style>
 		<script>
+			var certtemplates = {{{javascripttemplates}}}
 			var downloadedcerts = {
 				lastparams: '',
 				certs: []
@@ -1974,6 +1975,19 @@
 				}
 			}
 			
+			function processX509ExtensionTemplate(element) {
+				var template = element.options[element.selectedIndex].value
+				for(var i = 0; i <= certtemplates.length - 1; i++) {
+					if(certtemplates[i].name==template) {
+						var options = {
+							extensions: certtemplates[i].extensions
+						}
+						processImportedCert(options);
+						return;
+					}
+				}
+			}
+			
 			function processImportedCert(csroptions) {
 				$( "#choosecert" ).dialog("close");
 				console.log(csroptions);
@@ -1981,10 +1995,10 @@
 				clearExtendedKeyUsage();
 				if(csroptions.extensions) {
 					//if sans exist, add them
-					var list = document.getElementById('sanlist');
-					deleteAllAttr(list);
 					if(csroptions.extensions.SANs) {
 						//return;
+						var list = document.getElementById('sanlist');
+						deleteAllAttr(list);
 						for(key in csroptions.extensions.SANs) {
 							for(var i = 0; i <= csroptions.extensions.SANs[key].length - 1; i++) {
 								addSAN(key, csroptions.extensions.SANs[key][i]);
@@ -2104,9 +2118,19 @@
 										</div>
 									</div>
 									<div class="row">
-										<div class="col text-center">
+										<div class="col-lg-1 col-md-0 col-sm-0 col-xs-0"></div>
+										<div class="text-center col-lg-5 col-md-6 col-sm-6 col-xs-12">
 											<button onclick="openTemplateDialogue();" class="btn btn-primary" type="button">Use Existing Certificate as a Template</button>
 										</div>
+										<div class="col-lg-5 col-md-6 col-sm-6 col-xs-12">
+											<select onchange="processX509ExtensionTemplate(this)" class="form-control">
+												<option selected="selected">X509v3 Extension Templates</option>
+												{{#certtemplates}}
+													<option value="{{name}}">{{name}}</option>
+												{{/certtemplates}}
+											</select>
+										</div>
+										<div class="col-lg-1 col-md-0 col-sm-0 col-xs-0"></div>
 									</div>	
 									<div class="row">
 										<div class="col">
