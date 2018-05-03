@@ -7,6 +7,7 @@ var bodyParser = require('body-parser')
 //var https = require('https');
 var mustacheExpress = require('mustache-express');
 var app = express();
+var certtemplates = require('./templates.js');
 
 //console.log(config);
 
@@ -25,10 +26,17 @@ app.set('views', __dirname + '/views');
 app.use('/bower_components',  express.static(__dirname + '/bower_components'));
 
 //app.use(express.static('files'))app.use('/api/auth', require('./api/auth'));
+
+var template = {
+	title: "CertificateTools.com CSR/Certificate Generator",
+	certtemplates: certtemplates,
+	javascripttemplates: JSON.stringify(certtemplates, null, 4)
+	
+}
 	
 app.get('/', function(req, res) {
 	console.log(req.headers);
-	res.render('index.html', {"title": "CertificateTools.com CSR/Certificate Generator"});
+	res.render('index.html', template);
 });
 
 app.use(function(req, res, next) {
