@@ -23,4 +23,6 @@ RUN bower install --allow-root eonasdan-bootstrap-datetimepicker#latest bootstra
 
 EXPOSE 8443
 
+EXPOSE 8080
+
 CMD ["node", "index.js"]
