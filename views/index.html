@@ -5,9 +5,9 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 		<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
 		<link rel="stylesheet" href="bower_components/jquery-ui/themes/base/jquery-ui.css">
+		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 		<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
 		<script type="text/javascript" src="bower_components/moment/min/moment.min.js"></script>
-		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
 		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
 		<link rel="stylesheet" href="bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
@@ -801,12 +801,14 @@
 				var signcert = elem.options[elem.options.selectedIndex];
 				var timetype = document.getElementById('timetypecol');
 				var timelength = document.getElementById('timelengthcol');
+				//var manageca = document.getElementById('managecacol');
 				//var date1 = document.getElementById('date1');
 				//var date2 = document.getElementById('date2');
 				if(signcert.value!='nosign') {
 					if(signcert.innerText[0] == '*') {
 						timetype.style.display = 'none';
 						timelength.style.display = 'none';
+						//manageca.style.display = 'block';
 						//date1.style.display = 'block';
 						//date2.style.display = 'block';
 						$('#datetimepicker1').datetimepicker().show();
@@ -815,8 +817,9 @@
 						$('#datetimepicker2').data("DateTimePicker").date(moment(new Date()).add(1, 'years'));
 						//console.log($('#datetimepicker2').data("DateTimePicker").date().toDate());
 					} else {
-						timetype.style.display = 'inline';
-						timelength.style.display = 'inline';
+						timetype.style.display = 'block';
+						timelength.style.display = 'block';
+						//manageca.style.display = 'none';
 						//date1.style.display = 'none';
 						//date2.style.display = 'none';
 						$('#datetimepicker1').datetimepicker().hide();
@@ -825,6 +828,7 @@
 				} else {
 					timetype.style.display = 'none';
 					timelength.style.display = 'none';
+					//manageca.style.display = 'none';
 					//date1.style.display = 'none';
 					//date2.style.display = 'none';
 					$('#datetimepicker1').datetimepicker().hide();
@@ -2402,7 +2406,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 										</div>
 									</div>
 									<div class="row">
-										<div class="col-lg-2 col-md-3 col-sm-8 col-xs-8">
+										<div class="col-lg-2 col-md-2 col-sm-8 col-xs-8">
 											<select id="hashalg" class="form-control">
 												<option value="sha256">Hash Algorithm...</option>
 												<option value="sha">SHA</option>
@@ -2414,17 +2418,20 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 												<option value="sha512">SHA512</option>
 											</select>
 										</div>
-										<div class="col-lg-3 col-md-3 col-sm-4 col-xs-4">
+										<div class="col-lg-2 col-md-2 col-sm-4 col-xs-4">
 											<!--<label class="checkbox-inline"><input id="selfsign" type="checkbox" onchange="toggleSelfSign(this);" value=""/>Self-Sign Certificate</label>-->
 											<select id="signcert" class="form-control" onchange="toggleSelfSign(this);">
 												<option value="nosign">CSR Only</option>
 												<option value="selfsign">Self-Sign</option>
 											</select>
 										</div>
-										<div id="timelengthcol" class="col-lg-1 col-md-2 col-sm-6 col-xs-6">
+										<!--<div id="managecacol" class="col-lg-2 col-md-2 col-sm-3 col-xs-3">
+											<button class="btn btn-primary" onclick="manageCA();" type="button">Manage</button>
+										</div>-->
+										<div id="timelengthcol" class="col-lg-2 col-md-2 col-sm-4 col-xs-4">
 											<input value="1" id="timelength" type="text" class="form-control"  />
 										</div>
-										<div id="timetypecol" class="col-lg-3 col-md-3 col-sm-6 col-xs-6">
+										<div id="timetypecol" class="col-lg-3 col-md-3 col-sm-4 col-xs-4">
 											<select id="timetype" class="form-control">
 												<option value="year">Year(s)</option>
 												<option value="month">Month(s)</option>

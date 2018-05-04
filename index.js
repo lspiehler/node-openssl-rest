@@ -7,13 +7,16 @@ var bodyParser = require('body-parser')
 //var https = require('https');
 var mustacheExpress = require('mustache-express');
 var app = express();
+var httpapp = express();
 var certtemplates = require('./templates.js');
 
 //console.log(config);
 
 express_ssl.getSSL(function(sslOptions) {
-	var server = require('https').createServer(sslOptions, app).listen(8443);
+	var server = require('https').createServer(sslOptions, app).listen(config.httpsport);
 });
+
+var httpserver = require('http').createServer(httpapp).listen(config.httpport);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies.
@@ -33,7 +36,7 @@ var template = {
 	javascripttemplates: JSON.stringify(certtemplates, null, 4)
 	
 }
-	
+
 app.get('/', function(req, res) {
 	console.log(req.headers);
 	res.render('index.html', template);
@@ -47,3 +50,4 @@ app.use(function(req, res, next) {
 });
 
 app.use('/api/openssl', require('./api/openssl'));
+httpapp.use('/public/', require('./api/public'));

@@ -61,6 +61,51 @@ router.get('/getCAs', function(req, res) {
 	});
 });
 
+router.get('/issuer/:ca', function(req, res) {
+	let cadir = getCADir(req);
+	fs.stat(cadir + '/' + req.params.ca + '/ca.der', function(err, stat) {
+		if(err == null) {
+			fs.readFile(cadir + '/' + req.params.ca + '/ca.crt', function(err, der) {
+				var mimetype = 'application/x-x509-ca-cert';
+				res.setHeader('Content-disposition', 'attachment; filename=' + req.params.ca + '.cer');
+				res.setHeader('Content-type', mimetype);
+				res.charset = 'UTF-8';
+				//console.log(command);
+				res.send(der);
+			});
+		} else if(err.code == 'ENOENT') {
+			console.log('false');
+			fs.stat(cadir + '/' + req.params.ca + '/ca.crt', function(err, stat) {
+				if(err == null) {
+					//console.log('here');
+					fs.readFile(cadir + '/' + req.params.ca + '/ca.crt', function(err, data) {
+						openssl.convertPEMtoDER(data, function(err, der, cmd){
+							fs.writeFile(cadir + '/' + req.params.ca + '/ca.der', der, function(err) {
+								var mimetype = 'application/x-x509-ca-cert';
+								res.setHeader('Content-disposition', 'attachment; filename=' + req.params.ca + '.cer');
+								res.setHeader('Content-type', mimetype);
+								res.charset = 'UTF-8';
+								//console.log(command);
+								res.send(der);
+							});
+						});
+					});
+				} else {
+					//console.log('here');
+					res.status(404);
+					res.send('CA does not exist');
+				}
+			});
+			// file does not exist
+			//console.log('does not exist');
+			//res.json(false);
+		} else {
+			//console.log('Some other error: ', err.code);
+			//res.json(false);
+		}
+	});
+});
+
 var convertCertToCSR = function(download, certs, index, callback) {
 	//console.log(index);
 	openssl.convertCertToCSR(certs[index], function(err,csr,cmd) {
@@ -396,6 +441,13 @@ router.post('/selfSignCSR', function(req, res) {
 router.post('/CASignCSR', function(req, res) {
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
+	if(config.publichttp) {
+		console.log(csroptions);
+		csroptions.extensions.authorityInfoAccess = {};
+		csroptions.extensions.authorityInfoAccess.caIssuers = ['http://' + config.publichttp.replace('http://', '') + '/public/issuer/' + req.body.ca.path];
+		csroptions.extensions.authorityInfoAccess.OCSP = ['http://' + config.publichttp.replace('http://', '') + '/public/ocsp/' + req.body.ca.path];
+		csroptions.extensions.crlDistributionPoints = ['http://' + config.publichttp.replace('http://', '') + '/public/crl/' + req.body.ca.path];
+	}
 	let cadir = getCADir(req);
 	if(req.body.ca.path) {
 		fs.readFile(cadir + '/' + req.body.ca.path + '/ca.key', function(err, key) {
