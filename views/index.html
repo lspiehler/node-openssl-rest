@@ -1217,9 +1217,14 @@
 				}
 				var caname = document.getElementById('caname');
 				fileName = caname.value.replace(/[^A-Za-z0-9\-_ ]/g, "");
+				let keypass = false;
+				if(generated[certindex].key.encryption) {
+					keypass = generated[certindex].key.encryption.password;
+				}
 				var data = {
 					name: fileName,
 					key: generated[certindex].key.data,
+					keypass: keypass,
 					cert: cert,
 					chain: rootchain
 				}

@@ -469,6 +469,9 @@ router.post('/CASignCSR', function(req, res) {
 									cacrt: cacrt.toString() + chain.toString()
 								}
 								usageData(usagedata);
+								fs.writeFile(cadir + '/' + req.body.ca.path + '/config.txt', cmd.files.config, function(err) {
+								
+								});
 								if(err) {
 									var data = {
 										error: err,
@@ -504,6 +507,9 @@ router.post('/CASignCSR', function(req, res) {
 								cacrt: cacrt.toString()
 							}
 							usageData(usagedata);
+							fs.writeFile(cadir + '/' + req.body.ca.path + '/config.txt', cmd.files.config, function(err) {
+								
+							});
 							if(err) {
 								var data = {
 									error: err,
@@ -617,15 +623,26 @@ var createCADir = function(cadir, param) {
 								if(err) {
 									return true;
 								} else {
-									if(param.chain) {
-										fs.writeFile(cadir + '/' + param.name + '/ca.chain', param.chain, function(err) {
-											if(err) {
-												return true;
-											} else {
-												return false;
-											}
-										});
+									let pass = '';
+									if(param.keypass) {
+										pass = param.keypass;
 									}
+									fs.writeFile(cadir + '/' + param.name + '/capass.txt', pass, function(err) {
+										if(err) {
+											return true;
+										} else {
+											if(param.chain) {
+												fs.writeFile(cadir + '/' + param.name + '/ca.chain', param.chain, function(err) {
+													if(err) {
+														return true;
+													} else {
+														return false;
+													}
+												});
+											}
+										}
+											
+									});
 								}
 								fs.mkdirSync(cadir + '/' + param.name + '/certs');
 							});
