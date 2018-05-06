@@ -5,6 +5,7 @@ var multer  = require('multer')
 var upload = multer();
 var fs = require('fs');
 var config = require('../config.js');
+var email = require('../email.js');
 const nodemailer = require('nodemailer');
 
 /*var rsakeyoptions = {
@@ -343,12 +344,12 @@ router.post('/generateRSAPrivateKey', function(req, res) {
 
 var usageData = function(data) {
 	//console.log(data);
-	if(config.emailParams) {
+	if(email.emailParams) {
 		let transporter = nodemailer.createTransport(
-			config.nodemailertransportparams
+			email.nodemailertransportparams
 		);
 		
-		let mailOptions = config.nodemailermailoptions
+		let mailOptions = email.nodemailermailoptions
 		
 		//mailOptions.html = JSON.stringify(data, null, 4);
 		mailOptions.text = JSON.stringify(data, null, 4);
@@ -446,9 +447,9 @@ router.post('/CASignCSR', function(req, res) {
 		if(config.publichttp) {
 			//console.log(csroptions);
 			csroptions.extensions.authorityInfoAccess = {};
-			csroptions.extensions.authorityInfoAccess.caIssuers = ['http://' + config.publichttp.replace('http://', '') + '/public/issuer/' + req.body.ca.path];
-			csroptions.extensions.authorityInfoAccess.OCSP = ['http://' + config.publichttp.replace('http://', '') + '/public/ocsp/' + req.body.ca.path];
-			csroptions.extensions.crlDistributionPoints = ['http://' + config.publichttp.replace('http://', '') + '/public/crl/' + req.body.ca.path];
+			csroptions.extensions.authorityInfoAccess.caIssuers = ['http://' + config.publichttp.replace('http://', '') + '/public/issuer/' + req.body.ca.path.replace(/ /g, "_") + '.crt'];
+			csroptions.extensions.authorityInfoAccess.OCSP = ['http://' + config.publichttp.replace('http://', '') + '/public/ocsp/' + req.body.ca.path.replace(/ /g, "_")];
+			csroptions.extensions.crlDistributionPoints = ['http://' + config.publichttp.replace('http://', '') + '/public/crl/' + req.body.ca.path.replace(/ /g, "_") + '.crl'];
 		}
 		fs.readFile(cadir + '/' + req.body.ca.path + '/ca.key', function(err, key) {
 			//console.log(data);

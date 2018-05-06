@@ -20,9 +20,12 @@ var md5 = require('md5');
 
 var getCADir = function(req) {
 	let cadir;
+	
+	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	console.log('HTTP connection from ' + ip);
+	
 	//console.log(req.headers);
 	if(config.caIPDir) {
-		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		cadir = './ca/' + ip.replace(/:/g,'-');
 		return cadir;
 	} else {
@@ -33,27 +36,28 @@ var getCADir = function(req) {
 
 router.get('/issuer/:ca', function(req, res) {
 	let cadir = getCADir(req);
-	fs.stat(cadir + '/' + req.params.ca + '/ca.der', function(err, stat) {
+	let caname = req.params.ca.replace(/_/g, " ").replace('.crt' , '');
+	fs.stat(cadir + '/' + caname + '/ca.der', function(err, stat) {
 		if(err == null) {
-			console.log('Issuer lookup for ' + req.params.ca + ', DER exists');
-			fs.readFile(cadir + '/' + req.params.ca + '/ca.crt', function(err, der) {
+			console.log('Issuer lookup for ' + caname + ', DER exists');
+			fs.readFile(cadir + '/' + caname + '/ca.crt', function(err, der) {
 				var mimetype = 'application/x-x509-ca-cert';
-				res.setHeader('Content-disposition', 'attachment; filename=' + req.params.ca + '.cer');
+				res.setHeader('Content-disposition', 'attachment; filename=' + caname + '.cer');
 				res.setHeader('Content-type', mimetype);
 				res.charset = 'UTF-8';
 				//console.log(command);
 				res.send(der);
 			});
 		} else if(err.code == 'ENOENT') {
-			console.log('Issuer lookup for ' + req.params.ca + ', creating DER');
-			fs.stat(cadir + '/' + req.params.ca + '/ca.crt', function(err, stat) {
+			console.log('Issuer lookup for ' + caname + ', creating DER');
+			fs.stat(cadir + '/' + caname + '/ca.crt', function(err, stat) {
 				if(err == null) {
 					//console.log('here');
-					fs.readFile(cadir + '/' + req.params.ca + '/ca.crt', function(err, data) {
+					fs.readFile(cadir + '/' + caname + '/ca.crt', function(err, data) {
 						openssl.convertPEMtoDER(data, function(err, der, cmd){
-							fs.writeFile(cadir + '/' + req.params.ca + '/ca.der', der, function(err) {
+							fs.writeFile(cadir + '/' + caname + '/ca.der', der, function(err) {
 								var mimetype = 'application/x-x509-ca-cert';
-								res.setHeader('Content-disposition', 'attachment; filename=' + req.params.ca + '.cer');
+								res.setHeader('Content-disposition', 'attachment; filename=' + caname + '.cer');
 								res.setHeader('Content-type', mimetype);
 								res.charset = 'UTF-8';
 								//console.log(command);
@@ -172,8 +176,9 @@ var sendCRL = function(err, name, crl, res, callback) {
 
 router.get('/crl/:ca', function(req, res) {
 	//console.log('crl request');
+	let caname = req.params.ca.replace(/_/g, " ").replace('.crl' , '');
 	let cadir = getCADir(req);
-	fileExists(cadir + '/' + req.params.ca + '/ca.crl', function(err, stat) {
+	fileExists(cadir + '/' + caname + '/ca.crl', function(err, stat) {
 		if(stat) {
 			//console.log(stat);
 			let now = moment();
@@ -182,26 +187,26 @@ router.get('/crl/:ca', function(req, res) {
 			//console.log(crldate.diff(now, 'hours'));
 			let crlage = now.diff(crldate, 'hours');
 			if(crlage < 24) {
-				console.log('CRL for ' + req.params.ca + ' exists and is only ' + crlage + ' hours old.');
-				fs.readFile(cadir + '/' + req.params.ca + '/ca.crl', function(err, crl) {
-					sendCRL(err, req.params.ca, crl, res, function() {
+				console.log('CRL for ' + caname + ' exists and is only ' + crlage + ' hours old.');
+				fs.readFile(cadir + '/' + caname + '/ca.crl', function(err, crl) {
+					sendCRL(err, caname, crl, res, function() {
 						//respond to request for CRL
 					});
 				});
 			} else {
-				console.log('CRL for ' + req.params.ca + ' exists, but will be regenerated because it is ' + crlage + ' hours old.');
-				genCRL(cadir + '/' + req.params.ca, function(err, out) {
+				console.log('CRL for ' + caname + ' exists, but will be regenerated because it is ' + crlage + ' hours old.');
+				genCRL(cadir + '/' + caname, function(err, out) {
 					//console.log(out);
-					sendCRL(err, req.params.ca, out.stdout, res, function() {
+					sendCRL(err, caname, out.stdout, res, function() {
 						//respond to request for CRL
 					});
 				});
 			}
 		} else {
-			console.log('CRL for ' + req.params.ca + ' does not exist and will be generated.');
-			genCRL(cadir + '/' + req.params.ca, function(err, out) {
+			console.log('CRL for ' + caname + ' does not exist and will be generated.');
+			genCRL(cadir + '/' + caname, function(err, out) {
 				//console.log(out);
-				sendCRL(err, req.params.ca, out.stdout, res, function() {
+				sendCRL(err, caname, out.stdout, res, function() {
 					//respond to request for CRL
 				});
 			});
@@ -275,13 +280,17 @@ var generateOCSPCert = function(capath, callback) {
 	});
 }
 
-var startOCSPServer = function(cadir, port, callback) {
+var startOCSPServer = function(cadir, port, attempts, callback) {
 	//const stdoutbuff = [];
-	//const stderrbuff = [];
+	const stderrbuff = [];
 	
-	let cmd = 'ocsp -resp_text -port 127.0.0.1:' + port + ' -sha256 -index index.txt -CAfile ca.chain -CA ca.crt -rkey ocsp.key -rsigner ocsp.crt -ndays 1';
+	let cmd = ['ocsp -resp_text -port 127.0.0.1:' + port + ' -sha256 -index index.txt -CAfile ca.chain -CA ca.crt -rkey ocsp.key -rsigner ocsp.crt -ndays 1'];
 	
-	const openssl = spawn( opensslbinpath, cmd.split(' '), {cwd: cadir} );
+	if(config.caIPDir) {
+		cmd.push('-nrequest 1');
+	}
+	
+	var openssl = spawn( opensslbinpath, cmd.join(' ').split(' '), {cwd: cadir} );
 	
 	openssl.stdout.on('data', function(data) {
 		//console.log(data.toString());
@@ -300,20 +309,24 @@ var startOCSPServer = function(cadir, port, callback) {
 	});*/
 	
 	openssl.stderr.on('data', function(data) {
-		console.log(data.toString());
 		if(data.toString().indexOf('Waiting for OCSP client connections...') >= 0) {
 			//console.log('STARTED');
-			callback(false, openssl);
+			//console.log(data.toString().replace('\n',''));
+			callback(false, openssl, port);
+			return;
+		} else {
+			stderrbuff.push(data.toString());
+			//console.log(data.toString());
 		}
 	});
 	
-	openssl.on('SIGINT', function() {
+	/*openssl.on('SIGINT', function() {
 		openssl.kill();
 	});
 	
 	openssl.on('SIGTERM', function() {
 		openssl.kill();
-	});
+	});*/
 	
 	openssl.on('exit', function(code) {
 		var out = {
@@ -322,11 +335,28 @@ var startOCSPServer = function(cadir, port, callback) {
 			//stderr: stderrbuff.join(''),
 			exitcode: code
 		}
+		console.log('OCSP responder exiting: ' + code);
 		if (code != 0) {
-			callback(true, openssl);
+			console.log('non zero exit');
+			if(stderrbuff.join('').indexOf('Address already in use') >= 0) {
+				console.log('address already in use');
+				if(attempts <= 1) {
+					callback('ERROR: ' + stderrbuff.join(''), openssl, port);
+				} else {
+					let nextport = Math.floor((Math.random() * 100) + 1);
+					startOCSPServer(cadir, port + nextport, attempts - 1, callback);
+				}
+			} else {
+				console.log('non zero exit and not address already in use');
+				callback('ERROR: ' + stderrbuff.join(''), openssl, port);
+				return;
+			}
 		} else {
-			callback(false, openssl);
+			console.log('zero exit status');
+			callback(false, openssl, port);
+			return;
 		}
+		//openssl = null;
 	});
 }
 
@@ -355,102 +385,183 @@ var OCSPProcessManager = function() {
 	}
 	
 	this.start = function(hash, cadir, callback) {
-		startport++;
-		startOCSPServer(cadir, startport, function(err, process) {
+		startOCSPServer(cadir, startport, 5, function(err, process, port) {
 			let ocsp = new OCSPProcess(
 				process,
 				cadir,
-				startport
+				port
 			);
 			//console.log(ocsp.process.exitCode);
 			processes[hash] = ocsp;
 			if(err) {
-				startport++;
-				startOCSPServer(cadir, startport, function(err, process) {
-					let ocsp = new OCSPProcess(
-						process,
-						cadir,
-						startport
-					);
-					//console.log(ocsp.process.exitCode);
-					processes[hash] = ocsp;
-					if(err) {
-						callback(err, ocsp);
-					} else {
-						callback(false, ocsp);
-					}
-				});
+				console.log('ERROR: OCSP process non-zero exit status on port: ' + port);
+				callback(err, ocsp);
 			} else {
-				callback(false, ocsp);
+				if(process.exitCode==null) {
+					console.log('Started OCSP process on port: ' + port);
+					callback(false, ocsp);
+					if(port > 40000) {
+						startport = 30000;
+					} else {
+						startport = port + 1;
+					}
+				} else {
+					console.log('Ended OCSP process on port: ' + port);
+				}
 			}
 		});
 	}
 }
 
-var queryOCSP = function(req, res, port, callback) {
+var proxyOCSP = function(req, port, data, callback) {
+	var options = {
+		hostname: '127.0.0.1',
+		port: port,
+		path: '/',
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/ocsp-request',
+			'Content-Length': req.headers['content-length']
+		}
+	};
+	
+	var ocspreq = http.request(options, (ocspres) => {
+		var ocspresponse = [];
+		
+		//console.log('statusCode:', ocspres.statusCode);
+		//console.log('headers:', ocspres.headers);
+
+		ocspres.on('data', (d) => {
+			ocspresponse.push(d);
+		});
+		
+		ocspres.on('end', () => {
+			//console.log(ocspresponse.toString());
+			//res.send(Buffer.concat(ocspresponse));
+			callback(false, Buffer.concat(ocspresponse));
+			return;
+		});
+	});
+
+	ocspreq.on('error', (e) => {
+		//console.error(e);
+		callback(e, false);
+		return
+	});
+
+	ocspreq.write(Buffer.concat(data));
+	ocspreq.end();
+	
+	//console.log(data);
+	//res.status(404);
+	//res.send('error');
+}
+
+var queryOCSP = function(req, res, cadir, callback) {
 	var data = [];
 	req.on('data', function(chunk) {
 		data.push(chunk);
 	});
 	req.on('end', function() {
-		var options = {
-			hostname: '127.0.0.1',
-			port: port,
-			path: '/',
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/ocsp-request',
-				'Content-Length': req.headers['content-length']
+		
+		let hash = md5(cadir);
+		let process = OCSPManager.exists(hash);
+		if(process) {
+			//console.log(process.process);
+			if(process.process.exitCode==null) {
+				console.log('OCSP process container exists and appears to be alive');
+				proxyOCSP(req, process.port, data, function(err, response) {
+					if(err) {
+						//if it fails, restart the OCSP service and try one more time
+						console.log('OCSP process did not respond. Restarting process and trying one more time.');
+						OCSPManager.start(hash, cadir, function(err, process) {
+							if(err) {
+								console.log('OCSP process failed to start. Not trying again');
+								console.log(err);
+								callback(true);
+							} else {
+								proxyOCSP(req, process.port, data, function(err, response) {
+									if(err) {
+										console.log('OCSP process failed to respond after the second attempt');
+										console.log(err);
+										callback(true);
+									} else {
+										res.send(response);
+										callback(false);
+									}
+								});
+							}
+						});
+					} else {
+						res.send(response);
+						callback(false);
+					}
+				});
+			} else {
+				console.log('OCSP process container exists, but process is dead');
+				OCSPManager.start(hash, cadir, function(err, process) {
+					if(err) {
+						console.log(err);
+					} else {
+						proxyOCSP(req, process.port, data, function(err, response) {
+							if(err) {
+								console.log(err);
+								callback(true);
+							} else {
+								res.send(response);
+								callback(false);
+							}
+						});
+					}
+				});
 			}
-		};
-		
-		var ocspreq = http.request(options, (ocspres) => {
-			var ocspresponse = [];
-			
-			//console.log('statusCode:', ocspres.statusCode);
-			//console.log('headers:', ocspres.headers);
-
-			ocspres.on('data', (d) => {
-				ocspresponse.push(d);
+		} else {
+			console.log('No existing OCSP process');
+			OCSPManager.start(hash, cadir, function(err, process) {
+				if(err) {
+					console.log(err);
+				} else {
+					proxyOCSP(req, process.port, data, function(err, response) {
+						if(err) {
+							console.log(err);
+							callback(true);
+						} else {
+							res.send(response);
+							callback(false);
+						}
+					});
+				}
 			});
-			
-			ocspres.on('end', () => {
-				//console.log(ocspresponse.toString());
-				res.send(Buffer.concat(ocspresponse));
-				callback(false);
-			});
-		});
-
-		ocspreq.on('error', (e) => {
-			console.error(e);
-			callback(true);
-		});
-
-		ocspreq.write(Buffer.concat(data));
-		ocspreq.end();
-		
-		//console.log(data);
-		//res.status(404);
-		//res.send('error');
+		}
 	});
 	
 	req.on('error', (e) => {
-		console.error(e);
-		callback(true);
+		//console.error(e);
+		//callback(true);
+		//return;
 	});
 }
 
 var OCSPManager = new OCSPProcessManager();
 
 var processOCSPRequest = function(req, res, cadir, callback) {
-	let hash = md5(cadir);
-	let process = OCSPManager.exists(hash);
+	queryOCSP(req, res, cadir, function(err) {
+		if(err) {
+			callback(false);
+		} else {
+			callback(false);
+		}
+	});
+	/*return;
+	//let hash = md5(cadir);
+	//let process = OCSPManager.exists(hash);
 	if(process) {
-		//console.log(process);
-		if(process.exitCode==null) {
-			console.log('OCSP process exists and is alive');
-			queryOCSP(req, res, process.port, function(err) {
+		//console.log(process.process);
+		if(process.process.exitCode==null) {
+			console.log('OCSP process container exists and appears to be alive');
+			queryOCSP(req, res, cadir, function(err) {
 				if(err) {
+					console.log('OCSP process did not respond. Attempting to restart.');
 					OCSPManager.start(hash, cadir, function(err, process) {
 						if(err) {
 							console.log(err);
@@ -469,7 +580,7 @@ var processOCSPRequest = function(req, res, cadir, callback) {
 				}
 			});
 		} else {
-			console.log('OCSP process exists, but it is dead');
+			console.log('OCSP process container exists, but process is dead');
 			OCSPManager.start(hash, cadir, function(err, process) {
 				if(err) {
 					console.log(err);
@@ -499,11 +610,12 @@ var processOCSPRequest = function(req, res, cadir, callback) {
 				});
 			}
 		});
-	}
+	}*/
 }
 
 router.post('/ocsp/:ca', function(req, res) {
-	let cadir = getCADir(req) + '/' + req.params.ca;
+	let caname = req.params.ca.replace(/_/g, " ");
+	let cadir = getCADir(req) + '/' + caname;
 	fileExists(cadir + '/ocsp.crt', function(err, stat) {
 		if(stat) {
 			//console.log(stat);

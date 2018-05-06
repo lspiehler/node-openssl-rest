@@ -38,7 +38,8 @@ var template = {
 }
 
 app.get('/', function(req, res) {
-	console.log(req.headers);
+	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	console.log('HTTPS connection from ' + ip);
 	res.render('index.html', template);
 });
 

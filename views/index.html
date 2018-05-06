@@ -1224,7 +1224,7 @@
 					rootchain = false;
 				}
 				var caname = document.getElementById('caname');
-				fileName = caname.value.replace(/[^A-Za-z0-9\-_ ]/g, "");
+				fileName = caname.value.replace(/[^A-Za-z0-9\- ]/g, "");
 				let keypass = false;
 				if(generated[certindex].key.encryption) {
 					keypass = generated[certindex].key.encryption.password;
