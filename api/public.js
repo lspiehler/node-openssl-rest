@@ -191,7 +191,7 @@ router.get('/crl/:ca', function(req, res) {
 			} else {
 				console.log('CRL for ' + req.params.ca + ' exists, but will be regenerated because it is ' + crlage + ' hours old.');
 				genCRL(cadir + '/' + req.params.ca, function(err, out) {
-					console.log(out);
+					//console.log(out);
 					sendCRL(err, req.params.ca, out.stdout, res, function() {
 						//respond to request for CRL
 					});
@@ -200,7 +200,7 @@ router.get('/crl/:ca', function(req, res) {
 		} else {
 			console.log('CRL for ' + req.params.ca + ' does not exist and will be generated.');
 			genCRL(cadir + '/' + req.params.ca, function(err, out) {
-				console.log(out);
+				//console.log(out);
 				sendCRL(err, req.params.ca, out.stdout, res, function() {
 					//respond to request for CRL
 				});
@@ -258,7 +258,7 @@ var generateOCSPCert = function(capath, callback) {
 									//console.log(err);
 									//console.log(cmd);
 								} else {
-									console.log(crt);
+									//console.log(crt);
 									//console.log(cmd);
 									fs.writeFile(capath + '/ocsp.key', key, function() {
 										fs.writeFile(capath + '/ocsp.crt', crt, function() {
@@ -302,7 +302,7 @@ var startOCSPServer = function(cadir, port, callback) {
 	openssl.stderr.on('data', function(data) {
 		console.log(data.toString());
 		if(data.toString().indexOf('Waiting for OCSP client connections...') >= 0) {
-			console.log('STARTED');
+			//console.log('STARTED');
 			callback(false, openssl);
 		}
 	});
@@ -407,8 +407,8 @@ var queryOCSP = function(req, res, port, callback) {
 		var ocspreq = http.request(options, (ocspres) => {
 			var ocspresponse = [];
 			
-			console.log('statusCode:', ocspres.statusCode);
-			console.log('headers:', ocspres.headers);
+			//console.log('statusCode:', ocspres.statusCode);
+			//console.log('headers:', ocspres.headers);
 
 			ocspres.on('data', (d) => {
 				ocspresponse.push(d);
@@ -446,7 +446,7 @@ var processOCSPRequest = function(req, res, cadir, callback) {
 	let hash = md5(cadir);
 	let process = OCSPManager.exists(hash);
 	if(process) {
-		console.log(process);
+		//console.log(process);
 		if(process.exitCode==null) {
 			console.log('OCSP process exists and is alive');
 			queryOCSP(req, res, process.port, function(err) {
@@ -469,7 +469,7 @@ var processOCSPRequest = function(req, res, cadir, callback) {
 				}
 			});
 		} else {
-			console.log('OCSP rocess exists, but it is dead');
+			console.log('OCSP process exists, but it is dead');
 			OCSPManager.start(hash, cadir, function(err, process) {
 				if(err) {
 					console.log(err);

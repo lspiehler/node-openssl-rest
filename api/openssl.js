@@ -372,7 +372,7 @@ router.post('/generateCSR', function(req, res) {
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
 	var sign = req.body.sign;
-	console.log(JSON.stringify(csroptions, null, 4));
+	//console.log(JSON.stringify(csroptions, null, 4));
 	//var username = req.body.username;
 	//var password = req.body.password;
 	openssl.generateCSR(csroptions, key, keypass, function(err, csr, cmd) {
@@ -441,15 +441,15 @@ router.post('/selfSignCSR', function(req, res) {
 router.post('/CASignCSR', function(req, res) {
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
-	if(config.publichttp) {
-		console.log(csroptions);
-		csroptions.extensions.authorityInfoAccess = {};
-		csroptions.extensions.authorityInfoAccess.caIssuers = ['http://' + config.publichttp.replace('http://', '') + '/public/issuer/' + req.body.ca.path];
-		csroptions.extensions.authorityInfoAccess.OCSP = ['http://' + config.publichttp.replace('http://', '') + '/public/ocsp/' + req.body.ca.path];
-		csroptions.extensions.crlDistributionPoints = ['http://' + config.publichttp.replace('http://', '') + '/public/crl/' + req.body.ca.path];
-	}
 	let cadir = getCADir(req);
 	if(req.body.ca.path) {
+		if(config.publichttp) {
+			//console.log(csroptions);
+			csroptions.extensions.authorityInfoAccess = {};
+			csroptions.extensions.authorityInfoAccess.caIssuers = ['http://' + config.publichttp.replace('http://', '') + '/public/issuer/' + req.body.ca.path];
+			csroptions.extensions.authorityInfoAccess.OCSP = ['http://' + config.publichttp.replace('http://', '') + '/public/ocsp/' + req.body.ca.path];
+			csroptions.extensions.crlDistributionPoints = ['http://' + config.publichttp.replace('http://', '') + '/public/crl/' + req.body.ca.path];
+		}
 		fs.readFile(cadir + '/' + req.body.ca.path + '/ca.key', function(err, key) {
 			//console.log(data);
 			fs.readFile(cadir + '/' + req.body.ca.path + '/ca.crt', function(err, cacrt) {
