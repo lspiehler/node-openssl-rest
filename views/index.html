@@ -1167,6 +1167,14 @@
 			function nameCA(index) {
 				var caindex = document.getElementById('caindex');
 				caindex.value = index;
+				var caname = document.getElementById('caname');
+				if(generated[index].csr.json.options.subject.commonName) {
+					if(typeof(generated[index].csr.json.options.subject.commonName)=='string') {
+						caname.value = generated[index].csr.json.options.subject.commonName;
+					} else {
+						caname.value = generated[index].csr.json.options.subject.commonName[0];
+					}
+				}
 				$( "#saveca" ).dialog( "open" );
 			}
 			
