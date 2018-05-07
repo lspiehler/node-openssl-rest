@@ -287,9 +287,18 @@ var startOCSPServer = function(cadir, port, attempts, alt, callback) {
 	let cmd = [];
 	
 	if(alt) {
-		cmd.push('ocsp -port 127.0.0.1:' + port + ' -sha256 -index index.txt -CAfile ca.chain -CA ca.crt -rkey ocsp.key -rsigner ocsp.crt -ndays 1');
+		cmd.push('ocsp -port 127.0.0.1:' + port + ' -sha256 -index index.txt -CA ca.crt -rkey ocsp.key -rsigner ocsp.crt -ndays 1');
 	} else {
-		cmd.push('ocsp -port ' + port + ' -rmd sha256 -index index.txt -CAfile ca.chain -CA ca.crt -rkey ocsp.key -rsigner ocsp.crt -ndays 1');
+		cmd.push('ocsp -port ' + port + ' -rmd sha256 -index index.txt -CA ca.crt -rkey ocsp.key -rsigner ocsp.crt -ndays 1');
+	}
+	
+	try {
+		var stat = fs.statSync(cadir + '/ca.chain');
+		if(stat) {
+			cmd.push('-CAfile ca.chain');
+		}
+	} catch(e) {
+		//this must be a root ca. No chain exists
 	}
 	
 	if(config.caIPDir) {
