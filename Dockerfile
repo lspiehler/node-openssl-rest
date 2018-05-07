@@ -1,13 +1,9 @@
-FROM ubuntu:16.04
+FROM node:8-alpine
+
 MAINTAINER Lyas Spiehler
 
-RUN apt -y update
-
-RUN apt install -y openssl git curl
-
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
-
-RUN apt install -y nodejs
+RUN apk add --update openssl git && \
+    rm -rf /var/cache/apk/*
 
 WORKDIR /root
 
