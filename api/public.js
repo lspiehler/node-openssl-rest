@@ -280,11 +280,17 @@ var generateOCSPCert = function(capath, callback) {
 	});
 }
 
-var startOCSPServer = function(cadir, port, attempts, callback) {
+var startOCSPServer = function(cadir, port, attempts, alt, callback) {
 	//const stdoutbuff = [];
 	const stderrbuff = [];
 	
-	let cmd = ['ocsp -resp_text -port 127.0.0.1:' + port + ' -sha256 -index index.txt -CAfile ca.chain -CA ca.crt -rkey ocsp.key -rsigner ocsp.crt -ndays 1'];
+	let cmd = [];
+	
+	if(alt) {
+		cmd.push('ocsp -port 127.0.0.1:' + port + ' -sha256 -index index.txt -CAfile ca.chain -CA ca.crt -rkey ocsp.key -rsigner ocsp.crt -ndays 1');
+	} else {
+		cmd.push('ocsp -port ' + port + ' -rmd sha256 -index index.txt -CAfile ca.chain -CA ca.crt -rkey ocsp.key -rsigner ocsp.crt -ndays 1');
+	}
 	
 	if(config.caIPDir) {
 		cmd.push('-nrequest 1');
@@ -292,8 +298,13 @@ var startOCSPServer = function(cadir, port, attempts, callback) {
 	
 	var openssl = spawn( opensslbinpath, cmd.join(' ').split(' '), {cwd: cadir} );
 	
+	var hack = setTimeout(function() {
+		callback(false, openssl, port);
+		return;
+	}, 2000);
+	
 	openssl.stdout.on('data', function(data) {
-		//console.log(data.toString());
+		console.log(data.toString());
 		//stdoutbuff.push(data.toString());
 		/*//openssl.stdin.setEncoding('utf-8');
 		setTimeout(function() {
@@ -309,11 +320,17 @@ var startOCSPServer = function(cadir, port, attempts, callback) {
 	});*/
 	
 	openssl.stderr.on('data', function(data) {
+		console.log(data.toString());
+		if(hack) {
+			clearTimeout(false, openssl, port);
+		}
 		if(data.toString().indexOf('Waiting for OCSP client connections...') >= 0) {
 			//console.log('STARTED');
 			//console.log(data.toString().replace('\n',''));
 			callback(false, openssl, port);
 			return;
+		} else if(data.toString().indexOf('ocsp: Can\'t parse "127.0.0.1:30000" as a number') >= 0) {
+			startOCSPServer(cadir, port + nextport, attempts - 1, true, callback);
 		} else {
 			stderrbuff.push(data.toString());
 			//console.log(data.toString());
@@ -329,6 +346,9 @@ var startOCSPServer = function(cadir, port, attempts, callback) {
 	});*/
 	
 	openssl.on('exit', function(code) {
+		if(hack) {
+			clearTimeout(hack);
+		}
 		var out = {
 			command: 'openssl ' + cmd,
 			//stdout: stdoutbuff.join(''),
@@ -344,7 +364,7 @@ var startOCSPServer = function(cadir, port, attempts, callback) {
 					callback('ERROR: ' + stderrbuff.join(''), openssl, port);
 				} else {
 					let nextport = Math.floor((Math.random() * 100) + 1);
-					startOCSPServer(cadir, port + nextport, attempts - 1, callback);
+					startOCSPServer(cadir, port + nextport, attempts - 1, alt, callback);
 				}
 			} else {
 				console.log('non zero exit and not address already in use');
@@ -385,7 +405,7 @@ var OCSPProcessManager = function() {
 	}
 	
 	this.start = function(hash, cadir, callback) {
-		startOCSPServer(cadir, startport, 5, function(err, process, port) {
+		startOCSPServer(cadir, startport, 5, false, function(err, process, port) {
 			let ocsp = new OCSPProcess(
 				process,
 				cadir,
