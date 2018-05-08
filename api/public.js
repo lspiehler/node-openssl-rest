@@ -49,9 +49,9 @@ router.get('/issuer/:ca', function(req, res) {
 				res.send(der);
 			});
 		} else if(err.code == 'ENOENT') {
-			console.log('Issuer lookup for ' + caname + ', creating DER');
 			fs.stat(cadir + '/' + caname + '/ca.crt', function(err, stat) {
 				if(err == null) {
+					console.log('Issuer lookup for ' + caname + ', creating DER');
 					//console.log('here');
 					fs.readFile(cadir + '/' + caname + '/ca.crt', function(err, data) {
 						openssl.convertPEMtoDER(data, function(err, der, cmd){
@@ -67,6 +67,7 @@ router.get('/issuer/:ca', function(req, res) {
 					});
 				} else {
 					//console.log('here');
+					console.log('Issuer lookup for ' + caname + ' does not exist');
 					res.status(404);
 					res.send('CA does not exist');
 				}
@@ -203,12 +204,18 @@ router.get('/crl/:ca', function(req, res) {
 				});
 			}
 		} else {
-			console.log('CRL for ' + caname + ' does not exist and will be generated.');
-			genCRL(cadir + '/' + caname, function(err, out) {
-				//console.log(out);
-				sendCRL(err, caname, out.stdout, res, function() {
-					//respond to request for CRL
-				});
+			fileExists(cadir + '/' + caname + '/ca.crl', function(err, stat) {
+				if(stat) {
+					console.log('CRL for ' + caname + ' does not exist and will be generated.');
+					genCRL(cadir + '/' + caname, function(err, out) {
+						//console.log(out);
+						sendCRL(err, caname, out.stdout, res, function() {
+							//respond to request for CRL
+						});
+					});
+				} else {
+					console.log('attempted CRL lookup for non-existent CA: ' + caname);
+				}
 			});
 		}
 	});
