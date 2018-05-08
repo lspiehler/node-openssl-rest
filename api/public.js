@@ -215,6 +215,8 @@ router.get('/crl/:ca', function(req, res) {
 					});
 				} else {
 					console.log('attempted CRL lookup for non-existent CA: ' + caname);
+					res.status(404);
+					res.send('Unable to create or find CRL.');
 				}
 			});
 		}
