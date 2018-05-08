@@ -204,7 +204,7 @@ router.get('/crl/:ca', function(req, res) {
 				});
 			}
 		} else {
-			fileExists(cadir + '/' + caname + '/ca.crl', function(err, stat) {
+			fileExists(cadir + '/' + caname + '/ca.crt', function(err, stat) {
 				if(stat) {
 					console.log('CRL for ' + caname + ' does not exist and will be generated.');
 					genCRL(cadir + '/' + caname, function(err, out) {
