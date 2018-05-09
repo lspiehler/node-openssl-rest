@@ -34,8 +34,13 @@ var getCADir = function(req) {
 	}
 }
 
-router.get('/issuer/:ca', function(req, res) {
-	let cadir = getCADir(req);
+var routeIssuer = function(req, res, global) {
+	let cadir;
+	if(global) {
+		cadir = './ca/global';
+	} else {
+		cadir = './ca/' + req.params.dir;
+	}
 	let caname = req.params.ca.replace(/_/g, " ").replace('.crt' , '');
 	fs.stat(cadir + '/' + caname + '/ca.der', function(err, stat) {
 		if(err == null) {
@@ -80,6 +85,14 @@ router.get('/issuer/:ca', function(req, res) {
 			//res.json(false);
 		}
 	});
+}
+
+router.get('/issuer/:ca', function(req, res) {
+	routeIssuer(req, res, true);
+});
+
+router.get('/issuer/:dir/:ca', function(req, res) {
+	routeIssuer(req, res, false);
 });
 
 var fileExists = function(path, callback) {
@@ -175,10 +188,15 @@ var sendCRL = function(err, name, crl, res, callback) {
 	}
 }
 
-router.get('/crl/:ca', function(req, res) {
-	//console.log('crl request');
+var routeCRL = function(req, res, global) {
+	let cadir;
+	if(global) {
+		cadir = './ca/global';
+	} else {
+		cadir = './ca/' + req.params.dir;
+	}
+	//console.log(cadir);
 	let caname = req.params.ca.replace(/_/g, " ").replace('.crl' , '');
-	let cadir = getCADir(req);
 	fileExists(cadir + '/' + caname + '/ca.crl', function(err, stat) {
 		if(stat) {
 			//console.log(stat);
@@ -221,6 +239,14 @@ router.get('/crl/:ca', function(req, res) {
 			});
 		}
 	});
+}
+
+router.get('/crl/:ca', function(req, res) {
+	routeCRL(req, res, true);
+});
+
+router.get('/crl/:dir/:ca', function(req, res) {
+	routeCRL(req, res, false);
 });
 
 var generateOCSPCert = function(capath, callback) {
@@ -259,7 +285,7 @@ var generateOCSPCert = function(capath, callback) {
 	}
 	
 	openssl.generateRSAPrivateKey(rsakeyoptions, function(err, key, cmd) {
-		openssl.generateCSR(csroptions, key, 'test', function(err, csr, cmd) {
+		openssl.generateCSR(csroptions, key, false, function(err, csr, cmd) {
 			//fs.readFile(capath + '/config.txt', function(err, caconfig) {
 				//if (err) callback(err, false);
 				//tmp.file(function _tempFileCreated(err, path, fd, cleanupCallback) {
@@ -269,7 +295,7 @@ var generateOCSPCert = function(capath, callback) {
 							openssl.CASignCSR(csr, csroptions, capath, false, false, capass, function(err, crt, cmd) {
 								if(err) {
 									callback(true);
-									//console.log(err);
+									console.log(err);
 									//console.log(cmd);
 								} else {
 									//console.log(crt);
@@ -317,6 +343,7 @@ var startOCSPServer = function(cadir, port, attempts, alt, callback) {
 	var openssl = spawn( opensslbinpath, cmd.join(' ').split(' '), {cwd: cadir} );
 	
 	var hack = setTimeout(function() {
+		console.log('got called');
 		callback(false, openssl, port);
 		return;
 	}, 2000);
@@ -338,9 +365,9 @@ var startOCSPServer = function(cadir, port, attempts, alt, callback) {
 	});*/
 	
 	openssl.stderr.on('data', function(data) {
-		console.log(data.toString());
+		//console.log(data.toString());
 		if(hack) {
-			clearTimeout(false, openssl, port);
+			clearTimeout(hack);
 		}
 		if(data.toString().indexOf('Waiting for OCSP client connections...') >= 0) {
 			//console.log('STARTED');
@@ -380,6 +407,7 @@ var startOCSPServer = function(cadir, port, attempts, alt, callback) {
 				console.log('address already in use');
 				if(attempts <= 1) {
 					callback('ERROR: ' + stderrbuff.join(''), openssl, port);
+					return;
 				} else {
 					let nextport = Math.floor((Math.random() * 100) + 1);
 					startOCSPServer(cadir, port + nextport, attempts - 1, alt, callback);
@@ -651,9 +679,15 @@ var processOCSPRequest = function(req, res, cadir, callback) {
 	}*/
 }
 
-router.post('/ocsp/:ca', function(req, res) {
+var routeOCSP = function(req, res, global) {
 	let caname = req.params.ca.replace(/_/g, " ");
-	let cadir = getCADir(req) + '/' + caname;
+	let cadir;
+	if(global) {
+		cadir = './ca/global' + '/' + caname;;
+	} else {
+		cadir = './ca/' + req.params.dir + '/' + caname;;
+	}
+	//console.log(cadir);
 	fileExists(cadir + '/ocsp.crt', function(err, stat) {
 		if(stat) {
 			//console.log(stat);
@@ -684,6 +718,14 @@ router.post('/ocsp/:ca', function(req, res) {
 			});
 		}
 	});
+}
+
+router.post('/ocsp/:dir/:ca', function(req, res) {
+	routeOCSP(req, res, false);
+});
+
+router.post('/ocsp/:ca', function(req, res) {
+	routeOCSP(req, res, true);
 });
 
 module.exports = router

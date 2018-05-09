@@ -7,6 +7,7 @@ var fs = require('fs');
 var config = require('../config.js');
 var email = require('../email.js');
 const nodemailer = require('nodemailer');
+var md5 = require('md5');
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
@@ -19,7 +20,7 @@ var getCADir = function(req) {
 	//console.log(req.headers);
 	if(config.caIPDir) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-		cadir = './ca/' + ip.replace(/:/g,'-');
+		cadir = './ca/' + md5(ip);
 		return cadir;
 	} else {
 		cadir = './ca/global';
@@ -446,10 +447,15 @@ router.post('/CASignCSR', function(req, res) {
 	if(req.body.ca.path) {
 		if(config.publichttp) {
 			//console.log(csroptions);
+			let hash = '';
+			if(config.caIPDir) {
+				let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+				hash = md5(ip) + '/';
+			}
 			csroptions.extensions.authorityInfoAccess = {};
-			csroptions.extensions.authorityInfoAccess.caIssuers = ['http://' + config.publichttp.replace('http://', '') + '/public/issuer/' + req.body.ca.path.replace(/ /g, "_") + '.crt'];
-			csroptions.extensions.authorityInfoAccess.OCSP = ['http://' + config.publichttp.replace('http://', '') + '/public/ocsp/' + req.body.ca.path.replace(/ /g, "_")];
-			csroptions.extensions.crlDistributionPoints = ['http://' + config.publichttp.replace('http://', '') + '/public/crl/' + req.body.ca.path.replace(/ /g, "_") + '.crl'];
+			csroptions.extensions.authorityInfoAccess.caIssuers = ['http://' + config.publichttp.replace('http://', '') + '/public/issuer/' + hash + req.body.ca.path.replace(/ /g, "_") + '.crt'];
+			csroptions.extensions.authorityInfoAccess.OCSP = ['http://' + config.publichttp.replace('http://', '') + '/public/ocsp/' + hash + req.body.ca.path.replace(/ /g, "_")];
+			csroptions.extensions.crlDistributionPoints = ['http://' + config.publichttp.replace('http://', '') + '/public/crl/' + hash + req.body.ca.path.replace(/ /g, "_") + '.crl'];
 		}
 		fs.readFile(cadir + '/' + req.body.ca.path + '/ca.key', function(err, key) {
 			//console.log(data);
