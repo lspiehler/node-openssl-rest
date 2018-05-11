@@ -688,36 +688,44 @@ var routeOCSP = function(req, res, global) {
 		cadir = './ca/' + req.params.dir + '/' + caname;;
 	}
 	//console.log(cadir);
-	fileExists(cadir + '/ocsp.crt', function(err, stat) {
+	fileExists(cadir + '/ca.crt', function(err, stat) {
 		if(stat) {
-			//console.log(stat);
-			let now = moment();
-			//console.log(now);
-			let ocspcertdate = moment(stat.mtime);
-			//console.log(ocspcertdate.diff(now, 'days'));
-			let ocspcertage = now.diff(ocspcertdate, 'days');
-			if(ocspcertage < 360) {
-				console.log('Existing OCSP certificate OK:' + ocspcertage + ' days old.');
-				processOCSPRequest(req, res, cadir, function() {
-						
-				});
-			} else {
-				console.log('Existing OCSP certificate EXPIRED:' + ocspcertage + ' days old. Generating a new one...');
-				generateOCSPCert(cadir, function(err) {
-					processOCSPRequest(req, res, cadir, function() {
-						
+			fileExists(cadir + '/ocsp.crt', function(err, stat) {
+				if(stat) {
+					//console.log(stat);
+					let now = moment();
+					//console.log(now);
+					let ocspcertdate = moment(stat.mtime);
+					//console.log(ocspcertdate.diff(now, 'days'));
+					let ocspcertage = now.diff(ocspcertdate, 'days');
+					if(ocspcertage < 360) {
+						console.log('Existing OCSP certificate OK:' + ocspcertage + ' days old.');
+						processOCSPRequest(req, res, cadir, function() {
+								
+						});
+					} else {
+						console.log('Existing OCSP certificate EXPIRED:' + ocspcertage + ' days old. Generating a new one...');
+						generateOCSPCert(cadir, function(err) {
+							processOCSPRequest(req, res, cadir, function() {
+								
+							});
+						});
+					}
+				} else {
+					console.log('Generating OCSP certificate...');
+					generateOCSPCert(cadir, function(err) {
+						processOCSPRequest(req, res, cadir, function() {
+							
+						});
 					});
-				});
-			}
-		} else {
-			console.log('Generating OCSP certificate...');
-			generateOCSPCert(cadir, function(err) {
-				processOCSPRequest(req, res, cadir, function() {
-					
-				});
+				}
 			});
+		} else {
+			console.log('OCSP lookup for ' + caname + ' does not exist');
+			res.status(404);
+			res.send('CA does not exist');
 		}
-	});
+	})
 }
 
 router.post('/ocsp/:dir/:ca', function(req, res) {
