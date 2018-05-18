@@ -205,7 +205,7 @@ var routeCRL = function(req, res, global) {
 			let crldate = moment(stat.mtime);
 			//console.log(crldate.diff(now, 'hours'));
 			let crlage = now.diff(crldate, 'hours');
-			if(crlage < 24) {
+			if(crlage < 23) {
 				console.log('CRL for ' + caname + ' exists and is only ' + crlage + ' hours old.');
 				fs.readFile(cadir + '/' + caname + '/ca.crl', function(err, crl) {
 					sendCRL(err, caname, crl, res, function() {
