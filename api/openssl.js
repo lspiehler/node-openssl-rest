@@ -630,26 +630,12 @@ var createCADir = function(cadir, param) {
 								if(err) {
 									return true;
 								} else {
-									let pass = '';
 									if(param.keypass) {
-										pass = param.keypass;
+										fs.writeFileSync(cadir + '/' + param.name + '/capass.txt', param.keypass);
 									}
-									fs.writeFile(cadir + '/' + param.name + '/capass.txt', pass, function(err) {
-										if(err) {
-											return true;
-										} else {
-											if(param.chain) {
-												fs.writeFile(cadir + '/' + param.name + '/ca.chain', param.chain, function(err) {
-													if(err) {
-														return true;
-													} else {
-														return false;
-													}
-												});
-											}
-										}
-											
-									});
+									if(param.chain) {
+										fs.writeFileSync(cadir + '/' + param.name + '/ca.chain', param.chain);
+									}
 								}
 								fs.mkdirSync(cadir + '/' + param.name + '/certs');
 							});

@@ -100,18 +100,18 @@ var fileExists = function(path, callback) {
 		if(err == null) {
 			callback(false, stat);
 		} else if(err.code == 'ENOENT') {
-			callback(false, false);
+			callback(true, false);
 		} else {
 			callback(err, false);
 		}
 	});
 }
 
-var runOpenSSLCommand = function(cmd, callback) {
+var runOpenSSLCommand = function(cmd, cwd, callback) {
 	const stdoutbuff = [];
 	const stderrbuff = [];
 	
-	const openssl = spawn( opensslbinpath, cmd.split(' ') );
+	const openssl = spawn( opensslbinpath, cmd.split(' '), {cwd: cwd} );
 	
 	openssl.stdout.on('data', function(data) {
 		stdoutbuff.push(data.toString());
@@ -154,10 +154,14 @@ var genCRL = function(capath, callback) {
 		tmp.file(function _tempFileCreated(err, path, fd, cleanupCallback) {
 			if (err) throw err;
 			fs.writeFile(path, caconfig, function() {
-				fs.readFile(capath + '/capass.txt', function(err, capass) {
-					if (err) callback(err, false);
-					let command = 'ca -config ' + path + ' -gencrl -passin pass:' + capass;
-					runOpenSSLCommand(command, function(err, out) {
+				fileExists(capath + '/capass.txt', function(err, stat) {
+					let command;
+					if (err) {
+						command = 'ca -config ' + path + ' -gencrl -passin pass:';
+					} else {
+						command = 'ca -config ' + path + ' -gencrl -passin file:capass.txt';
+					}
+					runOpenSSLCommand(command, capath, function(err, out) {
 						if(err) {
 							//console.log(err);
 							callback(err, out);
@@ -292,7 +296,13 @@ var generateOCSPCert = function(capath, callback) {
 				//if (err) throw err;
 					//fs.writeFile(path, caconfig, function() {
 						fs.readFile(capath + '/capass.txt', function(err, capass) {
-							openssl.CASignCSR(csr, csroptions, capath, false, false, capass, function(err, crt, cmd) {
+							let pass;
+							if(err) {
+								pass = false;
+							} else {
+								pass = capass.toString();
+							}
+							openssl.CASignCSR(csr, csroptions, capath, false, false, pass, function(err, crt, cmd) {
 								if(err) {
 									callback(true);
 									console.log(err);
