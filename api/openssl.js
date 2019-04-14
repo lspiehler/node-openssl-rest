@@ -304,7 +304,7 @@ router.post('/uploadECCPrivateKey', upload.single('file'), function(req, res) {
 	var key = req.file.buffer;
 	//var username = req.body.username;
 	//var password = req.body.password;
-	openssl.importRSAPrivateKey(key, password, function(err, key, cmd) {
+	openssl.importECCPrivateKey(key, password, function(err, key, cmd) {
 		if(err) {
 			var data = {
 				error: err,
@@ -329,18 +329,57 @@ router.post('/checkCAKey', function(req, res) {
 		var password = req.body.password;
 	}
 	var capath = req.body.ca;
-	fs.readFile(cadir + '/' + capath + '/ca.key', function(err, data) {
-		//console.log(data);
-		openssl.importRSAPrivateKey(data, password, function(err, key, cmd) {
-			//console.log(key);
+	fs.readFile(cadir + '/' + capath + '/ca.crt', function(err, crtdata) {
+		openssl.getCertInfo(crtdata, function(err,data,cmd) {
+			//console.log(data);
 			if(err) {
-				var data = false;
+				fs.readFile(cadir + '/' + capath + '/ca.key', function(err, keydata) {
+					//console.log(keydata);
+					openssl.importRSAPrivateKey(keydata, password, function(err, key, cmd) {
+						//console.log(key);
+						if(err) {
+							var keydata = false;
+						} else {
+							var keydata = {
+								path: capath
+							}
+						}
+						res.send(keydata);
+					});
+				});
 			} else {
-				var data = {
-					path: capath
+				if(data['attributes']['Public Key Algorithm'].toLowerCase().indexOf('ec') >= 0) {
+					fs.readFile(cadir + '/' + capath + '/ca.key', function(err, keydata) {
+						//console.log(keydata);
+						openssl.importECCPrivateKey(keydata, password, function(err, key, cmd) {
+							//console.log(key);
+							if(err) {
+								var keydata = false;
+							} else {
+								var keydata = {
+									path: capath
+								}
+							}
+							res.send(keydata);
+						});
+					});
+				} else {
+					fs.readFile(cadir + '/' + capath + '/ca.key', function(err, keydata) {
+						//console.log(keydata);
+						openssl.importRSAPrivateKey(keydata, password, function(err, key, cmd) {
+							//console.log(key);
+							if(err) {
+								var keydata = false;
+							} else {
+								var keydata = {
+									path: capath
+								}
+							}
+							res.send(keydata);
+						});
+					});
 				}
 			}
-			res.send(data);
 		});
 	});
 	//var username = req.body.username;
