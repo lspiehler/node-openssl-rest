@@ -1,6 +1,6 @@
 {
   "name": "node-openssl-rest",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "REST API and UI for node-openssl-cert",
   "main": "index.js",
   "dependencies": {
