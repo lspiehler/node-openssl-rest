@@ -541,19 +541,35 @@
 				subject.appendChild(conrow);
 			}
 			function enableGenerate(enable) {
-				var encryptcol = document.getElementById("encryptcol");
 				var keysizecol = document.getElementById("keysizecol");
 				if(enable) {
+					keysizecol.style.display = 'block';
+				} else {
+					keysizecol.style.display = 'none';
+				}
+				keyEncrypt();
+			}
+			function keyEncrypt() {
+				var method = document.getElementById('keymethod');
+				var encryptcol = document.getElementById("encryptcol");
+				if(method.value=='PKCS1' || method.value=='PKCS8' || method.value=='PKCS1ECC' || method.value=='PKCS8ECC') {
 					var encryption = document.getElementById("encryption");
 					encryptcol.style.display = 'block';
-					keysizecol.style.display = 'block';
 					toggleEncryption(encryption);
 				} else {
 					passwordcol.style.display = 'none';
 					ciphercol.style.display = 'none';
 					encryptcol.style.display = 'none';
-					keysizecol.style.display = 'none';
 				}
+			}
+			function enableGenerateECC(enable) {
+				var curvescol = document.getElementById("curvescol");
+				if(enable) {
+					curvescol.style.display = 'block';
+				} else {
+					curvescol.style.display = 'none';
+				}
+				keyEncrypt();
 			}
 			function enablePaste(enable) {
 				var pastedkeycol = document.getElementById("pastedkeycol");
@@ -602,11 +618,29 @@
 					enableUpload(false);
 					enablePaste(false);
 					enableGenerate(true);
+					enableGenerateECC(false);
+				} else if(method.value=='PKCS1ECC' || method.value=='PKCS8ECC') {
+					enableUpload(false);
+					enablePaste(false);
+					enableGenerateECC(true);
+					enableGenerate(false);
 				} else if(method.value=='paste') {
+					enableGenerate(false);
+					enableGenerateECC(false);
+					enableUpload(false);
+					enablePaste(true);
+				} else if(method.value=='pasteecc') {
+					enableGenerateECC(false);
 					enableGenerate(false);
 					enableUpload(false);
 					enablePaste(true);
 				} else if(method.value=='upload') {
+					enableGenerate(false);
+					enableGenerateECC(false);
+					enablePaste(false);
+					enableUpload(true);
+				} else if(method.value=='uploadecc') {
+					enableGenerateECC(false);
 					enableGenerate(false);
 					enablePaste(false);
 					enableUpload(true);
@@ -778,8 +812,15 @@
 			function getKeyParams() {
 				var rsakeyoptions = {};
 			
-				var keysizeinput = document.getElementById('keysize');
-				rsakeyoptions.rsa_keygen_bits = keysizeinput.options[keysizeinput.selectedIndex].value
+				var keymethod = document.getElementById('keymethod');
+				var method = keymethod.options[keymethod.selectedIndex].value
+				if(method=="PKCS1" || method=="PKCS8") {
+					var keysizeinput = document.getElementById('keysize');
+					rsakeyoptions.rsa_keygen_bits = keysizeinput.options[keysizeinput.selectedIndex].value
+				} else {
+					var curve = document.getElementById('selcurve');
+					rsakeyoptions.curve = curve.options[curve.selectedIndex].value
+				}
 				
 				var encryptioninput = document.getElementById('encryption');
 				if(encryption.checked) {
@@ -1081,7 +1122,29 @@
 							});
 						}
 					});
-				} else if(keymethod=='paste') {
+				} else if(keymethod=='PKCS1ECC' || keymethod=='PKCS8ECC') {
+					var keyoptions = getKeyParams();
+					if(!keyoptions) {
+						return false;
+					}
+					x509.key = keyoptions;
+					x509.key.format = keymethod.replace('ECC','');
+					keyoptions.format = keymethod.replace('ECC','');
+					openSSLRESTAPI('generateECCPrivateKey', keyoptions, function(err, response) {
+						if(err) {
+							console.log(response);
+						} else {
+							console.log(response);
+							x509.key.generated = true;
+							x509.key.command = response.command;
+							x509.key.data = response.key;
+							//generated.push(x509);
+							processCSR(response, x509, function(err, x509, index) {
+								processCompleted(err, x509, index);
+							});
+						}
+					});
+				} else if(keymethod=='paste' || keymethod=='pasteecc') {
 					x509.key.generated = false;
 					var pastedkey = document.getElementById('pastedkey');
 					var passwordprompt = document.getElementById('passwordprompt');
@@ -1098,7 +1161,7 @@
 						key: pastedkey.value,
 						password: password
 					}
-					pasteKey(data, function(err, response) {
+					pasteKey(keymethod, data, function(err, response) {
 						if(err) {
 							console.log(err);
 							$( "#dialog" ).dialog("open");
@@ -1116,14 +1179,14 @@
 							});
 						}
 					});
-				} else if(keymethod=='upload') {
+				} else if(keymethod=='upload' || keymethod=='uploadecc') {
 					x509.key.generated = false;
 					var passwordprompt = document.getElementById('passwordprompt');
 					var password = false;
 					if(passwordprompt.value!='') {
 						password = passwordprompt.value;
 					}
-					uploadKey(password, function(err, response) {
+					uploadKey(keymethod, password, function(err, response) {
 						if(err) {
 							$( "#dialog" ).dialog("open");
 						} else {
@@ -1566,7 +1629,7 @@
 					//console.log(x509);
 				}
 			}
-			function uploadKey(pass, callback) {
+			function uploadKey(type, pass, callback) {
 				var formData = new FormData(),
 					file = document.getElementById('uploadedkey').files[0],
 					password = pass,
@@ -1574,7 +1637,11 @@
 				
 				formData.append('file', file);
 				formData.append('password', password);
-				request.open('POST', 'api/openssl/uploadPrivateKey', true);
+				if(type=="uploadecc") {
+					request.open('POST', 'api/openssl/uploadECCPrivateKey', true);
+				} else {
+					request.open('POST', 'api/openssl/uploadPrivateKey', true);
+				}
 				//request.setRequestHeader('Content-Disposition', 'attachment; filename="' + file + '"');
 				//request.setRequestHeader('Content-Type', file.type);
 				//request.setRequestHeader('Content-Type', 'multipart/form-data; charset=UTF-8');
@@ -1609,7 +1676,7 @@
 				var keymethodinput = document.getElementById('keymethod');
 				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
 				var password;
-				if(keymethod=='PKCS1' || keymethod=='PKCS8') {
+				if(keymethod=='PKCS1' || keymethod=='PKCS8' || keymethod=='PKCS1ECC' || keymethod=='PKCS8ECC') {
 					password = document.getElementById('password').value;
 				} else {
 					password = document.getElementById('passwordprompt').value;
@@ -1621,10 +1688,14 @@
 				}
 			}
 			
-			function pasteKey(data, callback) {
+			function pasteKey(type, data, callback) {
 				//console.log(data);
 				var request = new XMLHttpRequest();
-				request.open('POST', 'api/openssl/pasteKey', true);
+				if(type=="pasteecc") {
+					request.open('POST', 'api/openssl/pasteECCKey', true);
+				} else {
+					request.open('POST', 'api/openssl/pasteKey', true);
+				}
 				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
 				
 				request.onload = function() {
@@ -2157,10 +2228,14 @@
 									<div class="row">
 										<div class="col-lg-3 col-md-4 col-sm-8 col-xs-8">
 											<select id="keymethod" onchange="changePrivateKeyMethod(this);" class="form-control">
-												<option value="PKCS8">Generate PKCS#8 Private Key</option>
-												<option value="PKCS1">Generate PKCS#1 Private Key</option>
-												<option value="paste">Paste Existing PEM Private Key</option>
-												<option value="upload">Upload Existing Private Key</option>
+												<option value="PKCS8">Generate PKCS#8 RSA Private Key</option>
+												<option value="PKCS1">Generate PKCS#1 RSA Private Key</option>
+												<option value="PKCS8ECC">Generate PKCS#8 ECC Private Key</option>
+												<option value="PKCS1ECC">Generate PKCS#1 ECC Private Key</option>
+												<option value="paste">Paste Existing PEM RSA Private Key</option>
+												<option value="pasteecc">Paste Existing PEM ECC Private Key</option>
+												<option value="upload">Upload Existing RSA Private Key</option>
+												<option value="uploadecc">Upload Existing ECC Private Key</option>
 											</select>
 										</div>
 										<div id="keysizecol" class="col-lg-2 col-md-3 col-sm-4 col-xs-4">
@@ -2169,6 +2244,14 @@
 												<option value="1024">1024 Bit</option>
 												<option selected value="2048">2048 Bit</option>
 												<option value="4096">4096 Bit</option>
+											</select>
+										</div>
+										<div style="display: none;" id="curvescol" class="col-lg-2 col-md-3 col-sm-4 col-xs-4">
+											<select id="selcurve" class="form-control">
+												<option value="secp256k1">secp256k1</option>
+												<option value="secp384r1">secp384r1</option>
+												<option value="secp521r1">secp521r1</option>
+												<option selected value="prime256v1">prime256v1</option>
 											</select>
 										</div>
 										<div id="encryptcol" class="col-lg-1 col-md-2 col-sm-2 col-xs-3">

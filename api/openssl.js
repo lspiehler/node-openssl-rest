@@ -294,6 +294,32 @@ router.post('/uploadPrivateKey', upload.single('file'), function(req, res) {
 	});
 });
 
+router.post('/uploadECCPrivateKey', upload.single('file'), function(req, res) {
+	//console.log(req.file);
+	if(req.body.password=='false' || req.body.password==false) {
+		var password = false;
+	} else {
+		var password = req.body.password;
+	}
+	var key = req.file.buffer;
+	//var username = req.body.username;
+	//var password = req.body.password;
+	openssl.importRSAPrivateKey(key, password, function(err, key, cmd) {
+		if(err) {
+			var data = {
+				error: err,
+				key: key
+			}
+		} else {
+			var data = {
+				error: false,
+				key: key
+			}
+		}
+		res.send(data);
+	});
+});
+
 router.post('/checkCAKey', function(req, res) {
 	//console.log(req.file);
 	let cadir = getCADir(req);
@@ -326,6 +352,28 @@ router.post('/generateRSAPrivateKey', function(req, res) {
 	//var username = req.body.username;
 	//var password = req.body.password;
 	openssl.generateRSAPrivateKey(rsakeyoptions, function(err, key, cmd) {
+		if(err) {
+			var data = {
+				error: err,
+				key: key,
+				command: cmd
+			}
+		} else {
+			var data = {
+				error: false,
+				key: key,
+				command: cmd
+			}
+		}
+		res.json(data);
+	});
+});
+
+router.post('/generateECCPrivateKey', function(req, res) {
+	var rsakeyoptions = req.body;
+	//var username = req.body.username;
+	//var password = req.body.password;
+	openssl.generateECCPrivateKey(rsakeyoptions, function(err, key, cmd) {
 		if(err) {
 			var data = {
 				error: err,
@@ -584,6 +632,28 @@ router.post('/pasteKey', function(req, res) {
 	var key = req.body.key;
 	var password = req.body.password;
 	openssl.importRSAPrivateKey(key, password, function(err, key, cmd) {
+		if(err) {
+			var data = {
+				error: err,
+				key: key,
+				command: cmd
+			}
+		} else {
+			var data = {
+				error: false,
+				key: key,
+				command: cmd
+			}
+		}
+		res.json(data);
+	});
+});
+
+router.post('/pasteECCKey', function(req, res) {
+	//console.log(req.body);
+	var key = req.body.key;
+	var password = req.body.password;
+	openssl.importECCPrivateKey(key, password, function(err, key, cmd) {
 		if(err) {
 			var data = {
 				error: err,
