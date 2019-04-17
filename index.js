@@ -1,7 +1,6 @@
 //var openssl = require('./lib/openssl.js')
 var express_ssl = require('./lib/express_ssl.js')
 var config = require('./config.js');
-var curves = require('./lib/curves.js');
 var express = require('express')
 //var multer  = require('multer');
 var bodyParser = require('body-parser')
@@ -10,10 +9,6 @@ var mustacheExpress = require('mustache-express');
 var app = express();
 var httpapp = express();
 var certtemplates = require('./templates.js');
-
-/*curves.getCurves(function(availcurves) {
-	console.log(availcurves);
-});*/
 
 express_ssl.getSSL(function(sslOptions) {
 	var server = require('https').createServer(sslOptions, app).listen(config.httpsport);
