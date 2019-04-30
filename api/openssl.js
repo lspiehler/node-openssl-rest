@@ -63,6 +63,16 @@ router.get('/getCAs', function(req, res) {
 	});
 });
 
+router.get('/getAvailableCurves', function(req, res) {
+	openssl.getAvailableCurves(function(err, curves, out) {
+		if(err) {
+			res.json(false);
+		} else {
+			res.json(curves);
+		}
+	});
+});
+
 router.get('/issuer/:ca', function(req, res) {
 	let cadir = getCADir(req);
 	fs.stat(cadir + '/' + req.params.ca + '/ca.der', function(err, stat) {

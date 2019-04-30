@@ -22,14 +22,14 @@ app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies.
 // Register '.mustache' extension with The Mustache Express
 app.engine('html', mustacheExpress());
 app.set('view engine', 'html');
-app.set('views', __dirname + '/views');
 
 app.use('/bower_components',  express.static(__dirname + '/bower_components'));
+app.use('/images',  express.static(__dirname + '/images'));
 
 //app.use(express.static('files'))app.use('/api/auth', require('./api/auth'));
 
 var template = {
-	title: "CertificateTools.com CSR/Certificate Generator",
+	title: "CertificateTools.com X509 Certificate Generator",
 	certtemplates: certtemplates,
 	javascripttemplates: JSON.stringify(certtemplates, null, 4)
 	
@@ -39,6 +39,14 @@ app.get('/', function(req, res) {
 	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 	console.log('HTTPS connection from ' + ip);
 	res.render('index.html', template);
+});
+
+app.use('/', express.static(__dirname + '/views'));
+
+app.get('/newui', function(req, res) {
+        let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        console.log('HTTPS connection from ' + ip + ', redirecting to root');
+        res.redirect('/');
 });
 
 app.use(function(req, res, next) {

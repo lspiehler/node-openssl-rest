@@ -3,8 +3,37 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+		<meta name="description" content="Online x509 Certificate Generator. Create self-signed certificates, certificate signing requests (CSR), or create a root certificate authority and use it to sign other x509 certificates. Featuring support for multiple subject alternative names, multiple common names, all x509 v3 extensions, RSA and elliptic curve cryptography private keys. OpenSSL commands are shown so they can be run securely offline.">
+		<meta name="keywords" content="openssl command,certificate request,online certificate request generator,certificate request creator, openssl, csr, multiple subject alternative name, multiple common name, SAN, CN, existing certificate, template, multiple domains, private key, elliptic curve cryptography, generate self-signed certificate, self-signed certificate, certificate authority, create, generate">
+		<meta name="author" content="Lyas Spiehler">
+		<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
+                <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">
+                <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png">
+                <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png">
+                <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png">
+                <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png">
+                <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png">
+                <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png">
+                <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png">
+                <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png">
+                <link rel="icon" type="image/png" sizes="192x192"  href="/android-icon-192x192.png">
+                <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+                <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+                <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+		<meta property="og:title" content="CertificateTools.com">
+		<meta property="og:description" content="Online x509 Certificate Generator. CertificateTools.com offers the quickest and easiest way to create self-signed certificates, certificate signing requests (CSR), or create a root certificate authority and use it to sign other x509 certificates. We support multiple subject alternative names, multiple common names, all x509 v3 extensions, RSA and elliptic curve cryptography private keys. All OpenSSL commands are shown so they can be run securely offline.">
+		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
+		<meta property="og:url" content="https://certificatetools.com">
+		<meta property="og:site_name" content="CertificateTools.com">
+		<meta property="og:locale" content="en_US">
+		<meta property="og:type" content="website">
+                <link rel="manifest" href="/manifest.json">
+                <meta name="msapplication-TileColor" content="#ffffff">
+                <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+                <meta name="theme-color" content="#ffffff">
+		<title>CertificateTools.com - Online X509 Certificate Generator</title>
 		<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
-		<link rel="stylesheet" href="bower_components/jquery-ui/themes/base/jquery-ui.css">
+		<link rel="stylesheet" href="bower_components/jquery-ui/themes/base/jquery-ui.min.css">
 		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 		<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
 		<script type="text/javascript" src="bower_components/moment/min/moment.min.js"></script>
@@ -29,6 +58,15 @@
 				word-wrap: break-word; /* Internet Explorer 5.5+ */  
 			}
 		</style>
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-75343349-1"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+
+			gtag('config', 'UA-75343349-1');
+		</script>	
 		<script>
 			var certtemplates = {{{javascripttemplates}}}
 			var downloadedcerts = {
@@ -2202,7 +2240,7 @@
 								<div class="col">
 									<div class="row">
 										<div class="col">
-											<h2 class="text-center">{{title}}</h2>
+											<h1 class="text-center">{{title}}</h1>
 										</div>
 									</div>
 									<div class="row">
@@ -2601,7 +2639,11 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 							<div class="row">
 								<div class="col">
 									<div class="row">
-										<div style="margin-top: 10px; margin-bottom: 20px;" id="developedby" class="col text-center">Developed by Lyas Spiehler</div>
+										<div style="margin-top: 10px; margin-bottom: 20px;" id="developedby" class="col text-center">
+											Developed by Lyas Spiehler<br />
+											<!-- Go to www.addthis.com/dashboard to customize your tools --> <div class="addthis_sharing_toolbox"></div><br />
+											<a href="https://www.youtube.com/watch?v=O9-Ld_ceL0E">Checkout CertificateTools.com on YouTube</a>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -2810,7 +2852,8 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 						<h4 class="modal-title">Welcome</h4>
 					</div>
 					<div class="modal-body">
-						<h4>Welcome to the new certificatetools.com UI. Here are a few things the new tool can do:</h4>
+						<h3>Welcome to the new certificatetools.com UI. Here are a few things the new tool can do:</h3>
+						<h4><a href="https://www.youtube.com/watch?v=O9-Ld_ceL0E">Check out my new YouTube video overview and demonstration of the site's features.</a></h4>
 						<ul>
 							<li>Generate certificate signing requests (CSR)</li>
 							<li>Supports multiple common names and subject alternative names</li>
@@ -2922,5 +2965,6 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			populateSubject();
 		</script>
 		<form id="downloadtext"></form>
+		<!-- Go to www.addthis.com/dashboard to customize your tools --> <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-56f6c2b8ba1be9a6"></script>
 	</body>
 </html>
