@@ -217,6 +217,14 @@
 				input.value = item.parentNode.childNodes[1].innerText;
 				input.select();
 			}
+			function selectDefaultCurve() {
+				selcurve = document.getElementById('selcurve');
+				for(var i = 0; i <= selcurve.options.length - 1; i++) {
+					if(selcurve.options[i].value=='prime256v1') {
+						selcurve.options[i].selected = true;
+					}
+				}
+			}
 			function delSAN(item) {
 				item.parentNode.parentNode.removeChild(item.parentNode);
 				var list = document.getElementById('sanlist');
@@ -2286,10 +2294,13 @@
 										</div>
 										<div style="display: none;" id="curvescol" class="col-lg-2 col-md-3 col-sm-4 col-xs-4">
 											<select id="selcurve" class="form-control">
-												<option value="secp256k1">secp256k1</option>
+												<!--<option value="secp256k1">secp256k1</option>
 												<option value="secp384r1">secp384r1</option>
 												<option value="secp521r1">secp521r1</option>
-												<option selected value="prime256v1">prime256v1</option>
+												<option selected value="prime256v1">prime256v1</option>-->
+												{{#capabilities.curves}}
+													<option value="{{curve}}">{{curve}}</option>
+												{{/capabilities.curves}}
 											</select>
 										</div>
 										<div id="encryptcol" class="col-lg-1 col-md-2 col-sm-2 col-xs-3">
@@ -2952,6 +2963,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 					width: width + 'px'
 				});
 			});
+			selectDefaultCurve();
 			//alert(document.body.offsetWidth);
 			addRemoveSubjectAttrs();
 			var keymethod = document.getElementById("keymethod");

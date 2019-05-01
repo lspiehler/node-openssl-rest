@@ -9,6 +9,7 @@ var mustacheExpress = require('mustache-express');
 var app = express();
 var httpapp = express();
 var certtemplates = require('./templates.js');
+var opensslcap = require('./lib/openssl_capabilities.js');
 
 express_ssl.getSSL(function(sslOptions) {
 	var server = require('https').createServer(sslOptions, app).listen(config.httpsport);
@@ -28,20 +29,22 @@ app.use('/images',  express.static(__dirname + '/images'));
 
 //app.use(express.static('files'))app.use('/api/auth', require('./api/auth'));
 
-var template = {
-	title: "CertificateTools.com X509 Certificate Generator",
-	certtemplates: certtemplates,
-	javascripttemplates: JSON.stringify(certtemplates, null, 4)
+opensslcap.getCapabilities(function(err, capabilities) {
+	var template = {
+		title: "CertificateTools.com X509 Certificate Generator",
+		certtemplates: certtemplates,
+		javascripttemplates: JSON.stringify(certtemplates, null, 4),
+		capabilities: capabilities
+	}
+	//console.log(template);
+	app.get('/', function(req, res) {
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		console.log('HTTPS connection from ' + ip);
+		res.render('index.html', template);
+	});
 	
-}
-
-app.get('/', function(req, res) {
-	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-	console.log('HTTPS connection from ' + ip);
-	res.render('index.html', template);
+	app.use('/', express.static(__dirname + '/views'));
 });
-
-app.use('/', express.static(__dirname + '/views'));
 
 app.get('/newui', function(req, res) {
         let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
