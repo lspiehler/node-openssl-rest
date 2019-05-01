@@ -5,6 +5,7 @@
 git clone https://github.com/lspiehler/node-openssl-rest.git
 cd node-openssl-rest
 npm install
+npm install -g bower
 bower install --allow-root eonasdan-bootstrap-datetimepicker#latest bootstrap@3 jquery-ui
 ```
 
