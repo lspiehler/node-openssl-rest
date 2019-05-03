@@ -966,6 +966,7 @@
 				//var keyinput = document.getElementById('key');
 				//keyinput.innerText = keyresponse.command + '\r\n\r\n' + keyresponse.key;
 				var signvalue = signcert.options[signcert.options.selectedIndex].value;
+				googleAnalyticsEvent('Interaction', 'Generate', 'x509', signvalue)
 				var csroptions = getCSRParams();
 				if(!csroptions) {
 					return false;
@@ -1673,6 +1674,7 @@
 						$( "#accordionoutput" ).accordion( "option", "active", -1 );
 					}
 					//console.log(x509);
+					//alert('submission complete');
 				}
 			}
 			function uploadKey(type, pass, callback) {
@@ -2231,6 +2233,12 @@
 				for(var i = items.length - 1; i >= 0; i--) {
 					//console.log(items[i]);
 					list.removeChild(items[i]);
+				}
+			}
+			
+			function googleAnalyticsEvent(category, action, label, value) {
+				if(window.location.hostname=='certificatetools.com') {
+					ga('send', 'event', category, action, label, value);
 				}
 			}
 		</script>
