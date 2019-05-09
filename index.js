@@ -34,7 +34,8 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		title: "CertificateTools.com X509 Certificate Generator",
 		certtemplates: certtemplates,
 		javascripttemplates: JSON.stringify(certtemplates, null, 4),
-		capabilities: capabilities
+		capabilities: capabilities,
+		hosted: false
 	}
 	//console.log(template);
 	app.get('/', function(req, res) {
@@ -50,6 +51,12 @@ app.get('/newui', function(req, res) {
         let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
         console.log('HTTPS connection from ' + ip + ', redirecting to root');
         res.redirect('/');
+});
+
+app.get('/ca', function(req, res) {
+        let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        console.log('HTTPS connection from ' + ip + ', tshirt CA download');
+        res.redirect('/ca.crt');
 });
 
 app.use(function(req, res, next) {
