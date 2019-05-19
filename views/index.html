@@ -1258,8 +1258,9 @@
 					alert('Unrecognized private key method');
 				}
 			}
-			function downloadText(text, filename) {
+			function downloadText(text, filename, type) {
 				//alert(text);
+				googleAnalyticsEvent('Interaction', 'Download', type, '')
 				var form = document.getElementById('downloadtext');
 				form.action = 'api/openssl/returnDownload';
 				form.method = 'POST';
@@ -1376,6 +1377,7 @@
 			
 			function downloadPKCS7(index) {
 				//alert(text);
+				googleAnalyticsEvent('Interaction', 'Download', 'PKCS7', '')
 				var form = document.getElementById('downloadtext');
 				form.action = 'api/openssl/downloadPKCS7';
 				form.method = 'POST';
@@ -1419,6 +1421,7 @@
 			
 			function downloadPFX(index, password) {
 				//alert(text);
+				googleAnalyticsEvent('Interaction', 'Download', 'PKCS12', '')
 				$( "#pkcs12dialog" ).dialog( "close" );
 				var form = document.getElementById('downloadtext');
 				form.action = 'api/openssl/downloadPFX';
@@ -1482,7 +1485,7 @@
 					commandoutput.push('');
 				}
 				commandoutput.push('#Create the CSR (Click csrconfig.txt in the command below to download config)');
-				commandoutput.push(x509.csr.command[0].replace('csrconfig.txt', '<a href="javascript: downloadText(generated[' + index + '].csr.config, \'csrconfig.txt\');">csrconfig.txt</a>'));
+				commandoutput.push(x509.csr.command[0].replace('csrconfig.txt', '<a href="javascript: downloadText(generated[' + index + '].csr.config, \'csrconfig.txt\', \'csrconfig\');">csrconfig.txt</a>'));
 				if(x509.cert) {
 					commandoutput.push('');
 					if(x509.cert.signingca >= 0) {
@@ -1490,7 +1493,7 @@
 					} else {
 						commandoutput.push('#Self-sign your CSR (Click certconfig.txt in the command below to download config)');
 					}
-					commandoutput.push(x509.cert.command[0].replace('certconfig.txt', '<a href="javascript: downloadText(generated[' + index + '].cert.config, \'certconfig.txt\');">certconfig.txt</a>'));
+					commandoutput.push(x509.cert.command[0].replace('certconfig.txt', '<a href="javascript: downloadText(generated[' + index + '].cert.config, \'certconfig.txt\', \'certconfig\');">certconfig.txt</a>'));
 				}
 				//console.log(commandoutput)
 				return commandoutput.join('\r\n')
@@ -1498,11 +1501,11 @@
 			function returnDownloadLinks(x509, index) {
 				var div = document.createElement('div');
 				var keydownload = document.createElement('a');
-				keydownload.href = 'javascript: downloadText(generated[' + index + '].key.data, \'cert.key\');';
+				keydownload.href = 'javascript: downloadText(generated[' + index + '].key.data, \'cert.key\', \'key\');';
 				keydownload.innerText = 'Private Key';
 				
 				var csrdownload = document.createElement('a');
-				csrdownload.href = 'javascript: downloadText(generated[' + index + '].csr.data, \'cert.csr\');';
+				csrdownload.href = 'javascript: downloadText(generated[' + index + '].csr.data, \'cert.csr\', \'csr\');';
 				csrdownload.innerText = 'Certificate Signing Request';
 				
 				div.appendChild(keydownload);
@@ -1511,7 +1514,7 @@
 				
 				if(x509.cert) {
 					var certdownload = document.createElement('a');
-					certdownload.href = 'javascript: downloadText(generated[' + index + '].cert.data, \'cert.crt\');';
+					certdownload.href = 'javascript: downloadText(generated[' + index + '].cert.data, \'cert.crt\', \'cert\');';
 					certdownload.innerText = 'PEM Certificate';
 					div.appendChild(document.createElement('br'));
 					div.appendChild(certdownload);
@@ -2253,6 +2256,19 @@
 		</script>
 	</head>
 	<body>
+		<div style="text-align: center;">
+			<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+                                                <!-- CertificateTools.com Left -->
+                                                <ins class="adsbygoogle"
+                                                     style="display:block"
+                                                     data-ad-client="ca-pub-4797561390067055"
+                                                     data-ad-slot="8688054055"
+                                                     data-ad-format="auto"
+                                                     data-full-width-responsive="true"></ins>
+                                                <script>
+                                                (adsbygoogle = window.adsbygoogle || []).push({});
+                                        </script>
+		</div>
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
@@ -2264,7 +2280,7 @@
 							<div class="row">
 								<div class="col">
 									<div class="row">
-										<div class="col">
+										<div class="col text-center">
 											<h1 class="text-center">{{title}}</h1>
 										</div>
 									</div>
