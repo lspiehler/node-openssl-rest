@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+		<meta name="description" content="Online x509 Certificate Generator. Create self-signed certificates, certificate signing requests (CSR), or a root certificate authority. Featuring support for multiple subject alternative names, multiple common names, x509 v3 extensions, RSA and elliptic curve cryptography. OpenSSL commands are shown so they can be run securely offline.">
+		<meta name="keywords" content="openssl command,certificate request,online certificate request generator,certificate request creator, openssl, csr, multiple subject alternative name, multiple common name, SAN, CN, existing certificate, template, multiple domains, private key, elliptic curve cryptography, generate self-signed certificate, self-signed certificate, certificate authority, create, generate, online, tool">
+		<meta name="author" content="Lyas Spiehler">
+		<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
+                <link rel="apple-touch-icon" sizes="57x57" href="/images/apple-icon-57x57.png">
+                <link rel="apple-touch-icon" sizes="60x60" href="/images/apple-icon-60x60.png">
+                <link rel="apple-touch-icon" sizes="72x72" href="/images/apple-icon-72x72.png">
+                <link rel="apple-touch-icon" sizes="76x76" href="/images/apple-icon-76x76.png">
+                <link rel="apple-touch-icon" sizes="114x114" href="/images/apple-icon-114x114.png">
+                <link rel="apple-touch-icon" sizes="120x120" href="/images/apple-icon-120x120.png">
+                <link rel="apple-touch-icon" sizes="144x144" href="/images/apple-icon-144x144.png">
+                <link rel="apple-touch-icon" sizes="152x152" href="/images/apple-icon-152x152.png">
+                <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png">
+                <link rel="icon" type="image/png" sizes="192x192"  href="/images/android-icon-192x192.png">
+                <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+                <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+                <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+		<meta property="og:title" content="CertificateTools.com">
+		<meta property="og:description" content="Online x509 Certificate Generator. CertificateTools.com offers the quickest and easiest way to create self-signed certificates, certificate signing requests (CSR), or create a root certificate authority and use it to sign other x509 certificates. We support multiple subject alternative names, multiple common names, all x509 v3 extensions, RSA and elliptic curve cryptography private keys. All OpenSSL commands are shown so they can be run securely offline.">
+		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
+		<meta property="og:url" content="https://certificatetools.com">
+		<meta property="og:site_name" content="CertificateTools.com">
+		<meta property="og:locale" content="en_US">
+		<meta property="og:type" content="website">
+                <link rel="manifest" href="/manifest.json">
+                <meta name="msapplication-TileColor" content="#ffffff">
+                <meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
+                <meta name="theme-color" content="#ffffff">
+		<title>CertificateTools.com - Online X509 Certificate Generator</title>
+		<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+		<link rel="stylesheet" href="bower_components/jquery-ui/themes/base/jquery-ui.min.css">
+		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="bower_components/moment/min/moment.min.js"></script>
+		<script type="text/javascript" src="bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
+	</head>
+	<body>
+			<div id="choosecert" title="Select a Certificate">
+				<p>The query returned a chain of multiple certificates. Please select the one you'd like to use from the dropdown:</p>
+				<p><select class="form-control" id="downloadedcerts">
+				</select></p>
+				<p class="text-center"><button onclick="getSelectedCert();" type="button" class="btn btn-primary">Submit</button></p>
+				
+			</div>
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+						<select onchange="templateMethod(this);" class="form-control" id="templatemethod" >
+							<option value="ssltls">SSL/TLS Download</option>
+							<option value="starttls">STARTTLS Download</option>
+							<option value="paste">Paste</option>
+						</select>
+					</div>
+				</div>
+				<div style="margin-top: 10px;" class="row">
+					<div id="protocolcontain" class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+						<select onchange="changeProtocol(this);" style="display: none;" class="form-control" id="starttls">
+							<option value="smtp">SMTP</option>
+							<option value="pop3">POP3</option>
+							<option value="imap">IMAP</option>
+							<option value="ftp">FTP</option>
+							<option value="xmpp">XMPP</option>
+							<option value="xmpp-server">XMPP-Server</option>
+							<option value="irc">IRC</option>
+							<option value="postgres">Postgres</option>
+							<option value="mysql">MySQL</option>
+							<option value="lmtp">LMTP</option>
+							<option value="nntp">NNTP</option>
+							<option value="sieve">Sieve</option>
+							<option value="ldap">LDAP</option>
+						</select>
+						<select onchange="changeProtocol(this);" class="form-control" id="ssltls">
+							<option value="https">HTTPS</option>
+							<option value="smtps">SMTPS</option>
+							<option value="pop3s">POP3S</option>
+							<option value="imaps">IMAPS</option>
+							<option value="ftps">FTPS</option>
+							<option value="ldaps">LDAPS</option>
+							<option value="other">Other</option>
+						</select>
+					</div>
+					<div id="hostcontain" class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+						<input id='hostname' type="text" placeholder="google.com" class="form-control" /> 
+					</div>
+					<div id="pastecontain" class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="display:none;">
+						<textarea rows="5" class="form-control" style="white-space: pre; word-wrap: normal; overflow-wrap: normal; overflow-x: auto; font-family: Courier, monospace;" id="pastedcert"></textarea>
+					</div>
+					<div id="delimcontain" class="col-lg-1 col-md-1 col-sm-1 col-xs-1"><span style="font-size: 20px;">:</span></div>
+					<div id="portcontain" class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+						<input id="port" readonly type="text" placeholder="443" value="443" class="form-control" /> 
+					</div>
+				</div>
+				<div style="margin-top: 10px;" class="row">
+					<div class="col text-center">
+						<button onclick="importCert();" type="button" class="btn btn-primary">Submit</button>
+					</div>
+				</div>
+			</div>
+		<script>
+		function templateMethod(elem) {
+				var method = elem.options[elem.selectedIndex].value;
+				var ssltlsinput = document.getElementById('ssltls');
+				var starttlsinput = document.getElementById('starttls');
+				var protocolcontain = document.getElementById('protocolcontain');
+				var hostcontain = document.getElementById('hostcontain');
+				var portcontain = document.getElementById('portcontain');
+				var delimcontain = document.getElementById('delimcontain');
+				var pastecontain = document.getElementById('pastecontain');
+				if(method=='ssltls') {
+					pastecontain.style.display = 'none';
+					delimcontain.style.display = 'block';
+					protocolcontain.style.display = 'block';
+					hostcontain.style.display = 'block';
+					portcontain.style.display = 'block';
+					ssltlsinput.style.display = 'inline';
+					starttlsinput.style.display = 'none';
+					changeProtocol(ssltlsinput);
+				} else if(method=='starttls') {
+					pastecontain.style.display = 'none';
+					delimcontain.style.display = 'block';
+					protocolcontain.style.display = 'block';
+					hostcontain.style.display = 'block';
+					portcontain.style.display = 'block';
+					ssltlsinput.style.display = 'none';
+					starttlsinput.style.display = 'inline';
+					changeProtocol(starttlsinput);
+				} else {
+					delimcontain.style.display = 'none';
+					pastecontain.style.display = 'block';
+					protocolcontain.style.display = 'none';
+					hostcontain.style.display = 'none';
+					portcontain.style.display = 'none';
+				}
+			}
+			function changeProtocol(elem) {
+				var protocol = elem.options[elem.selectedIndex].value;
+				var port = document.getElementById('port');
+				if(protocol=='https') {
+					port.value = '443';
+					port.readOnly = true;
+				} else if(protocol=='smtps') {
+					port.value = '465';
+					port.readOnly = true;
+				} else if(protocol=='pop3s') {
+					port.value = '995';
+					port.readOnly = true;
+				} else if(protocol=='imaps') {
+					port.value = '993';
+					port.readOnly = true;
+				} else if(protocol=='ftps') {
+					port.value = '990';
+					port.readOnly = true;
+				} else if(protocol=='ldaps') {
+					port.value = '636';
+					port.readOnly = true;
+				} else if(protocol=='smtp') {
+					port.readOnly = false;
+					port.focus();
+					port.value = '25';
+				} else {
+					port.readOnly = false;
+					port.value = '';
+					port.focus();
+				}
+			}
+			
+			function showDownloadedCerts(certs) {
+				if(certs) {
+					var downloadedcerts = document.getElementById('downloadedcerts');
+					for(var i = downloadedcerts.options.length - 1; i >= 0; i--) {
+						downloadedcerts.remove(i);
+					}
+					for(var i = 0; i <= certs.length - 1; i++) {
+						var option = document.createElement('option');
+						option.value = i;
+						if(certs[i].options.subject.commonName) {
+							if(typeof(certs[i].options.subject.commonName)=='object') {
+								option.innerText = certs[i].options.subject.commonName[0];
+							} else {
+								option.innerText = certs[i].options.subject.commonName
+							}
+						} else {
+							option.innerText = 'Certificate' + i;
+						}
+						downloadedcerts.add(option);
+					}
+				}
+				$( "#choosecert" ).dialog("open");
+			}
+			
+			function getSelectedCert() {
+				var downloadedcert = document.getElementById('downloadedcerts');
+				var cert = downloadedcert.options[downloadedcert.selectedIndex].value;
+				processImportedCert(downloadedcerts.certs[cert].options);
+			}
+			
+			function openSSLRESTAPI(api, data, callback) {
+				var request = new XMLHttpRequest();
+				request.open('POST', 'api/openssl/' + api, true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						if(resp.error) {
+							callback(resp.error, resp);
+						} else {
+							callback(false, resp);
+						}
+						return;
+						//var key = document.getElementById('key');
+						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						//var csroptions = getCSRParams();
+						//generateCSR(resp.key, csroptions);
+					} else {
+						// We reached our target server, but it returned an error
+						callback(resp, false);
+						return;
+					}
+				};
+
+				request.onerror = function() {
+					callback(true, false);
+					return;
+					// There was a connection error of some sort
+				};
+
+				request.send(JSON.stringify(data));
+			}
+			
+			function importCert() {
+				var netcertoptions = {};
+				//googleAnalyticsEvent('Interaction', 'Import', 'x509')
+				var methodinput = document.getElementById('templatemethod');
+				var method = methodinput.options[methodinput.selectedIndex].value;
+				if(method != 'paste') {
+					var protocolinput = document.getElementById(method);
+					var protocol = protocolinput.options[protocolinput.selectedIndex].value;
+					var hostname = document.getElementById('hostname');
+					var port = document.getElementById('port');
+					netcertoptions.hostname = hostname.value;
+					netcertoptions.port = parseInt(port.value);
+					if(method=='starttls') {
+						netcertoptions.starttls = true;
+					} else {
+						netcertoptions.starttls = false;
+					}
+					netcertoptions.protocol = protocol;
+					if(downloadedcerts.lastparams == JSON.stringify(netcertoptions)) {
+						$( "#template" ).dialog("close");
+						if(downloadedcerts.certs.length == 1 ) {
+							processImportedCert(downloadedcerts.certs[0].options);
+						} else {
+							showDownloadedCerts(false);
+						}
+					} else {
+						openSSLRESTAPI('getCertFromNetwork', netcertoptions, function(error, response) {
+							if(error) {
+								alert(error);
+							} else {
+								$( "#template" ).dialog("close");
+								//console.log(response);
+								downloadedcerts.certs.length = 0;
+								downloadedcerts.lastparams = JSON.stringify(netcertoptions);
+								downloadedcerts.certs = response.csroptions;
+								if(response.csroptions.length == 1 ) {
+									processImportedCert(response.csroptions[0].options);
+								} else {
+									showDownloadedCerts(response.csroptions);
+								}
+							}
+						});
+					}
+				} else {
+					var pastedcert = document.getElementById('pastedcert');
+					var data = {
+						cert: pastedcert.value
+					}
+					openSSLRESTAPI('getCSRFromCert', data, function(error, response) {
+						if(error) {
+						
+						} else {
+							$( "#template" ).dialog("close");
+							//console.log(response);
+							processImportedCert(response.csroptions);
+						}
+					});
+				}
+			}
+			$( "#choosecert" ).dialog({
+				modal: true,
+				autoOpen: false
+			});
+			
+			var downloadedcerts = {
+				lastparams: '',
+				certs: []
+			}
+			
+			var templatemethod = document.getElementById('templatemethod');
+			templateMethod(templatemethod);
+		</script>
+	</body>
+</html>

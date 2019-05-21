@@ -11,6 +11,8 @@ RUN git clone https://github.com/lspiehler/node-openssl-rest.git
 
 WORKDIR /root/node-openssl-rest
 
+VOLUME /root/node-openssl-rest/ca
+
 RUN npm install
 
 RUN npm install bower -g
