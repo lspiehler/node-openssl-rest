@@ -3,7 +3,11 @@ module.exports = {
 		name: "node-openssl-rest",
 		script: "./index.js",
 		env: {
-			PUBLICHTTP: "certificatetools.com:8080"
+			PUBLICHTTP: false,
+			CAIPDIR: false,
+			HTTPPORT: 8080,
+			HTTPSPORT: 8443,
+			HOSTED: false
 		}
 	}]
 }

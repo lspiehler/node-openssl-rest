@@ -10,6 +10,19 @@ var app = express();
 var httpapp = express();
 var certtemplates = require('./templates.js');
 var opensslcap = require('./lib/openssl_capabilities.js');
+const fs = require('fs');
+
+if (fs.existsSync('./ca/global')) {
+	console.log('exists');
+} else {
+	fs.mkdirSync('./ca/global');
+}
+
+console.log('CAIPDIR is set to "' + config.caIPDir + '"');
+console.log('HOSTED is set to "' + config.hosted + '"');
+console.log('HTTPPORT is set to "' + config.httpport + '"');
+console.log('HTTPSPORT is set to "' + config.httpsport + '"');
+console.log('PUBLICHTTP is set to "' + config.publichttp + '"');
 
 express_ssl.getSSL(function(sslOptions) {
 	var server = require('https').createServer(sslOptions, app).listen(config.httpsport);
@@ -35,7 +48,7 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		certtemplates: certtemplates,
 		javascripttemplates: JSON.stringify(certtemplates, null, 4),
 		capabilities: capabilities,
-		hosted: false
+		hosted: config.hosted
 	}
 	//console.log(template);
 	app.get('/', function(req, res) {

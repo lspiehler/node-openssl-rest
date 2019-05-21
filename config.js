@@ -1,11 +1,13 @@
 var config = {
 	
 	//for public hosted, create CA directory for source IP
-	caIPDir: false,
+	caIPDir: process.env.CAIPDIR || false,
+
+	hosted: process.env.HOSTED || false,
 	
-	httpport: 8080,
+	httpport: process.env.HTTPPORT || 8080,
 	
-	httpsport: 8443,
+	httpsport: process.env.HTTPSPORT || 8443,
 	
 	//will enable ocsp and aia
 	publichttp: process.env.PUBLICHTTP || false,
