@@ -198,7 +198,8 @@
 			function getSelectedCert() {
 				var downloadedcert = document.getElementById('downloadedcerts');
 				var cert = downloadedcert.options[downloadedcert.selectedIndex].value;
-				processImportedCert(downloadedcerts.certs[cert].options);
+				//processImportedCert(downloadedcerts.certs[cert].options);
+				console.log(downloadedcerts.certs[cert]);
 			}
 			
 			function openSSLRESTAPI(api, data, callback) {
