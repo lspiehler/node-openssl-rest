@@ -8,6 +8,7 @@ var config = require('../config.js');
 var email = require('../email.js');
 const nodemailer = require('nodemailer');
 var md5 = require('md5');
+var ocsplib = require('../lib/ocsp_checker.js');
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
@@ -693,6 +694,26 @@ router.post('/pasteKey', function(req, res) {
 				key: key,
 				command: cmd
 			}
+		}
+		res.json(data);
+	});
+});
+
+router.post('/ocspChecker', function(req, res) {
+	var ocsp = new ocsplib();
+	console.log(req.body)
+	var netcertoptions = {
+		        hostname: req.body.hostname,
+		        port: 443,
+		        starttls: false,
+		        protocol: 'https'
+	}
+
+	ocsp.getCertFromNetwork(netcertoptions, function(err, response, cmd) {
+		var data = {
+			error: err,
+			response: response,
+			command: cmd
 		}
 		res.json(data);
 	});

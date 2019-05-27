@@ -1,6 +1,7 @@
 //var openssl = require('./lib/openssl.js')
 var express_ssl = require('./lib/express_ssl.js')
 var config = require('./config.js');
+var html = require('./html.js');
 var express = require('express')
 //var multer  = require('multer');
 var bodyParser = require('body-parser')
@@ -48,7 +49,8 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		certtemplates: certtemplates,
 		javascripttemplates: JSON.stringify(certtemplates, null, 4),
 		capabilities: capabilities,
-		hosted: config.hosted
+		hosted: config.hosted,
+		header: html.header.join('\r\n')
 	}
 	//console.log(template);
 	app.get('/', function(req, res) {
@@ -56,7 +58,13 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		console.log('HTTPS connection from ' + ip);
 		res.render('index.html', template);
 	});
-	
+
+	app.get('/ocsp_checker', function(req, res) {
+                let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+                console.log('HTTPS connection from ' + ip);
+                res.render('ocsp_checker.html', template);
+        });
+
 	app.use('/', express.static(__dirname + '/views'));
 });
 
