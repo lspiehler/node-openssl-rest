@@ -117,9 +117,54 @@
 				request.send(JSON.stringify(data));
 			}
 	
-			function showResponse(resp) {
-				alert(resp.response);
-				console.log(parseOCSPResponse(resp.response));
+			function showResponse(resp, domain) {
+				var attrs = [
+					'OCSP Response Status',
+					'Cert Status',
+					'This Update',
+					'Next Update',
+					'Produced At',
+					'Response Type'
+				]
+				//console.log(resp);
+				var ocspresp = parseOCSPResponse(resp.response);
+				var div = document.getElementById('resptable');
+				div.innerHTML = '';
+				var table = document.createElement('table');
+				Object.keys(ocspresp).forEach(function (key) {
+					//console.log(item); // key
+					//console.log(lunch[item]); // value
+					if(attrs.indexOf(key) >= 0) {
+						var row = table.insertRow(0);
+						var col0 = row.insertCell(0);
+						var col1 = row.insertCell(1);
+						col0.innerText = key
+						col1.innerText = ocspresp[key]
+						if(key=='Cert Status') {
+							if(ocspresp[key]=='good') {
+								col1.style.color = 'green';
+								col1.style.fontWeight = 'bold';
+							} else {
+								col1.style.color = 'red';
+								col1.style.fontWeight = 'bold';
+							}
+						}
+					}
+				});
+				var row = table.insertRow(0);
+				var col0 = row.insertCell(0);
+				var col1 = row.insertCell(1);
+				col0.innerText = 'OCSP URI'
+				col1.innerText = resp.command.uri
+				var hostname = document.getElementById('hostname');
+				var row = table.insertRow(0);
+				var col0 = row.insertCell(0);
+				var col1 = row.insertCell(1);
+				col0.innerText = 'Domain'
+				col1.innerText = hostname.value
+				div.className = 'table-responsive'
+				table.className = 'table'
+				div.appendChild(table);
 			}
 
 			function parseOCSPResponse(resp) {
@@ -220,11 +265,22 @@
 				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
 					
 				</div>
+			</div><br />
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+				<div class="col-lg-6 col-md-6 col-sm-8 col-xs-10">
+					<div class="row">
+						<div id="resptable"></div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
 			</div>
 		</div>
 		</form>
-		<br />
-		<div id="resptable"></div>
 		<br />
 		<div class="ad">
 			<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
