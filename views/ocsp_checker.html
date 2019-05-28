@@ -1,0 +1,243 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+		<meta name="description" content="Check the ocsp status of your X509 certificate using the domain name or by pasting the contents of your Base64 certificate..">
+		<meta name="keywords" content="ocsp checker, ocsp status, ocsp validator, ocsp tester, check ocsp, ocsp, online certificate status protocol">
+		<meta name="author" content="Lyas Spiehler">
+		<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
+		<link rel="apple-touch-icon" sizes="57x57" href="/images/apple-icon-57x57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="/images/apple-icon-60x60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="/images/apple-icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="/images/apple-icon-76x76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="/images/apple-icon-114x114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="/images/apple-icon-120x120.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="/images/apple-icon-144x144.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="/images/apple-icon-152x152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png">
+		<link rel="icon" type="image/png" sizes="192x192"  href="/images/android-icon-192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+		<meta property="og:title" content="CertificateTools.com - OCSP Checker">
+		<meta property="og:description" content="Online x509 Certificate Generator. CertificateTools.com offers the quickest and easiest way to create self-signed certificates, certificate signing requests (CSR), or create a root certificate authority and use it to sign other x509 certificates. We support multiple subject alternative names, multiple common names, all x509 v3 extensions, RSA and elliptic curve cryptography private keys. All OpenSSL commands are shown so they can be run securely offline.">
+		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
+		<meta property="og:url" content="https://certificatetools.com">
+		<meta property="og:site_name" content="CertificateTools.com">
+		<meta property="og:locale" content="en_US">
+		<meta property="og:type" content="website">
+		<meta name="msapplication-TileColor" content="#ffffff">
+		<meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
+		<meta name="theme-color" content="#ffffff">
+		<title>OCSP Checker</title>
+		<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+		<link rel="stylesheet" href="bower_components/jquery-ui/themes/base/jquery-ui.min.css">
+		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
+		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="/loader.css" />
+		<style>
+			input {
+				border: 0;
+				outline: 0;
+				background: transparent;
+				border-bottom: 2px solid #d4d3d3;
+				font-size: 30px;
+				width: 90% !important;
+				margin: auto;
+			}
+			div.ad {
+				text-align: center;
+			}
+			body {
+				padding-top: 70px;
+			}
+			div.container {
+				width: 100%;
+				text-align: center;
+			}
+			div #loading {
+				display: none;
+			}
+			h1 {
+				text-align: center;
+			}
+		</style>
+		<script>
+                        var hosted = {{hosted}};
+                </script>
+                <!-- Global site tag (gtag.js) - Google Analytics -->
+                <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75343349-1"></script>
+                <script>
+                        if(hosted) {
+                                window.dataLayer = window.dataLayer || [];
+                                function gtag(){dataLayer.push(arguments);}
+                                gtag('js', new Date());
+
+                                gtag('config', 'UA-75343349-1');
+                        }
+                </script>
+		<script>
+			var attempt = 0;
+			var maxattempts = 3;
+			function openSSLRESTAPI(api, data, callback) {
+				var request = new XMLHttpRequest();
+				request.open('POST', 'api/openssl/' + api, true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						if(resp.error) {
+							//console.log(resp);
+							callback(resp.error, resp);
+						} else {
+							callback(false, resp);
+						}
+						return;
+						//var key = document.getElementById('key');
+						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						//var csroptions = getCSRParams();
+						//generateCSR(resp.key, csroptions);
+					} else {
+						// We reached our target server, but it returned an error
+						callback(resp, false);
+						return;
+					}
+				};
+
+				request.onerror = function(err) {
+					callback(err, false);
+					//console.log(err);
+					return;
+					// There was a connection error of some sort
+				};
+
+				request.send(JSON.stringify(data));
+			}
+	
+			function showResponse(resp) {
+				alert(resp.response);
+				console.log(parseOCSPResponse(resp.response));
+			}
+
+			function parseOCSPResponse(resp) {
+			        //console.log(resp);
+			        var ocspresp = {}
+			        let body = resp.split('OCSP Response Data:')[1].split('Signature Algorithm:')[0];
+			        let splitbody = body.split('\n');
+			        for(let i = 0; i <= splitbody.length - 1; i++) {
+			                if(splitbody[i].indexOf(':') >= 0) {
+			                        let values = splitbody[i].split(':');
+			                        if(values.length == 2) {
+			                                ocspresp[values[0].trim(' ')] = values[1].trim(' ').replace('\r', '');
+			                        } else if(values.length >= 3) {
+			                                ocspresp[values[0].trim(' ')] = values.slice(1).join(':').trim(' ').replace('\r','');
+			                        } else {
+			
+			                        }
+			                }
+			        }
+			        return ocspresp;
+
+			}
+			
+			function OCSPChecker() {
+				var loading = document.getElementById('loading');
+				var hostname = document.getElementById('hostname');
+				var data = {
+					hostname: hostname.value
+				}
+				googleAnalyticsEvent('Interaction', 'OCSP', 'Query', hostname.value)
+				//alert(hostname.value);
+				loading.style.display = 'block';
+				openSSLRESTAPI('ocspChecker', data, function(error, response) {
+					loading.style.display = 'none';
+					if(error) {
+						//alert(error);
+						console.log(response);
+						if(error.indexOf('Error querying OCSP responder') >= 0) {
+							//alert('Matched' + error);
+							if(attempts <= maxattempts) {
+								attempts++;
+								OCSPChecker();
+							} else {
+								alert(error);
+							}
+						} else {
+							alert(error);
+						}
+					} else {
+						attempts = 0;
+						//$( "#template" ).dialog("close");
+						showResponse(response);
+						//console.log(response.command);
+						//processImportedCert(response.csroptions);
+					}
+				});
+
+			}
+			function submitForm() {
+				//e.preventDefault();
+				OCSPChecker();
+			}
+			function googleAnalyticsEvent(category, action, label, value) {
+                                if(hosted) {
+                                        gtag('event', action, {
+                                                'event_category': category,
+                                                'event_label': label,
+                                                'value': value
+                                        });
+                                }
+                        }
+		</script>
+	</head>
+	<body>
+		{{{header}}}
+		<h1 class="display-1">OCSP Checker</h1><br />
+		<form onsubmit="submitForm(); return false;">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+				<div class="col-lg-5 col-md-5 col-sm-6 col-xs-7">
+					<div class="row">
+						<input id="hostname" type="text" class="form-control" placeholder="www.google.com" />
+					</div>
+					<div id="loading" class="row">
+						<div class="container">
+	                                                <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+						</div>
+                                        </div>
+				</div>
+				<div class="col-lg-1 col-md-1 col-sm-2 col-xs-3">
+					<div class="row">
+						<input class="btn btn-primary btn-md" type="submit" value="Validate"/>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+			</div>
+		</div>
+		</form>
+		<br />
+		<div id="resptable"></div>
+		<br />
+		<div class="ad">
+			<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+			<!-- CertificateTools.com - OCSP Checker -->
+			<ins class="adsbygoogle"
+			     style="display:block"
+			     data-ad-client="ca-pub-4797561390067055"
+			     data-ad-slot="5860436506"
+			     data-ad-format="auto"
+			     data-full-width-responsive="true"></ins>
+			<script>
+				(adsbygoogle = window.adsbygoogle || []).push({});
+			</script>
+		</div>
+	</body>
+</html>
