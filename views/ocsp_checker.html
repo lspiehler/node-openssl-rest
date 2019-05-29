@@ -43,10 +43,16 @@
 				background: transparent;
 				border-bottom: 2px solid #d4d3d3;
 				font-size: 30px;
+				/*width: 90% !important;*/
+				/*margin: auto;*/
+			}
+			input #id, #hostname {
 				width: 90% !important;
-				margin: auto;
 			}
 			div.ad {
+				text-align: center;
+			}
+			div.options {
 				text-align: center;
 			}
 			body {
@@ -248,6 +254,23 @@
 					
 				</div>
 				<div class="col-lg-5 col-md-5 col-sm-6 col-xs-7">
+					<div class="row options">
+						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+							<label class="checkbox-inline radio-inline control-label">
+								<input type="radio" name="optradio" checked>
+								Download
+							</label>
+						</div>
+						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+							<label class="checkbox-inline radio-inline control-label">
+								<input type="radio" name="optradio">
+								Paste
+							</label>
+						</div>
+					</div>
+					<div class="row">
+						&nbsp;
+					</div>
 					<div class="row">
 						<input id="hostname" type="text" class="form-control" placeholder="www.google.com" />
 					</div>
@@ -259,7 +282,16 @@
 				</div>
 				<div class="col-lg-1 col-md-1 col-sm-2 col-xs-3">
 					<div class="row">
-						<input class="btn btn-primary btn-md" type="submit" value="Validate"/>
+						&nbsp;
+					</div>
+					<div class="row">
+						&nbsp;
+					</div>
+					<div class="row">
+						<input id="submit" class="btn btn-primary btn-md" type="submit" value="Validate"/>
+					</div>
+					<div class="row">
+						&nbsp;
 					</div>
 				</div>
 				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
