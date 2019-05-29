@@ -171,12 +171,15 @@
 				var col1 = row.insertCell(1);
 				col0.innerText = 'OCSP URI'
 				col1.innerText = resp.command.uri
-				var hostname = document.getElementById('hostname');
-				var row = table.insertRow(0);
-				var col0 = row.insertCell(0);
-				var col1 = row.insertCell(1);
-				col0.innerText = 'Domain'
-				col1.innerText = hostname.value
+				var method = getMethod();
+				if(method=='download') {
+					var hostname = document.getElementById('hostname');
+					var row = table.insertRow(0);
+					var col0 = row.insertCell(0);
+					var col1 = row.insertCell(1);
+					col0.innerText = 'Domain'
+					col1.innerText = hostname.value
+				}
 				div.className = 'table-responsive'
 				table.className = 'table'
 				div.appendChild(table);
@@ -206,8 +209,21 @@
 			function OCSPChecker() {
 				var loading = document.getElementById('loading');
 				var hostname = document.getElementById('hostname');
-				var data = {
-					hostname: hostname.value
+				var pastex509 = document.getElementById('pastex509');
+				var method = getMethod();
+				if(method=='download') {
+					var data = {
+						hostname: hostname.value,
+						method: method
+					}
+				
+				} else if(method==='paste') {
+					var data = {
+						cert: pastex509.value,
+						method: method
+					}
+				} else {
+					//should never happen
 				}
 				googleAnalyticsEvent('Interaction', 'OCSP', 'Query', hostname.value)
 				//alert(hostname.value);
@@ -260,24 +276,26 @@
 					});
 				}
 			}
-			function checkMethod() {
+			function getMethod() {
 				var methods = document.getElementsByClassName('methods');
-				var hostname = document.getElementById('hostname');
-				var pastex509 = document.getElementById('pastex509');
 				for(var i = 0; i <= methods.length - 1; i++) {
 					if(methods[i].checked) {
-						if(methods[i].value=='download') {
-							//alert(methods[i].value);
-							pastex509.style.display = 'none';
-							hostname.style.display = 'inline';
-						} else if(methods[i].value=='paste') {
-							//alert(methods[i].value);
-							pastex509.style.display = 'inline';
-							hostname.style.display = 'none';
-						} else {
-							//this should not happen
-						}
-					}
+						return methods[i].value;
+					}					
+				}
+			}
+			function checkMethod() {
+				var hostname = document.getElementById('hostname');
+				var pastex509 = document.getElementById('pastex509');
+				var method = getMethod();
+				if(method=='download') {
+					pastex509.style.display = 'none';
+					hostname.style.display = 'inline';
+				} else if(method=='paste') {
+					pastex509.style.display = 'inline';
+					hostname.style.display = 'none';
+				} else {
+					//this should not happen
 				}
 			}
 		</script>
