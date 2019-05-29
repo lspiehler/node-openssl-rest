@@ -49,6 +49,15 @@
 			input #id, #hostname {
 				width: 90% !important;
 			}
+			textarea {
+				width: 90% !important;
+				white-space: pre;
+				word-wrap: normal;
+				overflow-wrap: normal;
+				overflow-x: auto;
+				font-family: Courier, monospace;
+				display: none;
+			}
 			div.ad {
 				text-align: center;
 			}
@@ -234,14 +243,43 @@
 				OCSPChecker();
 			}
 			function googleAnalyticsEvent(category, action, label, value) {
-                                if(hosted) {
-                                        gtag('event', action, {
-                                                'event_category': category,
-                                                'event_label': label,
-                                                'value': value
-                                        });
-                                }
-                        }
+					if(hosted) {
+							gtag('event', action, {
+									'event_category': category,
+									'event_label': label,
+									'value': value
+							});
+					}
+			}
+			function addEventListeners() {
+				var methods = document.getElementsByClassName('methods');
+				for(var i = 0; i <= methods.length - 1; i++) {
+					methods[i].addEventListener("change", function(e){
+						//console.log(e.target);
+						checkMethod();
+					});
+				}
+			}
+			function checkMethod() {
+				var methods = document.getElementsByClassName('methods');
+				var hostname = document.getElementById('hostname');
+				var pastex509 = document.getElementById('pastex509');
+				for(var i = 0; i <= methods.length - 1; i++) {
+					if(methods[i].checked) {
+						if(methods[i].value=='download') {
+							//alert(methods[i].value);
+							pastex509.style.display = 'none';
+							hostname.style.display = 'inline';
+						} else if(methods[i].value=='paste') {
+							//alert(methods[i].value);
+							pastex509.style.display = 'inline';
+							hostname.style.display = 'none';
+						} else {
+							//this should not happen
+						}
+					}
+				}
+			}
 		</script>
 	</head>
 	<body>
@@ -257,13 +295,13 @@
 					<div class="row options">
 						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
 							<label class="checkbox-inline radio-inline control-label">
-								<input type="radio" name="optradio" checked>
+								<input class="methods" value="download" type="radio" name="optradio" checked>
 								Download
 							</label>
 						</div>
 						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
 							<label class="checkbox-inline radio-inline control-label">
-								<input type="radio" name="optradio">
+								<input class="methods" value="paste" type="radio" name="optradio">
 								Paste
 							</label>
 						</div>
@@ -273,12 +311,35 @@
 					</div>
 					<div class="row">
 						<input id="hostname" type="text" class="form-control" placeholder="www.google.com" />
+						<textarea class="form-control" id="pastex509" rows="12" placeholder="-----BEGIN CERTIFICATE-----
+MIID6TCCAtGgAwIBAgIJAN4Na2ZH0EY0MA0GCSqGSIb3DQEBCwUAMFUxHTAbBgNV
+BAMMFGNlcnRpZmljYXRldG9vbHMuY29tMQswCQYDVQQGEwJVUzEUMBIGA1UECAwL
+TWlzc2lzc2lwcGkxETAPBgNVBAcMCEd1bGZwb3J0MB4XDTE5MDUyOTE5MzUwNloX
+DTIwMDUyODE5MzUwNlowVTEdMBsGA1UEAwwUY2VydGlmaWNhdGV0b29scy5jb20x
+CzAJBgNVBAYTAlVTMRQwEgYDVQQIDAtNaXNzaXNzaXBwaTERMA8GA1UEBwwIR3Vs
+ZnBvcnQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDnkHwsjm5Dy7vv
+1Wn2EbI0jO3A+csR5j+mV79XbOnwt42EHCPaHZaWYLNmHHTKAdY0T0hqUvRJ7Z74
+aA0CpaqWJXKEAWB91m36MWaOpOKhpUuDxjiZ+zjsWIJHAnzD9h9vTTyjYP9MtonL
+bJcmwCB1zjuEwrs9tLvV5XNf+9YFGExtoryMhlUT3v99iSlqQaMo0jvMt6jdq0U2
+Dw7PX49tgJ7KXwVeJFzJwdu9V8KMYj/1e2ef1ENYTf7sUmbQ/E1rSIZJKw7NLNHJ
+8COElfNcZ7zwLT9lAevBalhpXkAci2/wVLVtKoGNZk9wbVHIDKs3qRL6JLaTesII
+RzLSaInhAgMBAAGjgbswgbgwHQYDVR0OBBYEFHLKAagfyG9Gab44XRzG65XSgo32
+MB8GA1UdIwQYMBaAFHLKAagfyG9Gab44XRzG65XSgo32MA4GA1UdDwEB/wQEAwIF
+oDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADA5
+BgNVHREEMjAwghRjZXJ0aWZpY2F0ZXRvb2xzLmNvbYIYd3d3LmNlcnRpZmljYXRl
+dG9vbHMuY29tMA0GCSqGSIb3DQEBCwUAA4IBAQAWeU9/PmhM1O5BJZW9ntXnbxZ0
+RWzIFuuher00ybTQ21zBhUrsjtwHm4DJmKkzQy/yJH2Bmx96qxQVQYWH5r+jFEUe
+yTixsWjhQpTcIsp4HdT4CcYH98NWEMI/ABTnA1zhFZ6oR3hC2wtSVpOdiW4OO08C
+EP0vnqjF5TMAv4WxpJuFA48jl1y2+TIfTGC2FXrMvkZlI8T4v22uUTQ7UnztGFF3
+zje8M8+FQsF1Q0ps61A1RECKHHtpuLnvP95NZsLAnf2AjnUFM/jX2+1KqZPiiGE0
+bnkWlGM+OZ2Mn7Bl/VPK2fWrhNSDX5JMDV5cpcboa+wAwRR/Ejr+x/yoAV9W
+-----END CERTIFICATE-----"></textarea>
 					</div>
 					<div id="loading" class="row">
 						<div class="container">
-	                                                <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+							<div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
 						</div>
-                                        </div>
+					</div>
 				</div>
 				<div class="col-lg-1 col-md-1 col-sm-2 col-xs-3">
 					<div class="row">
@@ -325,6 +386,10 @@
 			     data-full-width-responsive="true"></ins>
 			<script>
 				(adsbygoogle = window.adsbygoogle || []).push({});
+			</script>
+			<script>
+				addEventListeners();
+				checkMethod();
 			</script>
 		</div>
 	</body>
