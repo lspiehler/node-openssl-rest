@@ -158,6 +158,7 @@
 			function openSSLCommand(command) {
 				//console.log(ocspresponse.command.cert.base64);
 				command = command.replace('ca.pem', '<a href="javascript: downloadText(ocspresponse.command.ca, \'ca.crt\', \'ca.crt\')">ca.crt</a>');
+				command = command.replace('ca.pem', '<a href="javascript: downloadText(ocspresponse.command.ca, \'ca.crt\', \'ca.crt\')">ca.crt</a>');
 				command = command.replace('cert.pem', '<a href="javascript: downloadText(ocspresponse.command.cert.base64, \'cert.crt\', \'cert.crt\')">cert.crt</a>');
 				//alert(command);
 				return command;
@@ -209,7 +210,7 @@
 				col0.innerText = 'OCSP URI'
 				col1.innerText = resp.command.uri;
 				var method = getMethod();
-				if(method=='download') {
+				//if(method=='download') {
 					var hostname = document.getElementById('hostname');
 					var row = table.insertRow(0);
 					var col0 = row.insertCell(0);
@@ -218,7 +219,7 @@
 					col1.id = 'namescol';
 					col1.innerHTML = showDomainNames(resp.command.cert)
 					//console.log(resp.command);
-				}
+				//}
 				div.className = 'table-responsive'
 				table.className = 'table'
 				div.appendChild(table);

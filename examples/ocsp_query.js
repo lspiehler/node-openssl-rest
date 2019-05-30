@@ -10,16 +10,16 @@ var netcertoptions = {
 	protocol: 'https'
 }
 
-ocsp.getCertFromNetwork(netcertoptions, function(err, response, cmd) {
+/*ocsp.getCertFromNetwork(netcertoptions, function(err, response, cmd) {
 	if(err) {
 		console.log(err);
 	} else {
 		console.log(response);
 		console.log(cmd);
 	}
-});
+});*/
 
-/*fs.readFile('./test.crt', function(err, contents) {
+fs.readFile('./cert.cer', function(err, contents) {
 	//console.log(contents);
 	ocsp.query(contents.toString(), function(err, resp, cmd) {
 		if(err) {
@@ -32,4 +32,4 @@ ocsp.getCertFromNetwork(netcertoptions, function(err, response, cmd) {
 			//console.log(cmd.cert);
 		}
 	});
-});*/
+});
