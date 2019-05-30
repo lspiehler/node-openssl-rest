@@ -95,6 +95,7 @@
 		<script>
 			var attempt = 0;
 			var maxattempts = 3;
+			var ocspresponse;
 			function openSSLRESTAPI(api, data, callback) {
 				var request = new XMLHttpRequest();
 				request.open('POST', 'api/openssl/' + api, true);
@@ -131,6 +132,36 @@
 
 				request.send(JSON.stringify(data));
 			}
+			
+			function downloadText(text, filename, type) {
+				alert(text);
+				googleAnalyticsEvent('Interaction', 'Download', type, '')
+				var form = document.getElementById('downloadtext');
+				form.action = 'api/openssl/returnDownload';
+				form.method = 'POST';
+				var datainput = document.createElement('textarea');
+				datainput.name = "data"
+				datainput.innerHTML = text;
+				datainput.style.display = "none";
+				var filenameinput = document.createElement('input');
+				filenameinput.name = "filename"
+				filenameinput.value = filename;
+				filenameinput.type = "hidden";
+				form.appendChild(datainput);
+				form.appendChild(filenameinput);
+				form.submit();
+				
+				form.removeChild(datainput);
+				form.removeChild(filenameinput);
+			}
+			
+			function openSSLCommand(command) {
+				//console.log(ocspresponse.command.cert.base64);
+				command = command.replace('ca.pem', '<a href="javascript: downloadText(ocspresponse.command.ca, \'ca.crt\', \'ca.crt\')">ca.crt</a>');
+				command = command.replace('cert.pem', '<a href="javascript: downloadText(ocspresponse.command.cert.base64, \'cert.crt\', \'cert.crt\')">cert.crt</a>');
+				//alert(command);
+				return command;
+			}
 	
 			function showResponse(resp, domain) {
 				var attrs = [
@@ -146,6 +177,12 @@
 				var div = document.getElementById('resptable');
 				div.innerHTML = '';
 				var table = document.createElement('table');
+				var row = table.insertRow(0);
+				var col0 = row.insertCell(0);
+				var col1 = row.insertCell(1);
+				col0.innerText = 'OpenSSL Command'
+				col1.innerHTML = openSSLCommand(resp.command.command);
+				//console.log(resp.command.command);
 				Object.keys(ocspresp).forEach(function (key) {
 					//console.log(item); // key
 					//console.log(lunch[item]); // value
@@ -170,19 +207,68 @@
 				var col0 = row.insertCell(0);
 				var col1 = row.insertCell(1);
 				col0.innerText = 'OCSP URI'
-				col1.innerText = resp.command.uri
+				col1.innerText = resp.command.uri;
 				var method = getMethod();
 				if(method=='download') {
 					var hostname = document.getElementById('hostname');
 					var row = table.insertRow(0);
 					var col0 = row.insertCell(0);
 					var col1 = row.insertCell(1);
-					col0.innerText = 'Domain'
-					col1.innerText = hostname.value
+					col0.innerText = 'Domain Name(s)'
+					col1.id = 'namescol';
+					col1.innerHTML = showDomainNames(resp.command.cert)
+					//console.log(resp.command);
 				}
 				div.className = 'table-responsive'
 				table.className = 'table'
 				div.appendChild(table);
+			}
+			
+			function showDomainNames(cert) {
+				console.log(cert);
+				var domains = '';
+				if(cert.extensions.SANs) {
+					for(var i = 0; i <= cert.extensions.SANs.DNS.length - 1; i++) {
+						//console.log('here');
+						if(i == 0) {
+							domains = cert.extensions.SANs.DNS[i];
+						} else if(i <= 2) {
+							domains = domains + ', ' + cert.extensions.SANs.DNS[i];
+						} else {
+							domains = domains + '... <a href="javascript: showAllDomains(\'san\')">more</a>';
+							break
+						}
+					}
+				} else if(cert.subject.commonName) {
+					if(typeof(cert.subject.commonName=='string')) {
+						domains = cert.subject.commonName;
+					} else {
+						for(var i = 0; i <= cert.extensions.commonName.length - 1; i++) {
+							if(i == 0) {
+								domains = cert.extensions.commonName[i];
+							} else if(i <= 2) {
+								domains = domains + ', ' + cert.extensions.commonName[i];
+							} else {
+								domains = domains + '... <a href="javascript: showAllDomains(\'cn\')">more</a>';
+							}
+						}
+					}
+				} else {
+					domains = '';
+				}
+				console.log(domains);
+				return domains;
+			}
+			
+			function showAllDomains(type) {
+				var names = document.getElementById('namescol');
+				if(type=='cn') {
+					names.innerText = ocspresponse.command.cert.extensions.commonName.join(', ');
+				} else if(type='san') {
+					names.innerText = ocspresponse.command.cert.extensions.SANs.DNS.join(', ');
+				} else {
+				
+				}
 			}
 
 			function parseOCSPResponse(resp) {
@@ -247,6 +333,7 @@
 					} else {
 						attempts = 0;
 						//$( "#template" ).dialog("close");
+						ocspresponse = response;
 						showResponse(response);
 						//console.log(response.command);
 						//processImportedCert(response.csroptions);
@@ -410,5 +497,6 @@ bnkWlGM+OZ2Mn7Bl/VPK2fWrhNSDX5JMDV5cpcboa+wAwRR/Ejr+x/yoAV9W
 				checkMethod();
 			</script>
 		</div>
+		<form id="downloadtext"></form>
 	</body>
 </html>
