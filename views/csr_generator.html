@@ -1,0 +1,283 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+		<meta name="description" content="Check the OCSP status of your X509 certificate using the domain name or by pasting the contents of your Base64 encoded certificate.">
+		<meta name="keywords" content="ocsp checker, ocsp status, ocsp validator, ocsp tester, check ocsp, ocsp, online certificate status protocol">
+		<meta name="author" content="Lyas Spiehler">
+		<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
+		<link rel="apple-touch-icon" sizes="57x57" href="/images/apple-icon-57x57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="/images/apple-icon-60x60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="/images/apple-icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="/images/apple-icon-76x76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="/images/apple-icon-114x114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="/images/apple-icon-120x120.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="/images/apple-icon-144x144.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="/images/apple-icon-152x152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png">
+		<link rel="icon" type="image/png" sizes="192x192"  href="/images/android-icon-192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+		<meta property="og:title" content="CertificateTools.com - OCSP Checker">
+		<meta property="og:description" content="Check the OCSP status of your X509 certificate using the domain name or by pasting the contents of your Base64 encoded certificate.">
+		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
+		<meta property="og:url" content="https://certificatetools.com">
+		<meta property="og:site_name" content="CertificateTools.com">
+		<meta property="og:locale" content="en_US">
+		<meta property="og:type" content="website">
+		<meta name="msapplication-TileColor" content="#ffffff">
+		<meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
+		<meta name="theme-color" content="#ffffff">
+		<title>OCSP Checker</title>
+		<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+		<link rel="stylesheet" href="bower_components/jquery-ui/themes/base/jquery-ui.min.css">
+		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
+		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="/loader.css" />
+		<style>
+			input {
+				border: 0;
+				outline: 0;
+				background: transparent;
+				border-bottom: 2px solid #d4d3d3;
+				font-size: 30px;
+				/*width: 90% !important;*/
+				/*margin: auto;*/
+			}
+			input #id, #hostname {
+				width: 90% !important;
+			}
+			textarea {
+				width: 90% !important;
+				white-space: pre;
+				word-wrap: normal;
+				overflow-wrap: normal;
+				overflow-x: auto;
+				font-family: Courier, monospace;
+				display: none;
+			}
+			div.ad {
+				text-align: center;
+			}
+			div.options {
+				text-align: center;
+			}
+			body {
+				padding-top: 70px;
+			}
+			div.container {
+				width: 100%;
+				text-align: center;
+			}
+			div #loading {
+				display: none;
+			}
+			h1 {
+				text-align: center;
+			}
+		</style>
+		<script>
+                        var hosted = {{hosted}};
+                </script>
+                <!-- Global site tag (gtag.js) - Google Analytics -->
+                <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75343349-1"></script>
+                <script>
+                        if(hosted) {
+                                window.dataLayer = window.dataLayer || [];
+                                function gtag(){dataLayer.push(arguments);}
+                                gtag('js', new Date());
+
+                                gtag('config', 'UA-75343349-1');
+                        }
+                </script>
+		<script>
+			var attempt = 0;
+			var maxattempts = 3;
+			var ocspresponse;
+			function openSSLRESTAPI(api, data, callback) {
+				var request = new XMLHttpRequest();
+				request.open('POST', 'api/openssl/' + api, true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						if(resp.error) {
+							//console.log(resp);
+							callback(resp.error, resp);
+						} else {
+							callback(false, resp);
+						}
+						return;
+						//var key = document.getElementById('key');
+						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						//var csroptions = getCSRParams();
+						//generateCSR(resp.key, csroptions);
+					} else {
+						// We reached our target server, but it returned an error
+						callback(resp, false);
+						return;
+					}
+				};
+
+				request.onerror = function(err) {
+					callback(err, false);
+					//console.log(err);
+					return;
+					// There was a connection error of some sort
+				};
+
+				request.send(JSON.stringify(data));
+			}
+			
+			function downloadText(text, filename, type) {
+				alert(text);
+				googleAnalyticsEvent('Interaction', 'Download', type, '')
+				var form = document.getElementById('downloadtext');
+				form.action = 'api/openssl/returnDownload';
+				form.method = 'POST';
+				var datainput = document.createElement('textarea');
+				datainput.name = "data"
+				datainput.innerHTML = text;
+				datainput.style.display = "none";
+				var filenameinput = document.createElement('input');
+				filenameinput.name = "filename"
+				filenameinput.value = filename;
+				filenameinput.type = "hidden";
+				form.appendChild(datainput);
+				form.appendChild(filenameinput);
+				form.submit();
+				
+				form.removeChild(datainput);
+				form.removeChild(filenameinput);
+			}
+			
+			function submitForm() {
+				//e.preventDefault();
+				OCSPChecker();
+			}
+			function googleAnalyticsEvent(category, action, label, value) {
+					if(hosted) {
+							gtag('event', action, {
+									'event_category': category,
+									'event_label': label,
+									'value': value
+							});
+					}
+			}
+			function addEventListeners() {
+				/*var methods = document.getElementsByClassName('methods');
+				for(var i = 0; i <= methods.length - 1; i++) {
+					methods[i].addEventListener("change", function(e){
+						//console.log(e.target);
+						checkMethod();
+					});
+				}*/
+			}
+		</script>
+	</head>
+	<body>
+		{{{header}}}
+		<h1 class="display-1">CSR Generator</h1><br />
+		<form onsubmit="submitForm(); return false;">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+				<div class="col-lg-5 col-md-5 col-sm-6 col-xs-7">
+					<div class="row options">
+						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+							<label class="checkbox-inline radio-inline control-label">
+								<input class="methods" value="download" type="radio" name="optradio" checked>
+								Download
+							</label>
+						</div>
+						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+							<label class="checkbox-inline radio-inline control-label">
+								<input class="methods" value="paste" type="radio" name="optradio">
+								Paste
+							</label>
+						</div>
+					</div>
+					<div class="row">
+						&nbsp;
+					</div>
+					<div class="row">
+						<input id="hostname" type="text" class="form-control" placeholder="www.google.com" />
+						<textarea class="form-control" id="pastex509" rows="12" placeholder="-----BEGIN CERTIFICATE-----
+MIID6TCCAtGgAwIBAgIJAN4Na2ZH0EY0MA0GCSqGSIb3DQEBCwUAMFUxHTAbBgNV
+BAMMFGNlcnRpZmljYXRldG9vbHMuY29tMQswCQYDVQQGEwJVUzEUMBIGA1UECAwL
+TWlzc2lzc2lwcGkxETAPBgNVBAcMCEd1bGZwb3J0MB4XDTE5MDUyOTE5MzUwNloX
+DTIwMDUyODE5MzUwNlowVTEdMBsGA1UEAwwUY2VydGlmaWNhdGV0b29scy5jb20x
+CzAJBgNVBAYTAlVTMRQwEgYDVQQIDAtNaXNzaXNzaXBwaTERMA8GA1UEBwwIR3Vs
+ZnBvcnQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDnkHwsjm5Dy7vv
+1Wn2EbI0jO3A+csR5j+mV79XbOnwt42EHCPaHZaWYLNmHHTKAdY0T0hqUvRJ7Z74
+aA0CpaqWJXKEAWB91m36MWaOpOKhpUuDxjiZ+zjsWIJHAnzD9h9vTTyjYP9MtonL
+bJcmwCB1zjuEwrs9tLvV5XNf+9YFGExtoryMhlUT3v99iSlqQaMo0jvMt6jdq0U2
+Dw7PX49tgJ7KXwVeJFzJwdu9V8KMYj/1e2ef1ENYTf7sUmbQ/E1rSIZJKw7NLNHJ
+8COElfNcZ7zwLT9lAevBalhpXkAci2/wVLVtKoGNZk9wbVHIDKs3qRL6JLaTesII
+RzLSaInhAgMBAAGjgbswgbgwHQYDVR0OBBYEFHLKAagfyG9Gab44XRzG65XSgo32
+MB8GA1UdIwQYMBaAFHLKAagfyG9Gab44XRzG65XSgo32MA4GA1UdDwEB/wQEAwIF
+oDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADA5
+BgNVHREEMjAwghRjZXJ0aWZpY2F0ZXRvb2xzLmNvbYIYd3d3LmNlcnRpZmljYXRl
+dG9vbHMuY29tMA0GCSqGSIb3DQEBCwUAA4IBAQAWeU9/PmhM1O5BJZW9ntXnbxZ0
+RWzIFuuher00ybTQ21zBhUrsjtwHm4DJmKkzQy/yJH2Bmx96qxQVQYWH5r+jFEUe
+yTixsWjhQpTcIsp4HdT4CcYH98NWEMI/ABTnA1zhFZ6oR3hC2wtSVpOdiW4OO08C
+EP0vnqjF5TMAv4WxpJuFA48jl1y2+TIfTGC2FXrMvkZlI8T4v22uUTQ7UnztGFF3
+zje8M8+FQsF1Q0ps61A1RECKHHtpuLnvP95NZsLAnf2AjnUFM/jX2+1KqZPiiGE0
+bnkWlGM+OZ2Mn7Bl/VPK2fWrhNSDX5JMDV5cpcboa+wAwRR/Ejr+x/yoAV9W
+-----END CERTIFICATE-----"></textarea>
+					</div>
+					<div id="loading" class="row">
+						<div class="container">
+							<div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-1 col-md-1 col-sm-2 col-xs-3">
+					<div class="row">
+						&nbsp;
+					</div>
+					<div class="row">
+						&nbsp;
+					</div>
+					<div class="row">
+						<input id="submit" class="btn btn-primary btn-md" type="submit" value="Validate"/>
+					</div>
+					<div class="row">
+						&nbsp;
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+			</div><br />
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+				<div class="col-lg-6 col-md-6 col-sm-8 col-xs-10">
+					<div class="row">
+						<div id="resptable"></div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+			</div>
+		</div>
+		</form>
+		<br />
+		<div class="ad">
+		</div>
+		<form id="downloadtext"></form>
+	</body>
+	<script>
+		addEventListeners();
+		checkMethod();
+	</script>
+</html>

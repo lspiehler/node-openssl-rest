@@ -45,7 +45,7 @@ var routeIssuer = function(req, res, global) {
 	fs.stat(cadir + '/' + caname + '/ca.der', function(err, stat) {
 		if(err == null) {
 			console.log('Issuer lookup for ' + caname + ', DER exists');
-			fs.readFile(cadir + '/' + caname + '/ca.crt', function(err, der) {
+			fs.readFile(cadir + '/' + caname + '/ca.der', function(err, der) {
 				var mimetype = 'application/x-x509-ca-cert';
 				res.setHeader('Content-disposition', 'attachment; filename=' + caname + '.cer');
 				res.setHeader('Content-type', mimetype);
@@ -59,7 +59,7 @@ var routeIssuer = function(req, res, global) {
 					console.log('Issuer lookup for ' + caname + ', creating DER');
 					//console.log('here');
 					fs.readFile(cadir + '/' + caname + '/ca.crt', function(err, data) {
-						openssl.convertPEMtoDER(data, function(err, der, cmd){
+						openssl.convertPEMtoDER(data.toString(), function(err, der, cmd){
 							fs.writeFile(cadir + '/' + caname + '/ca.der', der, function(err) {
 								var mimetype = 'application/x-x509-ca-cert';
 								res.setHeader('Content-disposition', 'attachment; filename=' + caname + '.cer');
