@@ -226,7 +226,7 @@
 			}
 			
 			function showDomainNames(cert) {
-				console.log(cert);
+				//console.log(cert);
 				var domains = '';
 				if(cert.extensions.SANs) {
 					for(var i = 0; i <= cert.extensions.SANs.DNS.length - 1; i++) {
@@ -234,21 +234,23 @@
 						if(i == 0) {
 							domains = cert.extensions.SANs.DNS[i];
 						} else if(i <= 2) {
-							domains = domains + ', ' + cert.extensions.SANs.DNS[i];
+							domains = domains + ',&nbsp;' + cert.extensions.SANs.DNS[i];
 						} else {
 							domains = domains + '... <a href="javascript: showAllDomains(\'san\')">more</a>';
 							break
 						}
 					}
 				} else if(cert.subject.commonName) {
-					if(typeof(cert.subject.commonName=='string')) {
+					//console.log(typeof(cert.subject.commonName));
+					if(typeof(cert.subject.commonName)=='string') {
 						domains = cert.subject.commonName;
 					} else {
-						for(var i = 0; i <= cert.extensions.commonName.length - 1; i++) {
+						//console.log(cert.subject.commonName);
+						for(var i = 0; i <= cert.subject.commonName.length - 1; i++) {
 							if(i == 0) {
-								domains = cert.extensions.commonName[i];
+								domains = cert.subject.commonName[i];
 							} else if(i <= 2) {
-								domains = domains + ', ' + cert.extensions.commonName[i];
+								domains = domains + ',&nbsp;' + cert.subject.commonName[i];
 							} else {
 								domains = domains + '... <a href="javascript: showAllDomains(\'cn\')">more</a>';
 							}
@@ -257,14 +259,14 @@
 				} else {
 					domains = '';
 				}
-				console.log(domains);
+				//console.log(domains);
 				return domains;
 			}
 			
 			function showAllDomains(type) {
 				var names = document.getElementById('namescol');
 				if(type=='cn') {
-					names.innerText = ocspresponse.command.cert.extensions.commonName.join(', ');
+					names.innerText = ocspresponse.command.cert.subject.commonName.join(', ');
 				} else if(type='san') {
 					names.innerText = ocspresponse.command.cert.extensions.SANs.DNS.join(', ');
 				} else {
@@ -319,7 +321,7 @@
 					loading.style.display = 'none';
 					if(error) {
 						//alert(error);
-						console.log(response);
+						//console.log(response);
 						if(error.indexOf('Error querying OCSP responder') >= 0) {
 							//alert('Matched' + error);
 							if(attempts <= maxattempts) {
