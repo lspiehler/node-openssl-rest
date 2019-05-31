@@ -1,9 +1,10 @@
+<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 		<meta name="description" content="Check the OCSP status of your X509 certificate using the domain name or by pasting the contents of your Base64 encoded certificate.">
-		<meta name="keywords" content="ocsp checker, ocsp status, ocsp validator, ocsp tester, check ocsp, ocsp, online certificate status protocol">
+		<meta name="keywords" content="csr generator, generate csr, generate certificate signing request, multiple domain, san, multiple common name, subject alternative names, ecc, rsa">
 		<meta name="author" content="Lyas Spiehler">
 		<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 		<link rel="apple-touch-icon" sizes="57x57" href="/images/apple-icon-57x57.png">
@@ -29,7 +30,7 @@
 		<meta name="msapplication-TileColor" content="#ffffff">
 		<meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
 		<meta name="theme-color" content="#ffffff">
-		<title>OCSP Checker</title>
+		<title>CSR Generator</title>
 		<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
 		<link rel="stylesheet" href="bower_components/jquery-ui/themes/base/jquery-ui.min.css">
 		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -46,7 +47,7 @@
 				/*width: 90% !important;*/
 				/*margin: auto;*/
 			}
-			input #id, #hostname {
+			input #id, #hostnames {
 				width: 90% !important;
 			}
 			textarea {
@@ -157,9 +158,119 @@
 			
 			function submitForm() {
 				//e.preventDefault();
-				var loading = document.getElementById('loading');
-				loading.style.display = 'block';
+				showLoader(true);
+				getPrivateKey();
 			}
+			
+			function showLoader(enable) {
+				var loading = document.getElementById('loading');
+				if(enable) {
+					loading.style.display = 'block';
+				} else {
+					loading.style.display = 'none';
+				}
+			}
+			
+			function getKeyType() {
+				var keytype = document.getElementsByClassName('keytype');
+				for(var i = 0; i <= keytype.length - 1; i++) {
+					if(keytype[i].checked) {
+						return keytype[i].value;
+					}
+				}
+			}
+			
+			function getPrivateKey() {
+				var hostnames = document.getElementById('hostnames');
+				if(hostnames.value!='') {
+					var keyoptions = {
+						format: 'PKCS8'
+					}
+					
+					//console.log(getKeyType());
+					
+					if(getKeyType()=='ecc') {
+						keyoptions.curve = 'prime256v1';
+						openSSLRESTAPI('generateECCPrivateKey', keyoptions, function(err, response) {
+							if(err) {
+								console.log(response);
+							} else {
+								//console.log(response.key);
+								generateCSR(response);
+							}
+						});
+					} else {
+						keyoptions.rsa_keygen_bits = 2048;
+						openSSLRESTAPI('generateRSAPrivateKey', keyoptions, function(err, response) {
+							if(err) {
+								console.log(response);
+							} else {
+								//console.log(response.key);
+								generateCSR(response);
+							}
+						});
+					}
+				} else {
+					showLoader(false);
+					alert('You must enter at least one or more hostnames.');
+				}
+			}
+			
+			function generateCSR(key) {
+				//console.log(key);
+				var domains = [];
+				var hostnames = document.getElementById('hostnames');
+				var hostnamessplit = hostnames.value.split(',');
+				for(var i = 0; i <= hostnamessplit.length - 1; i++) {
+					domains.push(hostnamessplit[i].trim(' '));
+				}
+				var csr = {
+					subject: {
+						commonName: domains[0]
+					},
+					extensions: {
+						SANs: {
+							DNS: domains
+						},
+						keyUsage: {
+							critical: true,
+							usages: [
+								'digitalSignature'
+							]
+						},
+						extendedKeyUsage: {
+							usages: [
+								'serverAuth'
+							]
+						}
+					},
+					hash: 'sha256'
+				}
+				if(getKeyType()=='rsa') {
+					csr.extensions.keyUsage.usages.push('keyEncipherment');
+					csr.extensions.extendedKeyUsage.usages.push('clientAuth');
+				} else {
+				
+				}
+				//console.log(csr);
+				var data = {
+					options: csr,
+					key: key.key
+				}
+				openSSLRESTAPI('generateCSR', data, function(error, response) {
+					showOutput(key, response);
+				});
+			}
+			
+			function showOutput(key, csr) {
+				console.log(key);
+				console.log(csr);
+				var output = document.getElementById('output');
+				output.innerText = key.key + csr.csr
+				output.style.fontFamily = 'Courier, monospace';
+				showLoader(false);
+			}
+			
 			function googleAnalyticsEvent(category, action, label, value) {
 					if(hosted) {
 							gtag('event', action, {
@@ -174,7 +285,6 @@
 				for(var i = 0; i <= methods.length - 1; i++) {
 					methods[i].addEventListener("change", function(e){
 						//console.log(e.target);
-						checkMethod();
 					});
 				}*/
 			}
@@ -190,11 +300,25 @@
 					
 				</div>
 				<div class="col-lg-5 col-md-5 col-sm-6 col-xs-7">
+					<div class="row options">
+						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+							<label class="checkbox-inline radio-inline control-label">
+								<input class="keytype" value="rsa" type="radio" name="optradio" checked>
+								RSA
+							</label>
+						</div>
+						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+							<label class="checkbox-inline radio-inline control-label">
+								<input class="keytype" value="ecc" type="radio" name="optradio">
+								ECC
+							</label>
+						</div>
+					</div>
 					<div class="row">
 						&nbsp;
 					</div>
 					<div class="row">
-						<input id="hostname" type="text" class="form-control" placeholder="google.com, www.google.com" />
+						<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />
 					</div>
 					<div id="loading" class="row">
 						<div class="container">
@@ -203,6 +327,9 @@
 					</div>
 				</div>
 				<div class="col-lg-1 col-md-1 col-sm-2 col-xs-3">
+					<div class="row">
+						&nbsp;
+					</div>
 					<div class="row">
 						&nbsp;
 					</div>
@@ -217,6 +344,23 @@
 					
 				</div>
 			</div>
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					<div class="row">
+						&nbsp;
+					</div>
+				</div>
+				<div class="col-lg-5 col-md-5 col-sm-6 col-xs-7">
+					<div id="output" class="row">
+						
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					<div class="row">
+						&nbsp;
+					</div>
+				</div>
+			</div>
 		</div>
 		</form>
 		<br />
@@ -226,6 +370,5 @@
 	</body>
 	<script>
 		addEventListeners();
-		checkMethod();
 	</script>
 </html>
