@@ -157,7 +157,8 @@
 			
 			function submitForm() {
 				//e.preventDefault();
-				OCSPChecker();
+				var loading = document.getElementById('loading');
+				loading.style.display = 'block';
 			}
 			function googleAnalyticsEvent(category, action, label, value) {
 					if(hosted) {
@@ -189,48 +190,11 @@
 					
 				</div>
 				<div class="col-lg-5 col-md-5 col-sm-6 col-xs-7">
-					<div class="row options">
-						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-							<label class="checkbox-inline radio-inline control-label">
-								<input class="methods" value="download" type="radio" name="optradio" checked>
-								Download
-							</label>
-						</div>
-						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-							<label class="checkbox-inline radio-inline control-label">
-								<input class="methods" value="paste" type="radio" name="optradio">
-								Paste
-							</label>
-						</div>
-					</div>
 					<div class="row">
 						&nbsp;
 					</div>
 					<div class="row">
-						<input id="hostname" type="text" class="form-control" placeholder="www.google.com" />
-						<textarea class="form-control" id="pastex509" rows="12" placeholder="-----BEGIN CERTIFICATE-----
-MIID6TCCAtGgAwIBAgIJAN4Na2ZH0EY0MA0GCSqGSIb3DQEBCwUAMFUxHTAbBgNV
-BAMMFGNlcnRpZmljYXRldG9vbHMuY29tMQswCQYDVQQGEwJVUzEUMBIGA1UECAwL
-TWlzc2lzc2lwcGkxETAPBgNVBAcMCEd1bGZwb3J0MB4XDTE5MDUyOTE5MzUwNloX
-DTIwMDUyODE5MzUwNlowVTEdMBsGA1UEAwwUY2VydGlmaWNhdGV0b29scy5jb20x
-CzAJBgNVBAYTAlVTMRQwEgYDVQQIDAtNaXNzaXNzaXBwaTERMA8GA1UEBwwIR3Vs
-ZnBvcnQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDnkHwsjm5Dy7vv
-1Wn2EbI0jO3A+csR5j+mV79XbOnwt42EHCPaHZaWYLNmHHTKAdY0T0hqUvRJ7Z74
-aA0CpaqWJXKEAWB91m36MWaOpOKhpUuDxjiZ+zjsWIJHAnzD9h9vTTyjYP9MtonL
-bJcmwCB1zjuEwrs9tLvV5XNf+9YFGExtoryMhlUT3v99iSlqQaMo0jvMt6jdq0U2
-Dw7PX49tgJ7KXwVeJFzJwdu9V8KMYj/1e2ef1ENYTf7sUmbQ/E1rSIZJKw7NLNHJ
-8COElfNcZ7zwLT9lAevBalhpXkAci2/wVLVtKoGNZk9wbVHIDKs3qRL6JLaTesII
-RzLSaInhAgMBAAGjgbswgbgwHQYDVR0OBBYEFHLKAagfyG9Gab44XRzG65XSgo32
-MB8GA1UdIwQYMBaAFHLKAagfyG9Gab44XRzG65XSgo32MA4GA1UdDwEB/wQEAwIF
-oDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADA5
-BgNVHREEMjAwghRjZXJ0aWZpY2F0ZXRvb2xzLmNvbYIYd3d3LmNlcnRpZmljYXRl
-dG9vbHMuY29tMA0GCSqGSIb3DQEBCwUAA4IBAQAWeU9/PmhM1O5BJZW9ntXnbxZ0
-RWzIFuuher00ybTQ21zBhUrsjtwHm4DJmKkzQy/yJH2Bmx96qxQVQYWH5r+jFEUe
-yTixsWjhQpTcIsp4HdT4CcYH98NWEMI/ABTnA1zhFZ6oR3hC2wtSVpOdiW4OO08C
-EP0vnqjF5TMAv4WxpJuFA48jl1y2+TIfTGC2FXrMvkZlI8T4v22uUTQ7UnztGFF3
-zje8M8+FQsF1Q0ps61A1RECKHHtpuLnvP95NZsLAnf2AjnUFM/jX2+1KqZPiiGE0
-bnkWlGM+OZ2Mn7Bl/VPK2fWrhNSDX5JMDV5cpcboa+wAwRR/Ejr+x/yoAV9W
------END CERTIFICATE-----"></textarea>
+						<input id="hostname" type="text" class="form-control" placeholder="google.com, www.google.com" />
 					</div>
 					<div id="loading" class="row">
 						<div class="container">
@@ -243,26 +207,10 @@ bnkWlGM+OZ2Mn7Bl/VPK2fWrhNSDX5JMDV5cpcboa+wAwRR/Ejr+x/yoAV9W
 						&nbsp;
 					</div>
 					<div class="row">
-						&nbsp;
-					</div>
-					<div class="row">
-						<input id="submit" class="btn btn-primary btn-md" type="submit" value="Validate"/>
+						<input id="submit" class="btn btn-primary btn-md" type="submit" value="Generate"/>
 					</div>
 					<div class="row">
 						&nbsp;
-					</div>
-				</div>
-				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
-					
-				</div>
-			</div><br />
-			<div class="row">
-				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
-					
-				</div>
-				<div class="col-lg-6 col-md-6 col-sm-8 col-xs-10">
-					<div class="row">
-						<div id="resptable"></div>
 					</div>
 				</div>
 				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
