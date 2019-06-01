@@ -65,6 +65,9 @@
 			div.options {
 				text-align: center;
 			}
+			div#loading {
+				text-align: center;
+			}
 			body {
 				padding-top: 70px;
 			}
@@ -94,6 +97,8 @@
                         }
                 </script>
 		<script>
+			var key;
+			var csr;
 			var attempt = 0;
 			var maxattempts = 3;
 			var ocspresponse;
@@ -212,7 +217,7 @@
 					}
 				} else {
 					showLoader(false);
-					alert('You must enter at least one or more hostnames.');
+					alert('You must enter at least one or more domain names.');
 				}
 			}
 			
@@ -292,76 +297,90 @@
 	</head>
 	<body>
 		{{{header}}}
-		<h1 class="display-1">CSR Generator</h1><br />
 		<form onsubmit="submitForm(); return false;">
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
-					
+				<div class="col-lg-1 col-md-1 col-sm-0 col-xs-0">
+
 				</div>
-				<div class="col-lg-5 col-md-5 col-sm-6 col-xs-7">
-					<div class="row options">
-						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-							<label class="checkbox-inline radio-inline control-label">
-								<input class="keytype" value="rsa" type="radio" name="optradio" checked>
-								RSA
-							</label>
-						</div>
-						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-							<label class="checkbox-inline radio-inline control-label">
-								<input class="keytype" value="ecc" type="radio" name="optradio">
-								ECC
-							</label>
+				<div class="col-lg-6 col-md-6 col-sm-8 col-xs-12">
+					<div class="row">
+						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+							
 						</div>
 					</div>
 					<div class="row">
-						&nbsp;
-					</div>
-					<div class="row">
-						<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />
-					</div>
-					<div id="loading" class="row">
-						<div class="container">
-							<div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+							<div class="row">
+								<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+									<h1 class="display-1">CSR Generator</h1>
+								</div>
+							</div>
+							<div class="row options">
+								<div class="col-lg-2 col-md-2 col-sm-1 col-xs-0">
+									&nbsp;
+								</div>
+								<div class="col-lg-4 col-md-4 col-sm-5 col-xs-6">
+									<label class="checkbox-inline radio-inline control-label">
+										<input class="keytype" value="rsa" type="radio" name="optradio" checked>
+										RSA
+									</label>
+								</div>
+								<div class="col-lg-4 col-md-4 col-sm-5 col-xs-6">
+									<label class="checkbox-inline radio-inline control-label">
+										<input class="keytype" value="ecc" type="radio" name="optradio">
+										ECC
+									</label>
+								</div>
+								<div class="col-lg-2 col-md-2 col-sm-1 col-xs-0">
+									&nbsp;
+								</div>
+							</div>
+							<div class="row">
+								&nbsp;
+							</div>
+							<div class="row">
+								<div class="col-lg-10 col-md-10 col-sm-9 col-xs-8">
+									<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />
+								</div>
+								<div class="row">
+									<div class="col-lg-2 col-md-2 col-sm-3 col-xs-4">
+										<input id="submit" class="btn btn-primary btn-md" type="submit" value="Generate"/>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div id="loading" class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+									<div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+								</div>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div class="col-lg-1 col-md-1 col-sm-2 col-xs-3">
 					<div class="row">
-						&nbsp;
-					</div>
-					<div class="row">
-						&nbsp;
-					</div>
-					<div class="row">
-						<input id="submit" class="btn btn-primary btn-md" type="submit" value="Generate"/>
-					</div>
-					<div class="row">
-						&nbsp;
-					</div>
-				</div>
-				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
-					
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
-					<div class="row">
-						&nbsp;
-					</div>
-				</div>
-				<div class="col-lg-5 col-md-5 col-sm-6 col-xs-7">
-					<div id="output" class="row">
+						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+							<div id="output" class="row">
 						
+							</div>
+						</div>
 					</div>
 				</div>
-				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
-					<div class="row">
-						&nbsp;
+				<div class="col-lg-4 col-md-4 col-sm-3 hidden-xs">
+					<div class="affix">
+						<h3 style="text-align: center;">Features</h3>
+						<ul>
+							<li>Includes support for multiple domain names (comma separated)</li>
+							<li>First domain name listed is used as the Common Name</li>
+							<li>All domain names entered are added as Subject Alternative Names</li>
+							<li>Choose from a 2048 bit RSA Key or 256 bit ECC Key</li>
+							<li>SHA-256 is used as the signature hash</li>
+							<li>Copy/Paste or download in multiple formats</li>
+							<li>CSR and key are generated using best practices and industry standards to avoid browser errors</li>
+							<li>The OpenSSL command is shown and can be executed locally for security</li>
+							<li>Customizations and more powerful features are available using the <a href="/">advanced x509 generator</a></li>
+						</ul>
 					</div>
 				</div>
 			</div>
-		</div>
 		</form>
 		<br />
 		<div class="ad">
