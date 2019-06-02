@@ -3,8 +3,8 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-		<meta name="description" content="Check the OCSP status of your X509 certificate using the domain name or by pasting the contents of your Base64 encoded certificate.">
-		<meta name="keywords" content="csr generator, generate csr, generate certificate signing request, multiple domain, san, multiple common name, subject alternative names, ecc, rsa">
+		<meta name="description" content="Generate a certificate signing request (CSR) online in just one click with support for multiple domain names using common names and subject alternative names. Choose from either a 2048 bit RSA key or a 256 bit ECC key.">
+		<meta name="keywords" content="csr generator, generate csr, generate certificate signing request, multiple domain, san, multiple common names, subject alternative names, ecc, rsa">
 		<meta name="author" content="Lyas Spiehler">
 		<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 		<link rel="apple-touch-icon" sizes="57x57" href="/images/apple-icon-57x57.png">
@@ -20,8 +20,8 @@
 		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
-		<meta property="og:title" content="CertificateTools.com - OCSP Checker">
-		<meta property="og:description" content="Check the OCSP status of your X509 certificate using the domain name or by pasting the contents of your Base64 encoded certificate.">
+		<meta property="og:title" content="CertificateTools.com - CSR Generator">
+		<meta property="og:description" content="Generate a certificate signing request (CSR) online in just one click with support for multiple domain names using common names and subject alternative names. Choose from either a 2048 bit RSA key or a 256 bit ECC key.">
 		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
 		<meta property="og:url" content="https://certificatetools.com">
 		<meta property="og:site_name" content="CertificateTools.com">
@@ -105,7 +105,6 @@
 			var storedcsr;
 			var attempt = 0;
 			var maxattempts = 3;
-			var ocspresponse;
 			function openSSLRESTAPI(api, data, callback) {
 				var request = new XMLHttpRequest();
 				request.open('POST', 'api/openssl/' + api, true);
