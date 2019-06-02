@@ -97,8 +97,8 @@
                         }
                 </script>
 		<script>
-			var key;
-			var csr;
+			var storedkey;
+			var storedcsr;
 			var attempt = 0;
 			var maxattempts = 3;
 			var ocspresponse;
@@ -140,16 +140,29 @@
 			}
 			
 			function downloadText(text, filename, type) {
-				alert(text);
+				//alert(text);
 				googleAnalyticsEvent('Interaction', 'Download', type, '')
 				var form = document.getElementById('downloadtext');
 				form.action = 'api/openssl/returnDownload';
 				form.method = 'POST';
-				var datainput = document.createElement('textarea');
+				var datainput = document.getElementById('datainput');
+				//console.log(datainput);
+				if(datainput){
+				
+				} else {
+					datainput = document.createElement('textarea');
+					datainput.id = 'datainput';
+				}
 				datainput.name = "data"
 				datainput.innerHTML = text;
 				datainput.style.display = "none";
-				var filenameinput = document.createElement('input');
+				var filenameinput = document.getElementById('filenameinput');
+				if(filenameinput) {
+				
+				} else {
+					filenameinput = document.createElement('input');
+					filenameinput.id = 'filenameinput';
+				}
 				filenameinput.name = "filename"
 				filenameinput.value = filename;
 				filenameinput.type = "hidden";
@@ -163,6 +176,8 @@
 			
 			function submitForm() {
 				//e.preventDefault();
+				var output = document.getElementById('output');
+				output.innerHTML = '';
 				showLoader(true);
 				getPrivateKey();
 			}
@@ -268,12 +283,53 @@
 			}
 			
 			function showOutput(key, csr) {
-				console.log(key);
-				console.log(csr);
+				//console.log(key);
+				//console.log(csr);
+				storedkey = key;
+				storedcsr = csr;
 				var output = document.getElementById('output');
-				output.innerText = key.key + csr.csr
-				output.style.fontFamily = 'Courier, monospace';
+				//output.innerText = key.key + csr.csr
 				showLoader(false);
+				var accordion = document.createElement('div');
+				accordion.id='accordion';
+				var downloadtitle = document.createElement('h3');
+				downloadtitle.innerText = 'Download';
+				accordion.appendChild(downloadtitle);
+				var downloadcontainer = document.createElement('div');
+				var downloadtext = document.createElement('p');
+				downloadcontainer.appendChild(downloadtext);
+				var keydownload = document.createElement('a');
+				
+				keydownload.href = 'javascript: downloadText(storedkey.key, \'priv.key\', \'key\');';
+				keydownload.innerText = 'Private Key';
+				downloadtext.appendChild(keydownload);
+				
+				accordion.appendChild(downloadcontainer);
+				var keytitle = document.createElement('h3');
+				keytitle.innerText = 'Private Key';
+				accordion.appendChild(keytitle);
+				var keycontainer = document.createElement('div');
+				var keytext = document.createElement('p');
+				keycontainer.appendChild(keytext);
+				keytext.innerText = key.key;
+				keytext.style.fontFamily = 'Courier, monospace';
+				accordion.appendChild(keycontainer);
+				var csrtitle = document.createElement('h3');
+				csrtitle.innerText = 'Certificate Signing Request (CSR)';
+				accordion.appendChild(csrtitle);
+				var csrcontainer = document.createElement('div');
+				var csrtext = document.createElement('p');
+				csrcontainer.appendChild(csrtext);
+				csrtext.innerText = csr.csr;
+				csrtext.style.fontFamily = 'Courier, monospace';
+				accordion.appendChild(csrcontainer);
+				$( accordion ).accordion({
+							collapsible: true,
+							active: 2,
+							heightStyle: 'content'
+							//autoHeight:false
+						});
+				output.appendChild(accordion);
 			}
 			
 			function googleAnalyticsEvent(category, action, label, value) {
@@ -354,6 +410,11 @@
 									<div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
 								</div>
 							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+							&nbsp;
 						</div>
 					</div>
 					<div class="row">
