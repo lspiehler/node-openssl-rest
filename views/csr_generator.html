@@ -34,7 +34,7 @@
 		<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
 		<link rel="stylesheet" href="bower_components/jquery-ui/themes/base/jquery-ui.min.css">
 		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-		<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="bower_components/jquery-ui/jquery-ui.min.js"></script>
 		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
 		<link rel="stylesheet" href="/loader.css" />
 		<style>
@@ -80,6 +80,10 @@
 			}
 			h1 {
 				text-align: center;
+			}
+			div.align-bottom {
+				display: table-cell;
+				vertical-align: bottom;
 			}
 		</style>
 		<script>
@@ -234,6 +238,8 @@
 					}
 				} else {
 					showLoader(false);
+					var submit = document.getElementById('submit');
+					submit.disabled = false;
 					alert('You must enter at least one or more domain names.');
 				}
 			}
@@ -338,6 +344,14 @@
 				item.appendChild(csrdownload);
 				list.appendChild(item);
 				
+				var item = document.createElement('li');
+				var configdownload = document.createElement('a');
+				configdownload.href = 'javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csr\');';
+				configdownload.innerText = 'OpenSSL CSR Config';
+				downloadtext.appendChild(configdownload);
+				item.appendChild(configdownload);
+				list.appendChild(item);
+				
 				accordion.appendChild(downloadcontainer);
 				var keytitle = document.createElement('h3');
 				keytitle.innerText = 'Private Key';
@@ -348,6 +362,32 @@
 				keytext.innerText = key.key;
 				keytext.style.fontFamily = 'Courier, monospace';
 				accordion.appendChild(keycontainer);
+				
+				var cmdtitle = document.createElement('h3');
+				cmdtitle.innerText = 'OpenSSL Command(s)';
+				accordion.appendChild(cmdtitle);
+				var cmdcontainer = document.createElement('div');
+				var cmdtext = document.createElement('p');
+				cmdcontainer.appendChild(cmdtext);
+				try {
+					cmdtext.innerHTML = key.command.join('<br /><br />\r\n') + '<br /><br />\r\n' + csr.command.command.join('<br /><br />\r\n').replace('csrconfig.txt', '<a href="javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csrconfig\');">csrconfig.txt</a>');
+				} catch(e) {
+				
+				}
+				cmdtext.style.fontFamily = 'Courier, monospace';
+				accordion.appendChild(cmdcontainer);
+				
+				var csrconfigtitle = document.createElement('h3');
+				csrconfigtitle.innerText = 'OpenSSL CSR Config';
+				accordion.appendChild(csrconfigtitle);
+				var csrconfigcontainer = document.createElement('div');
+				var csrconfigtext = document.createElement('p');
+				csrconfigcontainer.appendChild(csrconfigtext);
+				csrconfigtext.innerText = csr.command.files.config;
+				console.log(csr.command);
+				csrconfigtext.style.fontFamily = 'Courier, monospace';
+				accordion.appendChild(csrconfigcontainer);
+				
 				var csrtitle = document.createElement('h3');
 				csrtitle.innerText = 'Certificate Signing Request (CSR)';
 				accordion.appendChild(csrtitle);
@@ -355,18 +395,20 @@
 				var csrtext = document.createElement('p');
 				csrcontainer.appendChild(csrtext);
 				csrtext.innerText = csr.csr;
-				//console.log(csr.csr);
 				csrtext.style.fontFamily = 'Courier, monospace';
 				accordion.appendChild(csrcontainer);
+				
 				$( accordion ).accordion({
 							collapsible: true,
-							active: 2,
+							active: 4,
 							heightStyle: 'content'
 							//autoHeight:false
 						});
 				output.appendChild(accordion);
 				//console.log(key.command);
 				//console.log(csr.command);
+				var elmnt = document.getElementById("scrolltocerts");
+				elmnt.scrollIntoView(); 
 			}
 			
 			function googleAnalyticsEvent(category, action, label, value) {
@@ -414,14 +456,14 @@
 									&nbsp;
 								</div>
 								<div class="col-lg-4 col-md-4 col-sm-5 col-xs-6">
-									<label class="checkbox-inline radio-inline control-label">
-										<input class="keytype" value="rsa" type="radio" name="optradio" checked>
+									<label for="rsaradio" class="radio-inline">
+										<input id="rsaradio" class="keytype" value="rsa" type="radio" name="optradio" checked>
 										RSA
 									</label>
 								</div>
 								<div class="col-lg-4 col-md-4 col-sm-5 col-xs-6">
-									<label class="checkbox-inline radio-inline control-label">
-										<input class="keytype" value="ecc" type="radio" name="optradio">
+									<label for="eccradio" class="radio-inline">
+										<input id="eccradio" class="keytype" value="ecc" type="radio" name="optradio">
 										ECC
 									</label>
 								</div>
@@ -433,18 +475,20 @@
 								&nbsp;
 							</div>
 							<div class="row">
-								<div class="col-lg-10 col-md-10 col-sm-9 col-xs-8">
-									<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
-									<div class="form-group">
-										<label for="hostnames">Domain Names:</label>
-										<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com">
-									</div>
-								</div>
-								<div class="row">
-									<div class="col-lg-2 col-md-2 col-sm-3 col-xs-4">
-										<div class="form-group">
-											<label for="submit">&nbsp;</label>
+								<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+									<div class="row row-conformity">
+										<div class="col-lg-10 col-md-10 col-sm-9 col-xs-8">
+											<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
+											<div class="form-group">
+												<label for="hostnames">Domain Names:</label>
+												<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com">
+											</div>
+										</div>
+										<div class="col-lg-2 col-md-2 col-sm-3 col-xs-4 align-bottom">
+											<div class="form-group">
+												<label for="submit">&nbsp;</label>
 												<input id="submit" class="btn btn-primary btn-md" type="submit" value="Generate"/>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -511,7 +555,7 @@
 							<li>SHA-256 is used as the signature hash</li>
 							<li>Copy/Paste or download CSR and private key</li>
 							<li>CSR and key are generated using best practices and industry standards to avoid browser errors</li>
-							<li>The OpenSSL command is shown and can be executed locally for security</li>
+							<li>The OpenSSL commands are shown and can be executed securely on a local system</li>
 							<li>Additional customizations and more powerful features are available using the <a href="/">Advanced x509 Generator</a></li>
 						</ul>
 						<div>
