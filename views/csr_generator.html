@@ -298,11 +298,23 @@
 				var downloadcontainer = document.createElement('div');
 				var downloadtext = document.createElement('p');
 				downloadcontainer.appendChild(downloadtext);
-				var keydownload = document.createElement('a');
+				var list = document.createElement('ul');
+				downloadcontainer.appendChild(list);
 				
+				var item = document.createElement('li');
+				var keydownload = document.createElement('a');
 				keydownload.href = 'javascript: downloadText(storedkey.key, \'priv.key\', \'key\');';
 				keydownload.innerText = 'Private Key';
-				downloadtext.appendChild(keydownload);
+				item.appendChild(keydownload);
+				list.appendChild(item);
+				
+				var item = document.createElement('li');
+				var csrdownload = document.createElement('a');
+				csrdownload.href = 'javascript: downloadText(storedcsr.csr, \'cert.csr\', \'csr\');';
+				csrdownload.innerText = 'Certificate Signing Request (CSR)';
+				downloadtext.appendChild(csrdownload);
+				item.appendChild(csrdownload);
+				list.appendChild(item);
 				
 				accordion.appendChild(downloadcontainer);
 				var keytitle = document.createElement('h3');
@@ -469,5 +481,6 @@
 	</body>
 	<script>
 		addEventListeners();
+		document.getElementById('hostnames').focus();
 	</script>
 </html>
