@@ -64,8 +64,14 @@ opensslcap.getCapabilities(function(err, capabilities) {
                 console.log('HTTPS connection from ' + ip);
                 res.render('ocsp_checker.html', template);
         });
+
+	app.get('/ocsp-checker', function(req, res) {
+		                let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		                console.log('HTTPS connection from ' + ip);
+		                res.render('ocsp_checker.html', template);
+		        });
 	
-	app.get('/csr_generator', function(req, res) {
+	app.get('/csr-generator', function(req, res) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);
 		res.render('csr_generator.html', template);
