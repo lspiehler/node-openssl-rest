@@ -450,6 +450,7 @@ var usageData = function(data) {
 		
 		let mailOptions = email.nodemailermailoptions
 		
+		//console.log(JSON.stringify(data));
 		//mailOptions.html = JSON.stringify(data, null, 4);
 		mailOptions.text = JSON.stringify(data, null, 4);
 		
@@ -729,6 +730,13 @@ router.post('/ocspChecker', function(req, res) {
 			if(response) {
 				if(response.indexOf('unauthorized') >= 0) {
 					ocsp.query(cmd.cert, function(err, response, cmd) {
+						let usagedata = {
+			                                action: 'OCSPBadChainDownload',
+			                                err: err,
+			                                headers: req.headers,
+                        			        ocsp: response
+			                        }
+						usageData(usagedata);
 						data = {
 							error: err,
 							response: response,
@@ -748,14 +756,35 @@ router.post('/ocspChecker', function(req, res) {
 								 }
 						});
 				} else {
+					let usagedata = {
+                                                action: 'OCSPDownload',
+                                                err: err,
+                                                headers: req.headers,
+                                                ocsp: response
+                                        }
+					usageData(usagedata);
 					res.json(data);
 				}
 			} else {
+				let usagedata = {
+                                        action: 'OCSPDownload',
+                                        err: err,
+                                        headers: req.headers,
+                                        ocsp: response
+                                }
+                                usageData(usagedata);
 				res.json(data);
 			}
 		});
 	} else {
 		ocsp.query(req.body.cert, function(err, response, cmd) {
+			let usagedata = {
+                                action: 'OCSPPaste',
+                                err: err,
+                                headers: req.headers,
+                                ocsp: response
+                        }
+                        usageData(usagedata);
 			data = {
 				error: err,
 				response: response,
