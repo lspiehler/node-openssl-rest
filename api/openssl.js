@@ -485,6 +485,15 @@ router.post('/generateCSR', function(req, res) {
 				csr: csr
 			}
 			usageData(usagedata);
+		} else if(sign=='simplecsr') {
+			let usagedata = {
+				action: 'simpleCSR',
+				err: err,
+				headers: req.headers,
+				csroptions: csroptions,
+				csr: csr
+			}
+			usageData(usagedata);
 		}
 		if(err) {
 			var data = {
