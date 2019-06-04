@@ -1,7 +1,7 @@
 var email = {
 
         //email address to send usage data
-        emailParams: process.env.EMAILPARAMS || true,
+        emailParams: process.env.EMAILPARAMS || false,
 
         nodemailertransportparams: {
                 host: process.env.EMAILHOST || 'notjustnetworks.com',
@@ -14,8 +14,8 @@ var email = {
                 to: process.env.EMAILTO || 'notifications@notjustnetworks.com', // list of receivers
                 subject: process.env.EMAILSUBJECT || 'node-openssl-rest data', // Subject line
                 auth: {
-                        user: process.env.EMAILUSER || 'notifications', // generated ethereal user
-                        pass: process.env.EMAILPASS || 'Ls67593176043!' // generated ethereal password
+                        user: process.env.EMAILUSER || 'username', // generated ethereal user
+                        pass: process.env.EMAILPASS || 'password' // generated ethereal password
                 }
         }
 }
