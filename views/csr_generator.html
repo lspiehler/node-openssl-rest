@@ -179,6 +179,7 @@
 			
 			function submitForm() {
 				//e.preventDefault();
+				googleAnalyticsEvent('Interaction', 'simpleCSR', '', '')
 				var output = document.getElementById('output');
 				var submit = document.getElementById('submit');
 				submit.disabled = true;
@@ -193,6 +194,15 @@
 					loading.style.display = 'block';
 				} else {
 					loading.style.display = 'none';
+				}
+			}
+			
+			function validateIPaddress(text) {
+				var ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+				if(text.match(ipformat)) {
+					return true;
+				} else {
+					return false;
 				}
 			}
 			
@@ -246,10 +256,15 @@
 			function generateCSR(key) {
 				//console.log(key);
 				var domains = [];
+				var ips = [];
 				var hostnames = document.getElementById('hostnames');
 				var hostnamessplit = hostnames.value.split(',');
 				for(var i = 0; i <= hostnamessplit.length - 1; i++) {
-					domains.push(hostnamessplit[i].trim(' '));
+					var value = hostnamessplit[i].trim(' ');
+					domains.push(value);
+					if(validateIPaddress(value)) {
+						ips.push(value);
+					}
 				}
 				var csr = {
 					subject: {
@@ -272,6 +287,9 @@
 						}
 					},
 					hash: 'sha256'
+				}
+				if(ips.length >= 1) {
+					csr.extensions.SANs.IP = ips;
 				}
 				var country = document.getElementById('country');
 				var state = document.getElementById('state');
@@ -299,7 +317,8 @@
 				//console.log(csr);
 				var data = {
 					options: csr,
-					key: key.key
+					key: key.key,
+					sign: 'simplecsr'
 				}
 				//console.log(data);
 				openSSLRESTAPI('generateCSR', data, function(error, response) {
