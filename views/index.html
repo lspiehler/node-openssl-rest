@@ -319,6 +319,18 @@
 				list.appendChild(li);
 			}
 			
+			function showSANExample(elem) {
+				var santypes = {
+					RID: '1.2.3.4.5.5',
+					dirName: 'req_distinguished_name',
+					otherName: '1.2.3.4;UTF8:example othername'
+				}
+				var saninput = document.getElementById('saninput');
+				if(santypes[elem.options[elem.selectedIndex].value]) {
+					saninput.value = santypes[elem.options[elem.selectedIndex].value];
+				}
+			}
+			
 			function processItem(type) {
 				var list = document.getElementById(index[type]['list']);
 				var items = list.getElementsByTagName('li');
@@ -2441,11 +2453,13 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 									</div>
 									<div class="row">
 										<div class="col-lg-2 col-md-3 col-sm-4 col-xs-4">
-											<select id="typeinput" class="form-control">
+											<select onchange="showSANExample(this)" id="typeinput" class="form-control">
 												<option value="DNS">DNS</option>
 												<option value="IP">IP</option>
 												<option value="URI">URI</option>
 												<option value="email">email</option>
+												<option value="RID">RID</option>
+												<option value="dirName">dirName</option>
 												<option value="otherName">otherName</option>
 											</select>
 										</div>
