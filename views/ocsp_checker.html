@@ -299,10 +299,16 @@
 				var loading = document.getElementById('loading');
 				var hostname = document.getElementById('hostname');
 				var pastex509 = document.getElementById('pastex509');
+				var domain;
+				if(hostname.value.indexOf('/') >= 0) {
+					domain = hostname.value.split('/')[2];
+				} else {
+					domain = hostname.value;
+				}
 				var method = getMethod();
 				if(method=='download') {
 					var data = {
-						hostname: hostname.value,
+						hostname: domain,
 						method: method
 					}
 				
@@ -314,7 +320,7 @@
 				} else {
 					//should never happen
 				}
-				googleAnalyticsEvent('Interaction', 'OCSP', 'Query', hostname.value)
+				googleAnalyticsEvent('Interaction', 'OCSP', 'Query', domain)
 				//alert(hostname.value);
 				loading.style.display = 'block';
 				openSSLRESTAPI('ocspChecker', data, function(error, response) {
