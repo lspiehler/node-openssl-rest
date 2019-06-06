@@ -711,7 +711,15 @@ router.post('/pasteKey', function(req, res) {
 
 router.post('/ocspChecker', function(req, res) {
 	var ocsp = new ocsplib();
-	console.log(req.body)
+	//console.log(req.body)
+	if(req.body.method=='download') {
+		console.log('OCSP download for: ' + req.body.hostname);
+	} else if(req.body.method=='paste') {
+		console.log('OCSP pasted cert:');
+		console.log(req.body.cert);
+	} else {
+		console.log('OCSP unrecognized method!');
+	}
 	var netcertoptions = {
 		        hostname: req.body.hostname,
 		        port: 443,
