@@ -737,7 +737,7 @@ router.post('/ocspChecker', function(req, res) {
 			//console.log(response);
 			if(response) {
 				if(response.indexOf('unauthorized') >= 0) {
-					ocsp.query(cmd.cert, function(err, response, cmd) {
+					ocsp.query(cmd.cert.base64, function(err, response, cmd) {
 						let usagedata = {
 			                                action: 'OCSPBadChainDownload',
 			                                err: err,
