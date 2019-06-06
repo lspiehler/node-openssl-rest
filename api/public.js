@@ -261,7 +261,7 @@ var generateOCSPCert = function(capath, callback) {
 	
 	var csroptions = {
 		hash: 'sha512',
-		days: 2,
+		days: 7,
 		subject: {
 			commonName: [
 				'OCSP'
@@ -708,7 +708,7 @@ var routeOCSP = function(req, res, global) {
 					let ocspcertdate = moment(stat.mtime);
 					//console.log(ocspcertdate.diff(now, 'days'));
 					let ocspcertage = now.diff(ocspcertdate, 'days');
-					if(ocspcertage < 360) {
+					if(ocspcertage <= 7) {
 						console.log('Existing OCSP certificate OK:' + ocspcertage + ' days old.');
 						processOCSPRequest(req, res, cadir, function() {
 								
