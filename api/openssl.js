@@ -734,6 +734,7 @@ router.post('/ocspChecker', function(req, res) {
 				command: cmd
 			}
 			//console.log(cmd.cert);
+			//console.log(err);
 			//console.log(response);
 			if(response) {
 				if(response.indexOf('unauthorized') >= 0) {

@@ -174,7 +174,6 @@
 					'Response Type'
 				]
 				//console.log(resp);
-				var ocspresp = parseOCSPResponse(resp.response);
 				var div = document.getElementById('resptable');
 				div.innerHTML = '';
 				var table = document.createElement('table');
@@ -184,26 +183,31 @@
 				col0.innerText = 'OpenSSL Command'
 				col1.innerHTML = openSSLCommand(resp.command.command);
 				//console.log(resp.command.command);
-				Object.keys(ocspresp).forEach(function (key) {
-					//console.log(item); // key
-					//console.log(lunch[item]); // value
-					if(attrs.indexOf(key) >= 0) {
-						var row = table.insertRow(0);
-						var col0 = row.insertCell(0);
-						var col1 = row.insertCell(1);
-						col0.innerText = key
-						col1.innerText = ocspresp[key]
-						if(key=='Cert Status') {
-							if(ocspresp[key]=='good') {
-								col1.style.color = 'green';
-								col1.style.fontWeight = 'bold';
-							} else {
-								col1.style.color = 'red';
-								col1.style.fontWeight = 'bold';
+				try {
+					var ocspresp = parseOCSPResponse(resp.response);
+					Object.keys(ocspresp).forEach(function (key) {
+						//console.log(item); // key
+						//console.log(lunch[item]); // value
+						if(attrs.indexOf(key) >= 0) {
+							var row = table.insertRow(0);
+							var col0 = row.insertCell(0);
+							var col1 = row.insertCell(1);
+							col0.innerText = key
+							col1.innerText = ocspresp[key]
+							if(key=='Cert Status') {
+								if(ocspresp[key]=='good') {
+									col1.style.color = 'green';
+									col1.style.fontWeight = 'bold';
+								} else {
+									col1.style.color = 'red';
+									col1.style.fontWeight = 'bold';
+								}
 							}
 						}
-					}
-				});
+					});
+				} catch(e) {
+				
+				}
 				var row = table.insertRow(0);
 				var col0 = row.insertCell(0);
 				var col1 = row.insertCell(1);
@@ -217,7 +221,11 @@
 					var col1 = row.insertCell(1);
 					col0.innerText = 'Domain Name(s)'
 					col1.id = 'namescol';
-					col1.innerHTML = showDomainNames(resp.command.cert)
+					try {
+						col1.innerHTML = showDomainNames(resp.command.cert)
+					} catch(e) {
+					
+					}
 					//console.log(resp.command);
 				//}
 				div.className = 'table-responsive'
@@ -336,6 +344,11 @@
 							} else {
 								alert(error);
 							}
+						} else if(error.indexOf('erify error:unable to get') >=0 ) {
+							attempts = 0;
+							//$( "#template" ).dialog("close");
+							ocspresponse = response;
+							showResponse(response);
 						} else {
 							alert(error);
 						}
