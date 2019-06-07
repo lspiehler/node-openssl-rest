@@ -560,6 +560,11 @@ router.post('/CASignCSR', function(req, res) {
 				let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 				hash = md5(ip) + '/';
 			}
+			if(csroptions.extensions) {
+                                //already exists
+                        } else {
+				csroptions.extensions = {};
+                        }
 			csroptions.extensions.authorityInfoAccess = {};
 			csroptions.extensions.authorityInfoAccess.caIssuers = ['http://' + config.publichttp.replace('http://', '') + '/public/issuer/' + hash + req.body.ca.path.replace(/ /g, "_") + '.crt'];
 			csroptions.extensions.authorityInfoAccess.OCSP = ['http://' + config.publichttp.replace('http://', '') + '/public/ocsp/' + hash + req.body.ca.path.replace(/ /g, "_")];
