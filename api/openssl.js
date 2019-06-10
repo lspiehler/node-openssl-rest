@@ -64,6 +64,37 @@ router.get('/getCAs', function(req, res) {
 	});
 });
 
+router.post('/showIssuedCerts', function(req, res) {
+	let CAs = [];
+	let cadir = getCADir(req);
+	var data = { error: true, issuedcerts: []};
+	//console.log(cadir);
+	fs.stat(cadir + '/' + req.body.ca + '/index.txt', function(err, stat) {
+		if(err == null) {
+			fs.readFile(cadir + '/' + req.body.ca + '/index.txt', function(err, file) {
+				var certs = file.toString().split('\n');
+				for(var i = 0; i <= certs.length - 1; i++) {
+					var attrs = certs[i].trim('\r').split('\t');
+					//console.log(attrs.length);
+					if(attrs.length >= 6) {
+						data.issuedcerts.push(attrs);
+						//console.log(attrs);
+					}
+				}
+				data.error = false;
+				res.json(data);
+			});
+		} else if(err.code == 'ENOENT') {
+			// file does not exist
+			//console.log('does not exist');
+			res.json(data);
+		} else {
+			//console.log('Some other error: ', err.code);
+			res.json(data);
+		}
+	});
+});
+
 router.get('/getAvailableCurves', function(req, res) {
 	openssl.getAvailableCurves(function(err, curves, out) {
 		if(err) {

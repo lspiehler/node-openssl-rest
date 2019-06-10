@@ -76,7 +76,13 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);
 		res.render('csr_generator.html', template);
-        });
+    });
+	
+	app.get('/manage-certs', function(req, res) {
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		console.log('HTTPS connection from ' + ip);
+		res.render('manage_certs.html', template);
+    });
 
 	app.use('/', express.static(__dirname + '/views'));
 });
