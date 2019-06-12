@@ -6,7 +6,9 @@ var upload = multer();
 var fs = require('fs');
 var config = require('../config.js');
 var email = require('../email.js');
+const opensslbinpath = config.opensslbinpath; //use full path if not in system PATH
 const nodemailer = require('nodemailer');
+const { spawn } = require( 'child_process' );
 var md5 = require('md5');
 var ocsplib = require('../lib/ocsp_checker.js');
 
@@ -15,6 +17,48 @@ var ocsplib = require('../lib/ocsp_checker.js');
 	rsa_keygen_pubexp: 65537,
 	format: 'PKCS8'
 }*/
+
+var runOpenSSLCommand = function(cmd, cwd, callback) {
+	const stdoutbuff = [];
+	const stderrbuff = [];
+	
+	//console.log(cmd);
+	
+	const openssl = spawn( opensslbinpath, cmd.split(' '), {cwd: cwd} );
+	
+	openssl.stdout.on('data', function(data) {
+		stdoutbuff.push(data.toString());
+		/*//openssl.stdin.setEncoding('utf-8');
+		setTimeout(function() {
+			//openssl.stdin.write("QUIT\r");
+			//console.log('QUIT\r\n');
+			//openssl.stdin.end();
+			openssl.kill();
+		}, 1000);*/
+	});
+
+	/*openssl.stdout.on('end', function(data) {
+		stderrbuff.push(data.toString());
+	});*/
+	
+	openssl.stderr.on('data', function(data) {
+		stderrbuff.push(data.toString());
+	});
+	
+	openssl.on('exit', function(code) {
+		var out = {
+			command: 'openssl ' + cmd,
+			stdout: stdoutbuff.join(''),
+			stderr: stderrbuff.join(''),
+			exitcode: code
+		}
+		if (code != 0) {
+			callback(stderrbuff.join(), out);
+		} else {
+			callback(false, out);
+		}
+	});
+}
 
 var getCADir = function(req) {
 	let cadir;
@@ -28,6 +72,84 @@ var getCADir = function(req) {
 		return cadir;
 	}
 }
+
+var revokeCerts = function(cadir, caname, revoke, index, callback) {
+	fs.stat(cadir + '/' + caname + '/certs/' + revoke[index] + '.pem', function(err, stat) {
+		if(err == null) {
+			//console.log('Issuer lookup for ' + caname + ', DER exists');
+			cmd = 'ca -config config.txt -revoke certs/' + revoke[index] + '.pem';
+			runOpenSSLCommand(cmd, cadir + '/' + caname, function(err, out) {
+				if(err) {
+					
+				} else {
+					
+				}
+				if(index >= revoke.length - 1) {
+					callback(false, false);
+				} else {
+					revokeCerts(cadir, caname, revoke, index + 1, callback);
+				}
+				//console.log(out);
+			});
+		} else if(err.code == 'ENOENT') {
+			// file does not exist
+			//console.log('does not exist');
+			callback(cadir + '/' + caname + '/certs/' + revoke[index] + '.pem does not exist', cadir + '/' + caname + '/certs/' + revoke[index] + '.pem does not exist');
+		} else {
+			//console.log('Some other error: ', err.code);
+			callback(cadir + '/' + caname + '/certs/' + revoke[index] + '.pem error', cadir + '/' + caname + '/certs/' + revoke[index] + '.pem error');
+		}
+	});
+}
+
+router.post('/revokeCerts', function(req, res) {
+	//console.log(req.body);
+	var cadir = getCADir();
+	let caname = req.body.ca.replace(/_/g, " ");
+	//console.log(caname);
+	revokeCerts(cadir, caname, req.body.revoke, 0, function(err, msg) {
+		if(err) {
+			res.json(err);
+		} else {
+			fs.unlink(cadir + '/' + caname + '/ca.crl', function(err) {
+				res.json(false);
+			});
+		}
+	});
+	/*fs.stat(cadir + '/' + caname + '/certs/' + req.body.revoke[0] + '.pem', function(err, stat) {
+		if(err == null) {
+			console.log('Issuer lookup for ' + caname + ', DER exists');
+		} else if(err.code == 'ENOENT') {
+			// file does not exist
+			//console.log('does not exist');
+			res.json(false);
+		} else {
+			//console.log('Some other error: ', err.code);
+			res.json(false);
+		}
+	});*/
+});
+
+router.get('/issuedCert/:ca/:cert', function(req, res) {
+	let cadir = getCADir(req);
+	fs.stat(cadir + '/' + req.params.ca + '/certs/' + req.params.cert.replace('.crt','.pem'), function(err, stat) {
+		if(err == null) {
+			fs.readFile(cadir + '/' + req.params.ca + '/certs/' + req.params.cert.replace('.crt','.pem'), function(err, pem) {
+				var mimetype = 'application/pkix-cert';
+				res.setHeader('Content-disposition', 'attachment; filename=' + req.params.cert);
+				res.setHeader('Content-type', mimetype);
+				res.charset = 'UTF-8';
+				//console.log(command);
+				res.send(pem);
+			});
+		} else if(err.code == 'ENOENT') {
+			//res.json(false);
+		} else {
+			//console.log('Some other error: ', err.code);
+			//res.json(false);
+		}
+	});
+});
 
 router.get('/getCAs', function(req, res) {
 	let CAs = [];
@@ -77,7 +199,16 @@ router.post('/showIssuedCerts', function(req, res) {
 					var attrs = certs[i].trim('\r').split('\t');
 					//console.log(attrs.length);
 					if(attrs.length >= 6) {
-						data.issuedcerts.push(attrs);
+						var cert = {
+							validity: attrs[0],
+							expiration: new Date(attrs[1].substr(0, 4) + '-' + attrs[1].substr(4, 2) + '-' + attrs[1].substr(6, 2) + ' ' + attrs[1].substr(8, 2) + ':' + attrs[1].substr(10, 2) + ':' + attrs[1].substr(12, 2)),
+							serial: attrs[3],
+							ca: attrs[4],
+							subject: attrs[5]
+						};
+						if(cert.subject!='/CN=OCSP') {
+							data.issuedcerts.push(cert);
+						}
 						//console.log(attrs);
 					}
 				}

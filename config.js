@@ -12,6 +12,12 @@ var config = {
 	//will enable ocsp and aia
 	publichttp: process.env.PUBLICHTTP || false,
 	
+	opensslbinpath: process.env.OPENSSLBINPATH || 'openssl'
+	//opensslbinpath: 'C:/Program Files/OpenVPN/bin/openssl.exe'
+	
 }
 
 module.exports = config;
+
+//minimal windows example
+//SET OPENSSLBINPATH=C:\Program Files\OpenVPN\bin\openssl.exe&&SET PUBLICHTTP=192.168.164.110:8080&& node index.js

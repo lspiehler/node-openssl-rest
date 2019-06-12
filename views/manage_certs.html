@@ -166,7 +166,7 @@
 			}
 			function listCAs() {
 				getCAs(function(err, cas) {
-					console.log(cas);
+					//console.log(cas);
 					var caselect = document.getElementById('caselect');
 					for(var i = 0; i <= cas.length - 1; i++) {
 						var option = document.createElement('option');
@@ -179,36 +179,119 @@
 			function loadCertsTable() {
 				var caselect = document.getElementById('caselect');
 				var ca = caselect.options[caselect.selectedIndex].value;
-				console.log(ca);
+				//console.log(ca);
 				var data = {
 					ca: ca
 				}
 				openSSLRESTAPI('showIssuedCerts', data, function(err, data) {
-					console.log(data.issuedcerts);
+					//console.log(data.issuedcerts);
 					var table = document.getElementById('certstable');
 					if(table) {
 					
 					} else {
 						table = document.createElement('table');
+						table.border = '1';
 						table.id = 'certstable';
+						table.className = 'table';
 						document.body.appendChild(table);
 					}
+					table.innerHTML = '';
+					
+					if(data.issuedcerts.length >= 1) {
+						var header = table.createTHead();
+						var row = header.insertRow(0);
+						var cell = document.createElement('th');
+						row.appendChild(cell);
+						Object.keys(data.issuedcerts[0]).forEach(function(key) { 
+							if(key=='ca') {
+							
+							} else {
+								var cell = document.createElement('th');
+								cell.innerHTML = key;
+								row.appendChild(cell);							
+							}
+						});
+					}
+					
 					for(var i = 0; i <= data.issuedcerts.length - 1; i++) {
-						var row = table.insertRow(table.rows.length - 1);
-						for(var j = 0; j <= data.issuedcerts[i].length - 1; j++) {
-							console.log(row.cells.length - 1);
-							var cell = row.insertCell(row.cells.length);
-							cell.innerText = data.issuedcerts[i][j];
+						var row = table.insertRow(table.rows.length);
+						var cell = row.insertCell(0);
+						var input = document.createElement('input');
+						input.type = 'checkbox';
+						input.id = data.issuedcerts[i].serial;
+						input.className = 'certcheckbox';
+						if(data.issuedcerts[i].validity=="R") {
+							input.disabled = true;
 						}
+						cell.appendChild(input);
+						Object.keys(data.issuedcerts[i]).forEach(function(key) {
+							//console.log(data.issuedcerts[i][key]);
+							//console.log(row.cells.length - 1);
+							if(key=='serial') {
+								var anchor = document.createElement('a');
+								anchor.href = 'api/openssl/issuedCert/' + ca + '/' + data.issuedcerts[i][key] + '.crt';
+								anchor.innerText = data.issuedcerts[i][key];
+								var cell = row.insertCell(row.cells.length);
+								cell.appendChild(anchor);
+							} else if(key=='ca') {
+
+							} else {
+								var cell = row.insertCell(row.cells.length);
+								cell.innerText = data.issuedcerts[i][key];
+							}
+						});
+						//for(var j = 0; j <= data.issuedcerts[i].length - 1; j++) {
+						//	console.log(row.cells.length - 1);
+						//	var cell = row.insertCell(row.cells.length);
+						//	cell.innerText = data.issuedcerts[i][j];
+						//}
 					}
 				});
+			}
+			function revokeCerts() {
+				var revoke = [];
+				var certchecks = document.getElementsByClassName('certcheckbox');
+				for(var i = 0; i <= certchecks.length - 1; i++) {
+					if(certchecks[i].checked) {
+						revoke.push(certchecks[i].id);
+					}
+				}
+				if(revoke.length <= 0) {
+					alert('Please select the certificates you\'d like to revoke.');
+					return;
+				}
+				var confirm = window.confirm('Are you sure you want to revoke ' + revoke.length + ' certificate(s)?');
+				if(confirm) {
+					//console.log(revoke);
+					var caselect = document.getElementById('caselect');
+					var ca = caselect.options[caselect.selectedIndex].value;
+					var data = {
+						ca: ca,
+						revoke: revoke
+					}
+					openSSLRESTAPI('revokeCerts', data, function(err, resp) {
+						//alert('done');
+						var certchecks = document.getElementsByClassName('certcheckbox');
+						for(var i = 0; i <= certchecks.length - 1; i++) {
+							if(certchecks[i].checked) {
+								certchecks[i].checked = false;
+								certchecks[i].disabled = true;
+								certchecks[i].parentNode.nextSibling.innerText = 'R';
+							}
+						}
+					});
+				} else {
+					//console.log(revoke);
+				}
 			}
 		</script>
 	</head>
 	<body>
+		{{{header}}}
 		<select onchange="loadCertsTable()" id="caselect">
 			<option value="false">Select a CA...</option>
 		</select>
+		<button type="button" onclick="revokeCerts()">Revoke</button>
 	</body>
 	<script>
 		listCAs();
