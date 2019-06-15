@@ -1,6 +1,7 @@
 var express = require('express'),
 router = express.Router();
 var openssl = require('../lib/openssl.js');
+var ocspcache = require('../lib/ocspcache.js');
 var multer  = require('multer')
 var upload = multer();
 const http = require('http');
@@ -11,6 +12,7 @@ const opensslbinpath = config.opensslbinpath; //use full path if not in system P
 var tmp = require('tmp');
 var moment = require('moment');
 var md5 = require('md5');
+var Ber = require('asn1').Ber;
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
@@ -328,6 +330,7 @@ var generateOCSPCert = function(capath, callback) {
 var startOCSPServer = function(cadir, port, attempts, alt, callback) {
 	//const stdoutbuff = [];
 	const stderrbuff = [];
+	var nevermind = false;
 	
 	let cmd = [];
 	
@@ -346,20 +349,24 @@ var startOCSPServer = function(cadir, port, attempts, alt, callback) {
 		//this must be a root ca. No chain exists
 	}
 	
-	if(config.caIPDir) {
+	//if(config.caIPDir) {
 		cmd.push('-nrequest 1');
-	}
+	//}
+	
+	//console.log(cmd.join(''));
 	
 	var openssl = spawn( opensslbinpath, cmd.join(' ').split(' '), {cwd: cadir} );
 	
 	var hack = setTimeout(function() {
 		console.log('got called');
+		nevermind = true;
 		callback(false, openssl, port);
 		return;
 	}, 2000);
 	
 	openssl.stdout.on('data', function(data) {
 		console.log(data.toString());
+		//console.log('here');
 		//stdoutbuff.push(data.toString());
 		/*//openssl.stdin.setEncoding('utf-8');
 		setTimeout(function() {
@@ -375,20 +382,25 @@ var startOCSPServer = function(cadir, port, attempts, alt, callback) {
 	});*/
 	
 	openssl.stderr.on('data', function(data) {
-		//console.log(data.toString());
-		if(hack) {
-			clearTimeout(hack);
-		}
-		if(data.toString().indexOf('Waiting for OCSP client connections...') >= 0) {
-			//console.log('STARTED');
-			//console.log(data.toString().replace('\n',''));
-			callback(false, openssl, port);
-			return;
-		} else if(data.toString().indexOf('ocsp: Can\'t parse "127.0.0.1:30000" as a number') >= 0) {
-			startOCSPServer(cadir, port + nextport, attempts - 1, true, callback);
+		if(nevermind) {
+			
 		} else {
-			stderrbuff.push(data.toString());
 			//console.log(data.toString());
+			//console.log('here');
+			if(hack) {
+				clearTimeout(hack);
+			}
+			if(data.toString().indexOf('Waiting for OCSP client connections...') >= 0) {
+				//console.log('STARTED');
+				//console.log(data.toString().replace('\n',''));
+				callback(false, openssl, port);
+				return;
+			} else if(data.toString().indexOf('ocsp: Can\'t parse "127.0.0.1:30000" as a number') >= 0) {
+				startOCSPServer(cadir, port + nextport, attempts - 1, true, callback);
+			} else {
+				stderrbuff.push(data.toString());
+				//console.log(data.toString());
+			}
 		}
 	});
 	
@@ -525,7 +537,7 @@ var proxyOCSP = function(req, port, data, callback) {
 		return
 	});
 
-	ocspreq.write(Buffer.concat(data));
+	ocspreq.write(data);
 	ocspreq.end();
 	
 	//console.log(data);
@@ -538,52 +550,103 @@ var queryOCSP = function(req, res, cadir, callback) {
 	req.on('data', function(chunk) {
 		data.push(chunk);
 	});
+	
 	req.on('end', function() {
-		
-		let hash = md5(cadir);
-		let process = OCSPManager.exists(hash);
-		if(process) {
-			//console.log(process.process);
-			if(process.process.exitCode==null) {
-				console.log('OCSP process container exists and appears to be alive');
-				proxyOCSP(req, process.port, data, function(err, response) {
-					if(err) {
-						//if it fails, restart the OCSP service and try one more time
-						console.log('OCSP process did not respond. Restarting process and trying one more time.');
-						OCSPManager.start(hash, cadir, function(err, process) {
-							if(err) {
-								console.log('OCSP process failed to start. Not trying again');
-								console.log(err);
-								callback(true);
-							} else {
-								proxyOCSP(req, process.port, data, function(err, response) {
-									if(err) {
-										console.log('OCSP process failed to respond after the second attempt');
-										console.log(err);
-										callback(true);
-									} else {
-										res.send(response);
-										callback(false);
-									}
-								});
-							}
-						});
-					} else {
-						res.send(response);
-						callback(false);
-					}
-				});
+		var request = Buffer.concat(data);
+		//console.log(req.headers);
+		//console.log(request.toString('hex'));
+		var reader = new Ber.Reader(request);
+		var oid;
+		while(oid != 6) {
+			reader.readSequence();
+			oid = reader.peek();
+		}
+		reader.readOID();
+		reader.readByte();
+		reader.readByte();
+		let issuernamehash = reader.readString(Ber.OctetString, true).toString('hex');
+		let issuerkeyhash = reader.readString(Ber.OctetString, true).toString('hex');
+		let serialnumber = reader.readString(Ber.Integer, true).toString('hex');
+		let issuerhash = md5(issuernamehash + issuerkeyhash);
+		console.log(issuerhash);
+		console.log('issuerNameHash: ' + issuernamehash);
+		console.log('issuerKeyHash: ' + issuerkeyhash);
+		console.log('serialNumber: ' + serialnumber);
+		let cache = ocspcache.getRequest(issuerhash, serialnumber);
+		if(cache) {
+			console.log('ocsp cache hit');
+			//console.log(cache);
+			res.send(cache.response);
+			callback(false);
+		} else {
+			console.log('ocsp cache miss');
+			let hash = md5(cadir);
+			let process = OCSPManager.exists(hash);
+			if(process) {
+				//console.log(process.process);
+				if(process.process.exitCode==null) {
+					console.log('OCSP process container exists and appears to be alive');
+					proxyOCSP(req, process.port, request, function(err, response) {
+						if(err) {
+							//if it fails, restart the OCSP service and try one more time
+							console.log('OCSP process did not respond. Restarting process and trying one more time.');
+							OCSPManager.start(hash, cadir, function(err, process) {
+								if(err) {
+									console.log('OCSP process failed to start. Not trying again');
+									console.log(err);
+									callback(true);
+								} else {
+									proxyOCSP(req, process.port, request, function(err, response) {
+										if(err) {
+											console.log('OCSP process failed to respond after the second attempt');
+											console.log(err);
+											callback(true);
+										} else {
+											ocspcache.addResponse(issuerhash, serialnumber, response);
+											res.send(response);
+											callback(false);
+										}
+									});
+								}
+							});
+						} else {
+							ocspcache.addResponse(issuerhash, serialnumber, response);
+							res.send(response);
+							callback(false);
+						}
+					});
+				} else {
+					console.log('OCSP process container exists, but process is dead');
+					OCSPManager.start(hash, cadir, function(err, process) {
+						if(err) {
+							console.log(err);
+						} else {
+							proxyOCSP(req, process.port, request, function(err, response) {
+								if(err) {
+									console.log(err);
+									callback(true);
+								} else {
+									ocspcache.addResponse(issuerhash, serialnumber, response);
+									res.send(response);
+									callback(false);
+								}
+							});
+						}
+					});
+				}
 			} else {
-				console.log('OCSP process container exists, but process is dead');
+				console.log('No existing OCSP process');
 				OCSPManager.start(hash, cadir, function(err, process) {
 					if(err) {
 						console.log(err);
 					} else {
-						proxyOCSP(req, process.port, data, function(err, response) {
+						proxyOCSP(req, process.port, request, function(err, response) {
 							if(err) {
 								console.log(err);
 								callback(true);
 							} else {
+								ocspcache.addResponse(issuerhash, serialnumber, response);
+								//console.log(response.toString());
 								res.send(response);
 								callback(false);
 							}
@@ -591,23 +654,6 @@ var queryOCSP = function(req, res, cadir, callback) {
 					}
 				});
 			}
-		} else {
-			console.log('No existing OCSP process');
-			OCSPManager.start(hash, cadir, function(err, process) {
-				if(err) {
-					console.log(err);
-				} else {
-					proxyOCSP(req, process.port, data, function(err, response) {
-						if(err) {
-							console.log(err);
-							callback(true);
-						} else {
-							res.send(response);
-							callback(false);
-						}
-					});
-				}
-			});
 		}
 	});
 	
@@ -739,10 +785,12 @@ var routeOCSP = function(req, res, global) {
 }
 
 router.post('/ocsp/:dir/:ca', function(req, res) {
+	//console.log(req);
 	routeOCSP(req, res, false);
 });
 
 router.post('/ocsp/:ca', function(req, res) {
+	//console.log(req.body);
 	routeOCSP(req, res, true);
 });
 

@@ -1,6 +1,7 @@
 var express = require('express'), 
 router = express.Router();
 var openssl = require('../lib/openssl.js');
+var ocspcache = require('../lib/ocspcache.js');
 var multer  = require('multer')
 var upload = multer();
 var fs = require('fs');
@@ -128,6 +129,14 @@ router.post('/revokeCerts', function(req, res) {
 			res.json(false);
 		}
 	});*/
+});
+
+router.get('/clearCache', function(req, res) {
+	ocspcache.clearCache();
+	res.json({
+		error: false,
+		message: 'cache cleared'
+	});
 });
 
 router.get('/issuedCert/:ca/:cert', function(req, res) {

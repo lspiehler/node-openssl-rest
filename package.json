@@ -4,6 +4,7 @@
   "description": "REST API and UI for node-openssl-cert",
   "main": "index.js",
   "dependencies": {
+    "asn1": "^0.2.4",
     "body-parser": "^1.18.2",
     "express": "^4.16.3",
     "md5": "^2.2.1",
