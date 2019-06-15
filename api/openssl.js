@@ -105,7 +105,7 @@ var revokeCerts = function(cadir, caname, revoke, index, callback) {
 
 router.post('/revokeCerts', function(req, res) {
 	//console.log(req.body);
-	var cadir = getCADir();
+	var cadir = getCADir(req);
 	let caname = req.body.ca.replace(/_/g, " ");
 	//console.log(caname);
 	revokeCerts(cadir, caname, req.body.revoke, 0, function(err, msg) {
