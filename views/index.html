@@ -872,6 +872,12 @@
 					}
 				}
 				
+				var muststaple = document.getElementById('muststaple');
+				if(muststaple.checked==true) {
+					//alert('true');
+					csr['mustStaple'] = true;
+				}
+				
 				return csr;
 			}
 			
@@ -2488,6 +2494,11 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 									<div class="row">
 										<div class="col">
 											<h4>x509v3 Extensions</h4>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-lg-11 col-lg-11 col-sm-11 col-xs-12">
+											<label class="checkbox-inline"><input type="checkbox" id="muststaple" value="">OCSP Must-Staple</label>
 										</div>
 									</div>
 									<div class="row">

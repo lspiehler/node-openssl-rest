@@ -1,3 +1,5 @@
+var config = require('./config.js');
+
 var html = {
 	
 	header: ['<nav class="navbar navbar-default navbar-fixed-top" role="navigation">',
@@ -20,19 +22,24 @@ var html = {
 		'				</ul>',
 		'			</li>',
 		'			<li class="dropdown">',
-                '                               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Generators <span class="caret"></span></a>',
-                '                               <ul class="dropdown-menu">',
-                '                                       <li><a href="/csr-generator">CSR Generator</a></li>',
-                '                               </ul>',
-                '                       </li>',
-		'		</ul>',
-		'		<!--<ul class="nav navbar-nav navbar-right">',
-		'			<li><a id="authbutton" href="javascript: loginButton();">Login</a></li>',
-		'		</ul>-->',
-		'		</div><!-- /.navbar-collapse -->',
-		'	</div><!-- /.container-fluid -->',
-		'</nav>']
-	
+		'                               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Generators <span class="caret"></span></a>',
+		'                               <ul class="dropdown-menu">',
+		'                                       <li><a href="/csr-generator">CSR Generator</a></li>',
+		'                               </ul>',
+		'                       </li>'
+	]
 }
+
+if(config.hosted==false) {
+	html.header.push('<li><a href="/manage-certs">Manage Certificates</a></li>')
+}
+
+html.header.push('		</ul>'),
+html.header.push('		<!--<ul class="nav navbar-nav navbar-right">'),
+html.header.push('			<li><a id="authbutton" href="javascript: loginButton();">Login</a></li>'),
+html.header.push('		</ul>-->'),
+html.header.push('		</div><!-- /.navbar-collapse -->'),
+html.header.push('	</div><!-- /.container-fluid -->'),
+html.header.push('</nav>');
 
 module.exports = html;
