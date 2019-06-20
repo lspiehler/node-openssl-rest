@@ -76,6 +76,7 @@
 			}
 		</script>	
 		<script>
+			var promptedfeedback = false;
 			var certtemplates = {{{javascripttemplates}}}
 			var downloadedcerts = {
 				lastparams: '',
@@ -1704,6 +1705,11 @@
 					}
 					//console.log(x509);
 					//alert('submission complete');
+					var top = document.getElementById('hashalg');
+					top.scrollIntoView();
+					setTimeout(function() {
+						promptFeedback();
+					}, 3500)
 				}
 			}
 			function uploadKey(type, pass, callback) {
@@ -1857,10 +1863,10 @@
 						console.log(err);
 					} else {
 						let cas = document.getElementById('signcert');
-						for(var i = 0; i <= resp.length - 1; i++) {
+						for(var i = 0; i <= resp.cas.length - 1; i++) {
 							let option = document.createElement('option');
-							option.value = resp[i];
-							option.innerText = '* ' + resp[i];
+							option.value = resp.cas[i].name;
+							option.innerText = '* ' + resp.cas[i].name;
 							cas.add(option);
 						}
 						//console.log(resp);
@@ -2273,6 +2279,24 @@
 						'value': value
 					});
 				}
+			}
+			function promptFeedback() {
+				var feedbacktext = document.getElementById('feedbacktext');
+				if(promptedfeedback==false) {
+					$( '#feedback' ).dialog( 'open' );
+				}
+				feedbacktext.focus();
+				promptedfeedback = true;
+			}
+			function processFeedback() {
+				var feedbacktext = document.getElementById('feedbacktext');
+				//alert(feedbacktext.value);
+				var data = {
+					message: feedbacktext.value
+				}
+				openSSLRESTAPI('postFeedback', data, function(err, response) {
+					$( '#feedback' ).dialog( 'close' );
+				});
 			}
 		</script>
 	</head>
@@ -2694,7 +2718,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 								<div class="col">
 									<div class="row">
 										<div class="col text-center">
-											<button class="btn btn-primary" style="margin-top: 10px; margin-bottom: 10px;" onclick="processForm();" type="button">Submit</button>
+											<button id="submitbutton" class="btn btn-primary" style="margin-top: 10px; margin-bottom: 10px;" onclick="processForm();" type="button">Submit</button>
 										</div>
 									</div>
 								</div>
@@ -2719,7 +2743,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 									<div class="row">
 										<div style="margin-top: 10px; margin-bottom: 20px;" id="developedby" class="col text-center">
 											Developed by Lyas Spiehler<br />
-											<!-- Go to www.addthis.com/dashboard to customize your tools --> <div class="addthis_sharing_toolbox"></div><br />
+											<!-- Go to www.addthis.com/dashboard to customize your tools <div class="addthis_sharing_toolbox"></div><br />-->
 											<a href="https://www.youtube.com/watch?v=O9-Ld_ceL0E">Checkout CertificateTools.com on YouTube</a>
 										</div>
 									</div>
@@ -2859,6 +2883,24 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				</tr>
 			</table>
 		</div>
+		<div id="feedback" title="CertificateTools.com">
+			<p align="center">
+				<img src="/static/most_interesting_man_certificatetools.com.gif" />
+			</p>
+			<p>
+				If you find this tool useful, please use one of the buttons below to get the word out about CertificateTools.com on social media! Thank you for your support!
+			</p>
+			<p align="center">
+				<div style="text-align: center;" class="addthis_sharing_toolbox"></div>
+			</p>
+			<p>
+				If there are any features missing from this site that you'd like to see in the future, please let me know using the textarea below.
+			</p>
+			<p align="center">
+				<textarea style="width:100%;" id="feedbacktext" rows=5></textarea>
+				<button onclick="processFeedback();" style="text-align: center;">Submit Feedback</button>
+			</p>
+		</div>
 		<div id="choosecert" title="Select a Certificate">
 			<p>The query returned a chain of multiple certificates. Please select the one you'd like to use from the dropdown:</p>
 			<p><select class="form-control" id="downloadedcerts">
@@ -2947,6 +2989,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 									<li>Extended Key Usage</li>
 									<li>Basic Constraints</li>
 									<li>Subject alternative Names</li>
+									<li>OCSP Must-Staple</li>
 								</ul>
 							<li>Download keys and certificates in multiple formats including:</li>
 								<ul>
@@ -3003,6 +3046,11 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 				modal: true,
 				autoOpen: false
 			});
+			$( "#feedback" ).dialog({
+				modal: true,
+				autoOpen: false,
+				width: '500px'
+			});
 			$( "#capassword" ).dialog({
 				modal: true,
 				autoOpen: false
@@ -3044,6 +3092,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			populateSubject();
 		</script>
 		<form id="downloadtext"></form>
+		<!--<button onclick="promptFeedback();">Feedback</button>-->
 		<!-- Go to www.addthis.com/dashboard to customize your tools --> <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-56f6c2b8ba1be9a6"></script>
 	</body>
 </html>

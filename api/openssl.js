@@ -174,14 +174,26 @@ router.get('/getCAs', function(req, res) {
 					//if(splitfile[splitfile.length - 1].toUpperCase()=='CRT') {
 					//console.log(file.substring(0, 2));
 					if(fs.statSync(cadir + '/' + file).isDirectory()) {
-						CAs.push(file);
+						ca = {
+							name: file
+						}
+						CAs.push(ca);
 					}
 					//if(file.isDirectory()) {	
 						//splitfile.pop()
 					//	CAs.push(file.join(''));
 					//}
 				});
-				res.json(CAs);
+				var hash = false;
+				if(config.caIPDir) {
+					let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+					hash = md5(ip) + '/';
+				}
+				res.json({
+					cas: CAs,
+					hash: hash,
+					publichttp: config.publichttp.replace('http://', '')
+				});
 				return;
 			})
 		} else if(err.code == 'ENOENT') {
@@ -233,6 +245,16 @@ router.post('/showIssuedCerts', function(req, res) {
 			res.json(data);
 		}
 	});
+});
+
+router.post('/postFeedback', function(req, res) {
+	console.log(req.body);
+	let usagedata = {
+		action: 'Feedback',
+		message: req.body.message
+	}
+	usageData(usagedata);
+	res.json(true);
 });
 
 router.get('/getAvailableCurves', function(req, res) {

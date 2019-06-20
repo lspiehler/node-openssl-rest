@@ -79,7 +79,8 @@
 			}
 		</style>
 		<script>
-                        var hosted = {{hosted}};
+				var hosted = {{hosted}};
+				var calist;	
                 </script>
                 <!-- Global site tag (gtag.js) - Google Analytics -->
                 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75343349-1"></script>
@@ -166,17 +167,41 @@
 			}
 			function listCAs() {
 				getCAs(function(err, cas) {
-					//console.log(cas);
+					//alert(cas.hash);
+					calist = cas;
 					var caselect = document.getElementById('caselect');
-					for(var i = 0; i <= cas.length - 1; i++) {
+					for(var i = 0; i <= cas.cas.length - 1; i++) {
 						var option = document.createElement('option');
-						option.value = cas[i];
-						option.innerText = cas[i];
+						option.value = cas.cas[i].name;
+						option.innerText = cas.cas[i].name;
 						caselect.add(option);
 					}
 				});
 			}
+			function populateCADownloads() {
+				var caselect = document.getElementById('caselect');
+				var crldownload = document.getElementById('crldownload');
+				var cadownload = document.getElementById('cadownload');
+				var selected = caselect.options[caselect.selectedIndex].value;
+				if(selected==false) {
+					crldownload.style.display = 'none';
+					cadownload.style.display = 'none';
+				} else {
+					crldownload.style.display = 'inline';
+					cadownload.style.display = 'inline';
+					if(calist.hash) {
+						var crlurl = 'http://' + calist.publichttp + '/public/crl/' + calist.hash + selected.replace(/ /g, "_") + '.crl';
+						var caurl = 'http://' + calist.publichttp + '/public/issuer/' + calist.hash + selected.replace(/ /g, "_") + '.crt';
+					} else {
+						var crlurl = 'http://' + calist.publichttp + '/public/crl/' + selected.replace(/ /g, "_") + '.crl';
+						var caurl = 'http://' + calist.publichttp + '/public/issuer/' + selected.replace(/ /g, "_") + '.crt';
+					}
+					crldownload.href = crlurl;
+					cadownload.href = caurl;
+				}
+			}
 			function loadCertsTable() {
+				populateCADownloads();
 				var caselect = document.getElementById('caselect');
 				var ca = caselect.options[caselect.selectedIndex].value;
 				//console.log(ca);
@@ -291,7 +316,9 @@
 		<select onchange="loadCertsTable()" id="caselect">
 			<option value="false">Select a CA...</option>
 		</select>
-		<button type="button" onclick="revokeCerts()">Revoke</button>
+		<button type="button" onclick="revokeCerts()">Revoke Certs</button>
+		<a id="cadownload" style="display:none;" href="/manage-certs">Download CA</a>&nbsp;
+		&nbsp;<a id="crldownload" style="display:none;" href="/manage-certs">Download CRL</a>
 	</body>
 	<script>
 		listCAs();

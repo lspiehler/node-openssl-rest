@@ -21,3 +21,6 @@ module.exports = config;
 
 //minimal windows example
 //SET OPENSSLBINPATH=C:\Program Files\OpenVPN\bin\openssl.exe&&SET PUBLICHTTP=192.168.164.110:8080&& node index.js
+
+//minimal Linux example
+//export HTTPPORT=9080&&export HTTPSPORT=9443&&node index.js

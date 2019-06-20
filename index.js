@@ -40,6 +40,7 @@ app.set('view engine', 'html');
 
 app.use('/bower_components',  express.static(__dirname + '/bower_components'));
 app.use('/images',  express.static(__dirname + '/images'));
+app.use('/static',  express.static(__dirname + '/static'));
 
 //app.use(express.static('files'))app.use('/api/auth', require('./api/auth'));
 
