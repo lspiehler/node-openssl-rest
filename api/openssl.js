@@ -112,6 +112,7 @@ router.post('/revokeCerts', function(req, res) {
 		if(err) {
 			res.json(err);
 		} else {
+			ocspcache.clearCache();
 			fs.unlink(cadir + '/' + caname + '/ca.crl', function(err) {
 				res.json(false);
 			});
