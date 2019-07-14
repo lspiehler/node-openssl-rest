@@ -1024,20 +1024,27 @@
 							data.csr = response.csr;
 							data.options.days = getdays();
 							openSSLRESTAPI('selfSignCSR', data, function(error, response) {
-								x509.cert.signingca = -1;
-								x509.cert.config = response.command.files.config;
-								x509.cert.json = data;
-								x509.cert.command = response.command.command;
-								x509.cert.data = response.crt;
-								//var cer = document.getElementById('cer');
-								//cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
-								x509.cert.isca = checkCAAttributes(x509);
-								generated.push(x509);
-								var certindex = generated.length - 1;
-								if(x509.cert.isca) {
-									appendCAToSignList(certindex);
+								if(error) {
+									//console.log(error);
+									alert('OpenSSL Error:\r\n\r\n' + error);
+									callback(error);
+									return;
+								} else {
+									x509.cert.signingca = -1;
+									x509.cert.config = response.command.files.config;
+									x509.cert.json = data;
+									x509.cert.command = response.command.command;
+									x509.cert.data = response.crt;
+									//var cer = document.getElementById('cer');
+									//cer.innerText = response.command.files.config + '\r\n\r\n' + response.command.command[0] + '\r\n\r\n' + response.crt;
+									x509.cert.isca = checkCAAttributes(x509);
+									generated.push(x509);
+									var certindex = generated.length - 1;
+									if(x509.cert.isca) {
+										appendCAToSignList(certindex);
+									}
+									callback(false, x509, certindex);
 								}
-								callback(false, x509, certindex);
 							});
 						} else if(signvalue=='nosign') {
 							x509.cert = false;
@@ -2281,12 +2288,14 @@
 				}
 			}
 			function promptFeedback() {
-				var feedbacktext = document.getElementById('feedbacktext');
-				if(promptedfeedback==false) {
-					$( '#feedback' ).dialog( 'open' );
+				if(hosted) {
+					var feedbacktext = document.getElementById('feedbacktext');
+					if(promptedfeedback==false) {
+						$( '#feedback' ).dialog( 'open' );
+					}
+					promptedfeedback = true;
+					//feedbacktext.focus();
 				}
-				promptedfeedback = true;
-				//feedbacktext.focus();
 			}
 			function processFeedback() {
 				var feedbacktext = document.getElementById('feedbacktext');
