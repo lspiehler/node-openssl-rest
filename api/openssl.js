@@ -19,6 +19,18 @@ var ocsplib = require('../lib/ocsp_checker.js');
 	format: 'PKCS8'
 }*/
 
+var fileExists = function(path, callback) {
+	fs.stat(path, function(err, stat) {
+		if(err == null) {
+			callback(false, stat);
+		} else if(err.code == 'ENOENT') {
+			callback(true, false);
+		} else {
+			callback(err, false);
+		}
+	});
+}
+
 var runOpenSSLCommand = function(cmd, cwd, callback) {
 	const stdoutbuff = [];
 	const stderrbuff = [];
@@ -77,20 +89,27 @@ var getCADir = function(req) {
 var revokeCerts = function(cadir, caname, revoke, index, callback) {
 	fs.stat(cadir + '/' + caname + '/certs/' + revoke[index] + '.pem', function(err, stat) {
 		if(err == null) {
-			//console.log('Issuer lookup for ' + caname + ', DER exists');
-			cmd = 'ca -config config.txt -revoke certs/' + revoke[index] + '.pem';
-			runOpenSSLCommand(cmd, cadir + '/' + caname, function(err, out) {
+			fileExists(cadir + '/' + caname + '/capass.txt', function(err, stat) {
+				let cmd;
 				if(err) {
-					
+					cmd = 'ca -config config.txt -revoke certs/' + revoke[index] + '.pem';
 				} else {
-					
+					cmd = 'ca -config config.txt -passin file:capass.txt -revoke certs/' + revoke[index] + '.pem';
 				}
-				if(index >= revoke.length - 1) {
-					callback(false, false);
-				} else {
-					revokeCerts(cadir, caname, revoke, index + 1, callback);
-				}
-				//console.log(out);
+				//console.log('Issuer lookup for ' + caname + ', DER exists');
+				runOpenSSLCommand(cmd, cadir + '/' + caname, function(err, out) {
+					if(err) {
+						
+					} else {
+						
+					}
+					if(index >= revoke.length - 1) {
+						callback(false, false);
+					} else {
+						revokeCerts(cadir, caname, revoke, index + 1, callback);
+					}
+					//console.log(out);
+				});
 			});
 		} else if(err.code == 'ENOENT') {
 			// file does not exist
