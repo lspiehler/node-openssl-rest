@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 var config = {
 	
 	//for public hosted, create CA directory for source IP
