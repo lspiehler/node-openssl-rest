@@ -875,8 +875,10 @@
 				
 				var muststaple = document.getElementById('muststaple');
 				if(muststaple.checked==true) {
-					//alert('true');
-					csr['mustStaple'] = true;
+					if(!csr['extensions']) {
+						csr['extensions'] = {}
+					}
+					csr['extensions']['tlsfeature'] = ['status_request'];
 				}
 				
 				return csr;
