@@ -259,13 +259,33 @@
 				saninput.value = item.parentNode.childNodes[3].innerText;
 				saninput.select();
 			}
-			function processSANInput() {
+			function processSANInput(multiple) {
+				let san;
+				let splitsan;
 				var list = document.getElementById('sanlist');
 				var items = list.getElementsByTagName('li');
 				var saninput = document.getElementById('saninput');
+				if(isNaN(multiple)) {
+					//console.log('nan');
+					if(saninput.value.indexOf(',') >= 0) {
+						processSANInput(0);
+						return;
+					} else {
+						san = saninput.value;
+					}
+				} else {
+					splitsan = saninput.value.split(',');
+					//console.log(splitsan.length + ' ' + multiple);
+					san = splitsan[multiple].trim();
+				}
 				var typeinput = document.getElementById('typeinput');
-				if(saninput.value=='') {
+				if(san=='') {
 					alert('Cannot add a blank subject alternative name.');
+					saninput.select();
+					return;
+				}
+				if(san.length>1024) {
+					alert('Subject alternative names cannot be greater than 128 characters.');
 					saninput.select();
 					return;
 				}
@@ -275,15 +295,24 @@
 				} else {
 					for(var i = 0; i <= items.length - 1; i++) {
 						//console.log(items[i].childNodes[1].innerText);
-						var current = typeinput.value + saninput.value;
+						var current = typeinput.value + san;
 						var exist = items[i].childNodes[1].innerText + items[i].childNodes[3].innerText;
 						if(current==exist) {
-							alert('The "' + typeinput.value + '" subject alternative name "' + saninput.value + '" has already been added');
+							alert('The "' + typeinput.value + '" subject alternative name "' + san + '" has already been added');
+							saninput.select();
 							return;
+
 						}
 					}
 				}
-				addSAN(typeinput.value, saninput.value);
+				addSAN(typeinput.value, san);
+				if(isNaN(multiple)) {
+				
+				} else {
+					if(multiple <= splitsan.length - 2) {
+						processSANInput(multiple + 1);
+					}
+				}
 				saninput.select();
 			}
 			function addSAN(type, value) {
@@ -332,12 +361,32 @@
 				}
 			}
 			
-			function processItem(type) {
+			function processItem(type, multiple) {
+				let itemvalue;
+				let splititem;
 				var list = document.getElementById(index[type]['list']);
 				var items = list.getElementsByTagName('li');
 				var input = document.getElementById(index[type]['input']);
-				if(input.value=='') {
+				if(isNaN(multiple)) {
+					//console.log('nan');
+					if(input.value.indexOf(',') >= 0) {
+						processItem(type, 0);
+						return;
+					} else {
+						itemvalue = input.value;
+					}
+				} else {
+					splititem = input.value.split(',');
+					//console.log(splitsan.length + ' ' + multiple);
+					itemvalue = splititem[multiple].trim();
+				}
+				if(itemvalue=='') {
 					alert('Cannot add a blank ' + index[type]['name'] + '.');
+					input.select();
+					return;
+				}
+				if(itemvalue.length > index[type]['maxlength']) {
+					alert('Value cannot be greater than ' + index[type]['maxlength'] + ' characters');
 					input.select();
 					return;
 				}
@@ -346,13 +395,20 @@
 				} else {
 					for(var i = 0; i <= items.length - 1; i++) {
 						//console.log(items[i].childNodes[1].innerText);
-						if(input.value==items[i].childNodes[1].innerText) {
-							alert('The ' + index[type]['name'] + ' "' + input.value + '" has already been added');
+						if(itemvalue==items[i].childNodes[1].innerText) {
+							alert('The ' + index[type]['name'] + ' "' + itemvalue + '" has already been added');
 							return;
 						}
 					}
 				}
-				addItem(type, input.value)
+				addItem(type, itemvalue)
+				if(isNaN(multiple)) {
+				
+				} else {
+					if(multiple <= splititem.length - 2) {
+						processItem(type, multiple + 1);
+					}
+				}
 				input.select();
 			}
 			
@@ -476,7 +532,9 @@
 				var row = document.getElementById(index[key]['name'] + 'multivaluerow');
 				var button = document.getElementById(index[key]['name'] + 'multivaluebutton');
 				var list = document.getElementById(index[key]['list']);
+				var input = document.getElementById(index[key]['input']);
 				
+				input.removeAttribute('maxlength');
 				row.style.display = 'block';
 				button.style.display = 'block';
 				list.style.display = 'block';
@@ -486,7 +544,9 @@
 				var row = document.getElementById(index[key]['name'] + 'multivaluerow');
 				var button = document.getElementById(index[key]['name'] + 'multivaluebutton');
 				var list = document.getElementById(index[key]['list']);
+				var input = document.getElementById(index[key]['input']);
 				
+				input.setAttribute('maxlength', index[key]['maxlength']);
 				row.style.display = 'none';
 				button.style.display = 'none';
 				list.style.display = 'none';
@@ -537,7 +597,7 @@
 				if(index[key]['defaultvalue']) {
 					row2input.value = index[key]['defaultvalue'];
 				}
-				row2input.maxLength = index[key]['maxlength'];
+				//row2input.maxLength = index[key]['maxlength'];
 				row2input.className = 'form-control';
 				row2input.id = index[key]['input'];
 				var row2col1 = document.createElement('div');
@@ -567,8 +627,9 @@
 				addEvent(row2btn, key);
 				
 				if(index[key]['multivalue']) {
-					
+
 				} else {
+					row2input.maxLength = index[key]['maxlength'];
 					row2col2.style.display = 'none';
 					row3.style.display = 'none';
 					list.style.display = 'none';
@@ -2505,7 +2566,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 											</select>
 										</div>
 										<div class="col-lg-8 col-md-7 col-sm-5 col-xs-5">
-											<input placeholder="certificatetools.com" type="text" maxlength="128" class="form-control" id="saninput" />
+											<input placeholder="certificatetools.com,www.certificatetools.com" type="text" class="form-control" id="saninput" />
 										</div>
 										<div class="col-lg-2 col-md-2 col-sm-3 col-xs-3 rightbtn">
 											<button class="btn btn-primary" onclick="processSANInput();" type="button">Add</button>
