@@ -480,7 +480,7 @@ router.post('/downloadPKCS7', function(req, res) {
 	for(var key in req.body) {
 		certs.push(req.body[key]);
 	}
-	openssl.createPKCS7(certs, function(err, pkcs7, command) {
+	openssl.createPKCS7(certs, 'PEM' function(err, pkcs7, command) {
 		if (err) console.log(err);
 		var mimetype = 'application/x-pkcs7-certificates';
 		res.setHeader('Content-disposition', 'attachment; filename=cert.p7b');
