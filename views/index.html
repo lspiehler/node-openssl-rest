@@ -824,7 +824,14 @@
 				if(addsubj) {
 					csr['subject'] = subject
 				}
-				if(!csr.subject.commonName) {
+				if(csr.subject) {
+					if(!csr.subject.commonName) {
+						var proceed = confirm('You have not added any common names. Click OK to proceed anyway or cancel to go back and add a common name.');
+						if(!proceed) {
+							return false;
+						}
+					}
+				} else {
 					var proceed = confirm('You have not added any common names. Click OK to proceed anyway or cancel to go back and add a common name.');
 					if(!proceed) {
 						return false;
@@ -941,7 +948,7 @@
 					}
 					csr['extensions']['tlsfeature'] = ['status_request'];
 				}
-				
+				console.log(csr);
 				return csr;
 			}
 			
