@@ -945,48 +945,62 @@ router.post('/ocspChecker', function(req, res) {
 		        protocol: 'https'
 	}
 	if(req.body.method=='download') {
-		openssl.getCertFromNetwork(netcertoptions, function(err, cert, cmd) {
-			//if(err) console.log(err);
-			//console.log(cmd);
+		ocsp.getCertFromNetwork(netcertoptions, function(err, response, cmd) {
+			var data = {
+				error: err,
+				response: response,
+				command: cmd
+			}
 			//console.log(cmd.cert);
 			//console.log(err);
 			//console.log(response);
-			if(err) {
-				let usagedata = {
-											action: 'OCSPDownload',
-											err: err,
-											headers: req.headers,
-											ocsp: response
-									}
-				usageData(usagedata);
-				res.json(data);
-			} else {
-				ocsp.query(cert[0], function(err, response, cmd) {
+			if(response) {
+				if(response.indexOf('unauthorized') >= 0) {
+					ocsp.query(cmd.cert.base64, function(err, response, cmd) {
+						let usagedata = {
+			                                action: 'OCSPBadChainDownload',
+			                                err: err,
+			                                headers: req.headers,
+                        			        ocsp: response
+			                        }
+						usageData(usagedata);
+						data = {
+							error: err,
+							response: response,
+							command: cmd
+						}
+								if(err) {
+							//console.log(data);
+										res.json(data);
+								 } else {
+										//console.log(resp);
+										//for(var i = 0; i <= cmd.ca.length - 1; i++) {
+										//      console.log(cmd.ca[i]);
+										//}
+										//console.log(cmd.cert);
+							//console.log(data);
+							res.json(data);
+								 }
+						});
+				} else {
 					let usagedata = {
-										action: 'OCSPBadChainDownload',
-										err: err,
-										headers: req.headers,
-										ocsp: response
-								}
+                                                action: 'OCSPDownload',
+                                                err: err,
+                                                headers: req.headers,
+                                                ocsp: response
+                                        }
 					usageData(usagedata);
-					data = {
-						error: err,
-						response: response,
-						command: cmd
-					}
-							if(err) {
-						//console.log(data);
-									res.json(data);
-							 } else {
-									//console.log(resp);
-									//for(var i = 0; i <= cmd.ca.length - 1; i++) {
-									//      console.log(cmd.ca[i]);
-									//}
-									//console.log(cmd.cert);
-						//console.log(data);
-						res.json(data);
-							 }
-					});
+					res.json(data);
+				}
+			} else {
+				let usagedata = {
+                                        action: 'OCSPDownload',
+                                        err: err,
+                                        headers: req.headers,
+                                        ocsp: response
+                                }
+                                usageData(usagedata);
+				res.json(data);
 			}
 		});
 	} else {
