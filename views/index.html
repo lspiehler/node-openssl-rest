@@ -205,6 +205,71 @@
 					placeholder: 'email@gmail.com',
 					multivalue: false,
 					enabled: false
+				},
+				jurisdictionCountryName: {
+					title: 'EV Country',
+					section: 'evcsection',
+					list: 'evcountry',
+					input: 'evcinput',
+					note: 'Add an EV Country',
+					name: 'EV Country',
+					maxlength: 2,
+					defaultvalue: 'US',
+					placeholder: 'US',
+					multivalue: false,
+					enabled: false
+				},
+				jurisdictionStateOrProvinceName: {
+					title: 'EV State',
+					section: 'evstatesection',
+					list: 'evstate',
+					input: 'evstateinput',
+					note: 'Add an EV State',
+					name: 'EV State',
+					maxlength: 128,
+					defaultvalue: false,
+					placeholder: 'Louisiana',
+					multivalue: false,
+					enabled: false
+				},
+				jurisdictionLocalityName: {
+					title: 'EV Locality',
+					section: 'evlocalitysection',
+					list: 'evlocality',
+					input: 'evlocalityinput',
+					note: 'Add an EV Locality',
+					name: 'EV Locality',
+					maxlength: 128,
+					defaultvalue: false,
+					placeholder: 'Slidell',
+					multivalue: false,
+					enabled: false
+				},
+				businessCategory: {
+					title: 'EV Business Category',
+					section: 'evbusinesscategorysection',
+					list: 'evbusinesscategory',
+					input: 'evbusinesscategoryinput',
+					note: 'Add an EV Business Category',
+					name: 'EV Business Category',
+					maxlength: 128,
+					defaultvalue: false,
+					placeholder: '',
+					multivalue: false,
+					enabled: false
+				},
+				serialNumber: {
+					title: 'EV Serial Number',
+					section: 'evserialnumbersection',
+					list: 'evserialnumber',
+					input: 'evserialnumberinput',
+					note: 'Add an EV Serial Number',
+					name: 'EV Serial Number',
+					maxlength: 128,
+					defaultvalue: false,
+					placeholder: '',
+					multivalue: false,
+					enabled: false
 				}
 			}
 			
@@ -2827,7 +2892,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 										<div style="margin-top: 10px; margin-bottom: 20px;" id="developedby" class="col text-center">
 											Developed by Lyas Spiehler<br />
 											<!-- Go to www.addthis.com/dashboard to customize your tools <div class="addthis_sharing_toolbox"></div><br />-->
-											<a href="https://www.youtube.com/watch?v=O9-Ld_ceL0E">Checkout CertificateTools.com on YouTube</a>
+											<a href="https://www.youtube.com/watch?v=O9-Ld_ceL0E">Checkout CertificateTools.com on YouTube</a><br />
 										</div>
 									</div>
 								</div>
@@ -2967,7 +3032,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			</table>
 		</div>
 		<div id="feedback" title="CertificateTools.com">
-			<p align="center">
+			<!--<p align="center">
 				<img style="width: 100%;" src="/static/most_interesting_man_certificatetools.com.gif" />
 			</p>
 			<p>
@@ -2980,6 +3045,9 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			<p align="center">
 				Consider donating. Thank you for your support!
 				<a href="https://paypal.me/lspiehler?locale.x=en_US"><img align="center" src="/images/Paypal_donate_button-300x140.png" /></a>
+			</p>-->
+			<p align="center">
+				If you like this tool, you may be interested in checking out my new site <a target="_blank" href="https://pkiaas.io">https://pkiaas.io</a>. It is still beta, but it has lots of great features and can be used as a complete PKI solution.
 			</p>
 			<!--<p>
 				If there are any features missing from this site that you'd like to see in the future, please let me know using the textarea below.
@@ -3062,6 +3130,8 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 					<div class="modal-body">
 						<h3>Welcome to the new certificatetools.com UI. Here are a few things the new tool can do:</h3>
 						<h4><a href="https://www.youtube.com/watch?v=O9-Ld_ceL0E">Check out my new YouTube video overview and demonstration of the site's features.</a></h4>
+						<h3>OR</h3>
+						<h4><a target="_blank" href="https://pkiaas.io">Try out my new PKIaaS.IO site to easily build a fully managed PKI!!!</a></h4>
 						<ul>
 							<li>Generate certificate signing requests (CSR)</li>
 							<li>Supports multiple common names and subject alternative names</li>
