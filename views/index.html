@@ -848,6 +848,9 @@
 				//add hash algorithm
 				
 				var hashalg = document.getElementById('hashalg');
+				var challengepassphrase = document.getElementById('challengepassphrase');
+				var charencodingelem = document.getElementById('charencoding');
+				var charencoding = charencodingelem.options[charencodingelem.selectedIndex].value;
 				csr['hash'] = hashalg.options[hashalg.selectedIndex].value;
 				
 				//add subject attributes
@@ -1013,6 +1016,18 @@
 					}
 					csr['extensions']['tlsfeature'] = ['status_request'];
 				}
+
+				if(challengepassphrase.value != '') {
+					if(!csr['requestAttributes']) {
+						csr['requestAttributes'] = {}
+					}
+					csr['requestAttributes']['challengePassword'] = challengepassphrase.value;
+				}
+
+				if(charencoding != 'default') {
+					csr['string_mask'] = charencoding;
+				}
+
 				console.log(csr);
 				return csr;
 			}
@@ -1050,6 +1065,7 @@
 				var signcert = elem.options[elem.options.selectedIndex];
 				var timetype = document.getElementById('timetypecol');
 				var timelength = document.getElementById('timelengthcol');
+				var challengepassphrase = document.getElementById('challengepassphrasecol');
 				//var manageca = document.getElementById('managecacol');
 				//var date1 = document.getElementById('date1');
 				//var date2 = document.getElementById('date2');
@@ -1057,6 +1073,7 @@
 					if(signcert.innerText[0] == '*') {
 						timetype.style.display = 'none';
 						timelength.style.display = 'none';
+						challengepassphrase.style.display = 'none';
 						//manageca.style.display = 'block';
 						//date1.style.display = 'block';
 						//date2.style.display = 'block';
@@ -1068,6 +1085,7 @@
 					} else {
 						timetype.style.display = 'block';
 						timelength.style.display = 'block';
+						challengepassphrase.style.display = 'none';						
 						//manageca.style.display = 'none';
 						//date1.style.display = 'none';
 						//date2.style.display = 'none';
@@ -1077,6 +1095,7 @@
 				} else {
 					timetype.style.display = 'none';
 					timelength.style.display = 'none';
+					challengepassphrase.style.display = 'inline';
 					//manageca.style.display = 'none';
 					//date1.style.display = 'none';
 					//date2.style.display = 'none';
@@ -2786,6 +2805,28 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 								<div class="col">
 									<div class="row">
 										<div class="col">
+											<h4>Encoding Options</h4>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-lg-2 col-md-2 col-sm-8 col-xs-8">
+											<select id="charencoding" class="form-control">
+												<option value="default">Default</option>
+												<option value="utf8only">UTF-8</option>
+												<option value="nombstr">PrintableString</option>
+											</select>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">	
+							<div class="row">
+								<div class="col">
+									<div class="row">
+										<div class="col">
 											<h4>CSR Options</h4>
 										</div>
 									</div>
@@ -2808,6 +2849,13 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 												<option value="nosign">CSR Only</option>
 												<option value="selfsign">Self-Sign</option>
 											</select>
+										</div>
+										<div id="challengepassphrasecol" class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+											<div class="form-inline">
+												<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+													Challenge Passphrase: <input id="challengepassphrase" type="text" placeholder="optional" class="form-control" class="form-control" />
+												</div>
+											</div>
 										</div>
 										<!--<div id="managecacol" class="col-lg-2 col-md-2 col-sm-3 col-xs-3">
 											<button class="btn btn-primary" onclick="manageCA();" type="button">Manage</button>
