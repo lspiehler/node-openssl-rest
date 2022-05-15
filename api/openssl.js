@@ -76,14 +76,14 @@ var runOpenSSLCommand = function(cmd, cwd, callback) {
 var getCADir = function(req) {
 	let cadir;
 	//console.log(req.headers);
-	if(config.caIPDir) {
-		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-		cadir = './ca/' + md5(ip);
-		return cadir;
-	} else {
+	// if(config.caIPDir) {
+	// 	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	// 	cadir = './ca/' + md5(ip);
+	// 	return cadir;
+	// } else {
 		cadir = './ca/global';
 		return cadir;
-	}
+	// }
 }
 
 var revokeCerts = function(cadir, caname, revoke, index, callback) {

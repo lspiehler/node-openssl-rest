@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://certificatetools.com/sitemap.xml
+Sitemap: https://cert.emil.md/sitemap.xml

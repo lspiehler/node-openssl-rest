@@ -20,11 +20,11 @@
 		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
-		<meta property="og:title" content="CertificateTools.com - CSR Generator">
+		<meta property="og:title" content="mTech Certifier - CSR Generator">
 		<meta property="og:description" content="Generate a certificate signing request (CSR) online in just one click with support for multiple domain names using common names and subject alternative names. Choose from either a 2048 bit RSA key or a 256 bit ECC key.">
-		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
-		<meta property="og:url" content="https://certificatetools.com">
-		<meta property="og:site_name" content="CertificateTools.com">
+		<meta property="og:image" content="https://emil.md/images/og_certificatetools.png">
+		<meta property="og:url" content="https://emil.md">
+		<meta property="og:site_name" content="mTech Certifierm">
 		<meta property="og:locale" content="en_US">
 		<meta property="og:type" content="website">
 		<meta name="msapplication-TileColor" content="#ffffff">
@@ -88,19 +88,6 @@
 		</style>
 		<script>
                         var hosted = {{hosted}};
-                </script>
-                <!-- Global site tag (gtag.js) - Google Analytics -->
-                <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75343349-1"></script>
-                <script>
-                        if(hosted) {
-                                window.dataLayer = window.dataLayer || [];
-                                function gtag(){dataLayer.push(arguments);}
-                                gtag('js', new Date());
-
-                                gtag('config', 'UA-75343349-1');
-                        }
-                </script>
-		<script>
 			var storedkey;
 			var storedcsr;
 			var attempt = 0;
@@ -144,7 +131,6 @@
 			
 			function downloadText(text, filename, type) {
 				//alert(text);
-				googleAnalyticsEvent('Interaction', 'Download', type, '')
 				var form = document.getElementById('downloadtext');
 				form.action = 'api/openssl/returnDownload';
 				form.method = 'POST';
@@ -179,7 +165,6 @@
 			
 			function submitForm() {
 				//e.preventDefault();
-				googleAnalyticsEvent('Interaction', 'simpleCSR', '', '')
 				var output = document.getElementById('output');
 				var submit = document.getElementById('submit');
 				submit.disabled = true;
@@ -429,15 +414,7 @@
 				elmnt.scrollIntoView(); 
 			}
 			
-			function googleAnalyticsEvent(category, action, label, value) {
-					if(hosted) {
-							gtag('event', action, {
-									'event_category': category,
-									'event_label': label,
-									'value': value
-							});
-					}
-			}
+			
 			function addEventListeners() {
 				/*var methods = document.getElementsByClassName('methods');
 				for(var i = 0; i <= methods.length - 1; i++) {
@@ -496,10 +473,9 @@
 								<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 									<div class="row">
 										<div class="col-lg-10 col-md-9 col-sm-9 col-xs-8">
-											<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
 											<div class="form-group">
 												<label for="hostnames">Domain Names</label>
-												<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com">
+												<input id="hostnames" type="text" class="form-control" placeholder="example.com, www.example.com">
 											</div>
 										</div>
 										<div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 align-bottom">
@@ -577,26 +553,6 @@
 							<li>Additional customizations and more powerful features are available using the <a href="/">Advanced x509 Generator</a></li>
 						</ul>
 						<div style="width: 100%; height: 325px;">
-						<!--<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-						<ins class="adsbygoogle"
-	        style="display:block"
-	      data-ad-client="ca-pub-4797561390067055"
-            data-ad-slot="1657746854"
-	         data-ad-format="auto"
-	       data-full-width-responsive="true"></ins>
-	<script>
-		(adsbygoogle = window.adsbygoogle || []).push({});
-	</script>-->
-						<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<ins class="adsbygoogle"
-     style="display:block; text-align:center;"
-     data-ad-layout="in-article"
-     data-ad-format="fluid"
-     data-ad-client="ca-pub-4797561390067055"
-     data-ad-slot="2652044575"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
 					</div>
 					</div>
 					</div>

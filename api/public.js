@@ -268,7 +268,7 @@ var generateOCSPCert = function(capath, callback) {
 			commonName: [
 				'OCSP'
 			],
-			emailAddress: 'lyas.spiehler@slidellmemorial.org'
+			emailAddress: 'admin@emil.md'
 		},
 		extensions: {
 			basicConstraints: {

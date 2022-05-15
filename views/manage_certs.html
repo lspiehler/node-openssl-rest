@@ -19,11 +19,11 @@
 		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
-		<meta property="og:title" content="CertificateTools.com - OCSP Checker">
+		<meta property="og:title" content="mTech Certifier - OCSP Checker">
 		<meta property="og:description" content="Check the OCSP status of your X509 certificate using the domain name or by pasting the contents of your Base64 encoded certificate.">
-		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
-		<meta property="og:url" content="https://certificatetools.com">
-		<meta property="og:site_name" content="CertificateTools.com">
+		<meta property="og:image" content="https://cert.emil.md/images/og_certificatetools.png">
+		<meta property="og:url" content="https://cert.emil.md">
+		<meta property="og:site_name" content="mTech Certifier">
 		<meta property="og:locale" content="en_US">
 		<meta property="og:type" content="website">
 		<meta name="msapplication-TileColor" content="#ffffff">
@@ -82,18 +82,7 @@
 				var hosted = {{hosted}};
 				var calist;	
                 </script>
-                <!-- Global site tag (gtag.js) - Google Analytics -->
-                <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75343349-1"></script>
-                <script>
-                        if(hosted) {
-                                window.dataLayer = window.dataLayer || [];
-                                function gtag(){dataLayer.push(arguments);}
-                                gtag('js', new Date());
-
-                                gtag('config', 'UA-75343349-1');
-                        }
-                </script>
-		<script>
+			<script>
 			function getCAs(callback) {
 				var request = new XMLHttpRequest();
 				request.open('GET', 'api/openssl/getCAs', true);

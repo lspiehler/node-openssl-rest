@@ -5,7 +5,7 @@ var html = {
 	header: ['<nav class="navbar navbar-default navbar-fixed-top" role="navigation">',
 		'	<div class="container-fluid" id="navfluid">',
 		'		<div class="navbar-header">',
-		'			<a class="navbar-brand" href="/">CertificateTools.com</a>',
+		'			<a class="navbar-brand" href="/">mTech Certifier</a>',
 		'			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigationbar">',
 		'			<span class="sr-only">Toggle navigation</span>',
 		'			<span class="icon-bar"></span>',

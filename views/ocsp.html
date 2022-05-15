@@ -20,18 +20,18 @@
                 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
                 <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
                 <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
-		<meta property="og:title" content="CertificateTools.com">
-		<meta property="og:description" content="Online x509 Certificate Generator. CertificateTools.com offers the quickest and easiest way to create self-signed certificates, certificate signing requests (CSR), or create a root certificate authority and use it to sign other x509 certificates. We support multiple subject alternative names, multiple common names, all x509 v3 extensions, RSA and elliptic curve cryptography private keys. All OpenSSL commands are shown so they can be run securely offline.">
-		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
-		<meta property="og:url" content="https://certificatetools.com">
-		<meta property="og:site_name" content="CertificateTools.com">
+		<meta property="og:title" content="mTech Certifier">
+		<meta property="og:description" content="Online x509 Certificate Generator. mTech Certifier offers the quickest and easiest way to create self-signed certificates, certificate signing requests (CSR), or create a root certificate authority and use it to sign other x509 certificates. We support multiple subject alternative names, multiple common names, all x509 v3 extensions, RSA and elliptic curve cryptography private keys. All OpenSSL commands are shown so they can be run securely offline.">
+		<meta property="og:image" content="https://cert.emil.md/images/og_certificatetools.png">
+		<meta property="og:url" content="https://cert.emil.md">
+		<meta property="og:site_name" content="mTech Certifier">
 		<meta property="og:locale" content="en_US">
 		<meta property="og:type" content="website">
                 <link rel="manifest" href="/manifest.json">
                 <meta name="msapplication-TileColor" content="#ffffff">
                 <meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
                 <meta name="theme-color" content="#ffffff">
-		<title>CertificateTools.com - Online X509 Certificate Generator</title>
+		<title>mTech Certifier - X509 Certificate Generator</title>
 		<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
 		<link rel="stylesheet" href="bower_components/jquery-ui/themes/base/jquery-ui.min.css">
 		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -87,7 +87,7 @@
 						</select>
 					</div>
 					<div id="hostcontain" class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
-						<input id='hostname' type="text" placeholder="google.com" class="form-control" /> 
+						<input id='hostname' type="text" placeholder="example.com" class="form-control" /> 
 					</div>
 					<div id="pastecontain" class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="display:none;">
 						<textarea rows="5" class="form-control" style="white-space: pre; word-wrap: normal; overflow-wrap: normal; overflow-x: auto; font-family: Courier, monospace;" id="pastedcert"></textarea>
@@ -239,7 +239,6 @@
 			
 			function importCert() {
 				var netcertoptions = {};
-				//googleAnalyticsEvent('Interaction', 'Import', 'x509')
 				var methodinput = document.getElementById('templatemethod');
 				var method = methodinput.options[methodinput.selectedIndex].value;
 				if(method != 'paste') {

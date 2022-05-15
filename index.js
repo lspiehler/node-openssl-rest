@@ -24,6 +24,8 @@ console.log('HOSTED is set to "' + config.hosted + '"');
 console.log('HTTPPORT is set to "' + config.httpport + '"');
 console.log('HTTPSPORT is set to "' + config.httpsport + '"');
 console.log('PUBLICHTTP is set to "' + config.publichttp + '"');
+console.log('SITENAME is set to "' + config.siteName + '"');
+
 
 express_ssl.getSSL(function(sslOptions) {
 	var server = require('https').createServer(sslOptions, app).listen(config.httpsport);
@@ -46,7 +48,7 @@ app.use('/static',  express.static(__dirname + '/static'));
 
 opensslcap.getCapabilities(function(err, capabilities) {
 	var template = {
-		title: "CertificateTools.com X509 Certificate Generator",
+		title: "mTech Certifier X509 Certificate Generator",
 		certtemplates: certtemplates,
 		javascripttemplates: JSON.stringify(certtemplates, null, 4),
 		capabilities: capabilities,
