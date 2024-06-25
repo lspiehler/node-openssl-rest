@@ -1,23 +1,23 @@
-FROM node:8-alpine
+FROM node:lts-alpine3.20
 
-MAINTAINER Lyas Spiehler
+LABEL maintainer="Lyas Spiehler"
 
 RUN apk add --update openssl git && \
     rm -rf /var/cache/apk/*
 
-WORKDIR /root
+WORKDIR /var/node
 
 RUN git clone https://github.com/lspiehler/node-openssl-rest.git
 
-WORKDIR /root/node-openssl-rest
+WORKDIR /var/node/node-openssl-rest
 
-VOLUME /root/node-openssl-rest/ca
+VOLUME /var/node/node-openssl-rest/ca
 
 RUN npm install
 
 RUN npm install bower -g
 
-RUN bower install --allow-root eonasdan-bootstrap-datetimepicker#latest bootstrap@3 jquery-ui
+#RUN bower install --allow-root tempusdominus-bootstrap-3 bootstrap@3 jquery-ui moment
 
 EXPOSE 8443
 
