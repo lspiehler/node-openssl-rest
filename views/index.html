@@ -32,14 +32,15 @@
                 <meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
                 <meta name="theme-color" content="#ffffff">
 		<title>CertificateTools.com - Online X509 Certificate Generator</title>
-		<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
-		<link rel="stylesheet" href="bower_components/jquery-ui/themes/base/jquery-ui.min.css">
-		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-		<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
-		<script type="text/javascript" src="bower_components/moment/min/moment.min.js"></script>
-		<script type="text/javascript" src="bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
-		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
-		<link rel="stylesheet" href="bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
+		<script type="text/javascript" src="js/jquery/jquery.min.js"></script>
+		<link rel="stylesheet" href="js/jquery-ui/themes/base/jquery-ui.min.css">
+		<script type="text/javascript" src="js/bootstrap/bootstrap.min.js"></script>
+		<script src="js/jquery-ui/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="js/moment/moment.min.js"></script>
+		<script type="text/javascript" src="js/tempusdominus/tempusdominus-bootstrap-3.min.js"></script>
+		<script src="/js/popper.js/popper.min.js"></script>
+		<link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+		<link rel="stylesheet" href="css/tempusdominus/tempusdominus-bootstrap-3.css" />
 		<style>
 			body {
 				padding-top: 70px;
@@ -1077,10 +1078,10 @@
 						//manageca.style.display = 'block';
 						//date1.style.display = 'block';
 						//date2.style.display = 'block';
-						$('#datetimepicker1').datetimepicker().show();
-						$('#datetimepicker1').data("DateTimePicker").date(new Date());
-						$('#datetimepicker2').datetimepicker().show();
-						$('#datetimepicker2').data("DateTimePicker").date(moment(new Date()).add(1, 'years'));
+						$('#datetimepicker1').css("display", "");
+						$('#datetimepicker1').datetimepicker('date', new Date());
+						$('#datetimepicker2').css("display", "");
+						$('#datetimepicker2').datetimepicker('date', moment(new Date()).add(1, 'years'));
 						//console.log($('#datetimepicker2').data("DateTimePicker").date().toDate());
 					} else {
 						timetype.style.display = 'block';
@@ -1089,8 +1090,8 @@
 						//manageca.style.display = 'none';
 						//date1.style.display = 'none';
 						//date2.style.display = 'none';
-						$('#datetimepicker1').datetimepicker().hide();
-						$('#datetimepicker2').datetimepicker().hide();
+						$('#datetimepicker1').css("display", "none");
+						$('#datetimepicker2').css("display", "none");
 					}
 				} else {
 					timetype.style.display = 'none';
@@ -1099,8 +1100,8 @@
 					//manageca.style.display = 'none';
 					//date1.style.display = 'none';
 					//date2.style.display = 'none';
-					$('#datetimepicker1').datetimepicker().hide();
-					$('#datetimepicker2').datetimepicker().hide();
+					$('#datetimepicker1').css("display", "none");
+					$('#datetimepicker2').css("display", "none");
 				}
 			}
 			
@@ -2890,7 +2891,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 										</script>
 										<div id="date2" class='col-lg-3 col-md-3 col-sm-6 col-xs-6'>
 											<div class="form-group">
-												<div class='input-group date' id='datetimepicker2'>
+												<div class='input-group date'  id='datetimepicker2'>
 													<input placeholder="End Date" type='text' class="form-control" />
 													<span class="input-group-addon">
 														<span class="glyphicon glyphicon-calendar"></span>

@@ -38,7 +38,16 @@ app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies.
 app.engine('html', mustacheExpress());
 app.set('view engine', 'html');
 
-app.use('/bower_components',  express.static(__dirname + '/bower_components'));
+app.use('/js/bootstrap',  express.static(__dirname + '/node_modules/bootstrap/dist/js'));
+app.use('/js/moment', express.static('./node_modules/moment/min'));
+app.use('/js/jquery', express.static('./node_modules/jquery/dist'));
+app.use('/js/jquery-ui', express.static('./node_modules/jquery-ui/dist'));
+app.use('/js/tempusdominus', express.static('./node_modules/tempusdominus-bootstrap-3/build/js'));
+app.use('/js/popper.js', express.static('./node_modules/popper.js/dist/umd'));
+app.use('/css/tempusdominus', express.static('./node_modules/tempusdominus-bootstrap-3/build/css'));
+app.use('/css/bootstrap',  express.static(__dirname + '/node_modules/bootstrap/dist/css'));
+app.use('/css/fonts',  express.static(__dirname + '/node_modules/bootstrap/dist/fonts'));
+app.use('/css/jquery-ui',  express.static(__dirname + '/node_modules/jquery-ui/dist'));
 app.use('/images',  express.static(__dirname + '/images'));
 app.use('/static',  express.static(__dirname + '/static'));
 
