@@ -21,5 +21,6 @@ export PUBLICHTTP=publicdomainname:port&&node index.js
 
 #### Run Docker Container
 ```
+docker build -t lspiehler/node-openssl-rest:latest .
 docker run --name node-openssl-rest -p 8443:8443 -p 8080:8080 -it lspiehler/node-openssl-rest:latest
 ```
