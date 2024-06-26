@@ -1950,7 +1950,7 @@
 				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
 				var password;
 				//if(keymethod=='PKCS1' || keymethod=='PKCS8' || keymethod=='PKCS1ECC' || keymethod=='PKCS8ECC') {
-				if(method.value.indexOf('paste') >= 0 || method.value.indexOf('upload') >= 0) {
+				if(keymethod.indexOf('paste') >= 0 || keymethod.indexOf('upload') >= 0) {
 					password = document.getElementById('passwordprompt').value;
 				} else {
 					password = document.getElementById('password').value;
