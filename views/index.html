@@ -746,14 +746,15 @@
 			function keyEncrypt() {
 				var method = document.getElementById('keymethod');
 				var encryptcol = document.getElementById("encryptcol");
-				if(method.value=='PKCS1' || method.value=='PKCS8' || method.value=='PKCS1ECC' || method.value=='PKCS8ECC') {
-					var encryption = document.getElementById("encryption");
-					encryptcol.style.display = 'block';
-					toggleEncryption(encryption);
-				} else {
+				//if(method.value=='PKCS1' || method.value=='PKCS8' || method.value=='PKCS1ECC' || method.value=='PKCS8ECC') {
+				if(method.value.indexOf('paste') >= 0 || method.value.indexOf('upload') >= 0) {
 					passwordcol.style.display = 'none';
 					ciphercol.style.display = 'none';
 					encryptcol.style.display = 'none';
+				} else {
+					var encryption = document.getElementById("encryption");
+					encryptcol.style.display = 'block';
+					toggleEncryption(encryption);
 				}
 			}
 			function enableGenerateECC(enable) {
@@ -839,7 +840,11 @@
 					enablePaste(false);
 					enableUpload(true);
 				} else {
-					alert('Unrecognized option');
+					enableGenerateECC(false);
+					enableGenerate(false);
+					enablePaste(false);
+					enableUpload(false);
+					keyEncrypt();
 				}
 			}
 			function getCSRParams() {
@@ -1041,9 +1046,11 @@
 				if(method=="PKCS1" || method=="PKCS8") {
 					var keysizeinput = document.getElementById('keysize');
 					rsakeyoptions.rsa_keygen_bits = keysizeinput.options[keysizeinput.selectedIndex].value
-				} else {
+				} else if(method=="PKCS8ECC" || method=="PKCS1ECC") {
 					var curve = document.getElementById('selcurve');
 					rsakeyoptions.curve = curve.options[curve.selectedIndex].value
+				} else {
+					rsakeyoptions.algorithm = method;
 				}
 				
 				var encryptioninput = document.getElementById('encryption');
@@ -1438,8 +1445,29 @@
 							});
 						}
 					});
-				} else {
-					alert('Unrecognized private key method');
+				} else { // OQS options
+					var keyoptions = getKeyParams();
+					if(!keyoptions) {
+						return false;
+					}
+					x509.key = keyoptions;
+					//x509.key.format = keymethod.replace('PKCS8');
+					//keyoptions.format = keymethod.replace('PKCS8');
+					console.log(keyoptions);
+					openSSLRESTAPI('generateOQSPrivateKey', keyoptions, function(err, response) {
+						if(err) {
+							console.log(response);
+						} else {
+							console.log(response);
+							x509.key.generated = true;
+							x509.key.command = response.command;
+							x509.key.data = response.key;
+							//generated.push(x509);
+							processCSR(response, x509, function(err, x509, index) {
+								processCompleted(err, x509, index);
+							});
+						}
+					});
 				}
 			}
 			function downloadText(text, filename, type) {
@@ -1921,10 +1949,11 @@
 				var keymethodinput = document.getElementById('keymethod');
 				var keymethod = keymethodinput.options[keymethodinput.selectedIndex].value
 				var password;
-				if(keymethod=='PKCS1' || keymethod=='PKCS8' || keymethod=='PKCS1ECC' || keymethod=='PKCS8ECC') {
-					password = document.getElementById('password').value;
-				} else {
+				//if(keymethod=='PKCS1' || keymethod=='PKCS8' || keymethod=='PKCS1ECC' || keymethod=='PKCS8ECC') {
+				if(method.value.indexOf('paste') >= 0 || method.value.indexOf('upload') >= 0) {
 					password = document.getElementById('passwordprompt').value;
+				} else {
+					password = document.getElementById('password').value;
 				}
 				if(password == '') {
 					return false;
@@ -2530,6 +2559,14 @@
 												<option value="pasteecc">Paste Existing PEM ECC Private Key</option>
 												<option value="upload">Upload Existing RSA Private Key</option>
 												<option value="uploadecc">Upload Existing ECC Private Key</option>
+												<option value="uploadecc">Upload Existing ECC Private Key</option>
+												<option value="dilithium2">Generate dilithium2 Private Key</option>
+												<option value="p256_dilithium2">Generate p256_dilithium2 Private Key</option>
+												<option value="rsa3072_dilithium2">Generate rsa3072_dilithium2 Private Key</option>
+												<option value="dilithium3">Generate dilithium3 Private Key</option>
+												<option value="p384_dilithium3">Generate p384_dilithium3 Private Key</option>
+												<option value="dilithium5">Generate dilithium5 Private Key</option>
+												<option value="p521_dilithium5">Generate p521_dilithium5 Private Key</option>
 											</select>
 										</div>
 										<div id="keysizecol" class="col-lg-2 col-md-3 col-sm-4 col-xs-4">

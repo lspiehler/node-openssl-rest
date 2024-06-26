@@ -1,6 +1,7 @@
 var express = require('express'), 
 router = express.Router();
 var openssl = require('../lib/openssl.js');
+var openssl2 = require('../lib/openssl2.js');
 var ocspcache = require('../lib/ocspcache.js');
 var multer  = require('multer')
 var upload = multer();
@@ -626,6 +627,30 @@ router.post('/generateRSAPrivateKey', function(req, res) {
 				error: false,
 				key: key,
 				command: cmd
+			}
+		}
+		res.json(data);
+	});
+});
+
+router.post('/generateOQSPrivateKey', function(req, res) {
+	var keyoptions = req.body;
+	//var username = req.body.username;
+	//var password = req.body.password;
+	console.log(keyoptions);
+	openssl2.keypair.generateOQSKey(keyoptions, function(err, key) {
+		console.log(err);
+		if(err) {
+			var data = {
+				error: err,
+				key: key.data,
+				command: cmd
+			}
+		} else {
+			var data = {
+				error: false,
+				key: key.data,
+				command: key.command
 			}
 		}
 		res.json(data);
