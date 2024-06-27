@@ -637,9 +637,9 @@ router.post('/generateOQSPrivateKey', function(req, res) {
 	var keyoptions = req.body;
 	//var username = req.body.username;
 	//var password = req.body.password;
-	console.log(keyoptions);
+	//console.log(keyoptions);
 	openssl2.keypair.generateOQSKey(keyoptions, function(err, key) {
-		console.log(err);
+		//console.log(err);
 		if(err) {
 			var data = {
 				error: err,
