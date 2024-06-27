@@ -814,38 +814,56 @@
 					enablePaste(false);
 					enableGenerate(true);
 					enableGenerateECC(false);
+					defaultHashAlg('sha256', false);
 				} else if(method.value=='PKCS1ECC' || method.value=='PKCS8ECC') {
 					enableUpload(false);
 					enablePaste(false);
 					enableGenerateECC(true);
 					enableGenerate(false);
+					defaultHashAlg('sha256', false);
 				} else if(method.value=='paste') {
 					enableGenerate(false);
 					enableGenerateECC(false);
 					enableUpload(false);
 					enablePaste(true);
+					defaultHashAlg('sha256', false);
 				} else if(method.value=='pasteecc') {
 					enableGenerateECC(false);
 					enableGenerate(false);
 					enableUpload(false);
 					enablePaste(true);
+					defaultHashAlg('sha256', false);
 				} else if(method.value=='upload') {
 					enableGenerate(false);
 					enableGenerateECC(false);
 					enablePaste(false);
 					enableUpload(true);
+					defaultHashAlg('sha256', false);
 				} else if(method.value=='uploadecc') {
 					enableGenerateECC(false);
 					enableGenerate(false);
 					enablePaste(false);
 					enableUpload(true);
+					defaultHashAlg('sha256', false);
 				} else {
 					enableGenerateECC(false);
 					enableGenerate(false);
 					enablePaste(false);
 					enableUpload(false);
 					keyEncrypt();
+					defaultHashAlg('default', true);
 				}
+			}
+			function defaultHashAlg(selected, disabled) {
+				let dropdown = document.getElementById('hashalg');
+				for(let i = 1; i < dropdown.options.length; i++) {
+					//console.log(dropdown.options[i].value);
+					if(dropdown.options[i].value == selected) {
+						dropdown.selectedIndex = i;
+						break;
+					}
+				}
+				dropdown.disabled = disabled;
 			}
 			function getCSRParams() {
 				var csr = {}
@@ -2879,6 +2897,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 												<option selected value="sha256">SHA256</option>
 												<option value="sha384">SHA384</option>
 												<option value="sha512">SHA512</option>
+												<option value="default">default</option>
 											</select>
 										</div>
 										<div class="col-lg-2 col-md-2 col-sm-4 col-xs-4">
@@ -3334,6 +3353,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 			togglePathLen(true);
 			listCAs();
 			populateSubject();
+			defaultHashAlg('sha256', false);
 		</script>
 		<form id="downloadtext"></form>
 		<!--<button onclick="promptFeedback();">Feedback</button>-->
