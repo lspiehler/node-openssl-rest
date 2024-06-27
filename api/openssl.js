@@ -644,7 +644,7 @@ router.post('/generateOQSPrivateKey', function(req, res) {
 			var data = {
 				error: err,
 				key: key.data,
-				command: cmd
+				command: key.command
 			}
 		} else {
 			var data = {

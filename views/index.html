@@ -1474,7 +1474,7 @@
 					console.log(keyoptions);
 					openSSLRESTAPI('generateOQSPrivateKey', keyoptions, function(err, response) {
 						if(err) {
-							console.log(response);
+							alert('OpenSSL Error:\r\n\r\n' + err);
 						} else {
 							console.log(response);
 							x509.key.generated = true;
@@ -2578,13 +2578,23 @@
 												<option value="upload">Upload Existing RSA Private Key</option>
 												<option value="uploadecc">Upload Existing ECC Private Key</option>
 												<option value="uploadecc">Upload Existing ECC Private Key</option>
-												<option value="dilithium2">Generate dilithium2 Private Key</option>
-												<option value="p256_dilithium2">Generate p256_dilithium2 Private Key</option>
-												<option value="rsa3072_dilithium2">Generate rsa3072_dilithium2 Private Key</option>
-												<option value="dilithium3">Generate dilithium3 Private Key</option>
-												<option value="p384_dilithium3">Generate p384_dilithium3 Private Key</option>
-												<option value="dilithium5">Generate dilithium5 Private Key</option>
-												<option value="p521_dilithium5">Generate p521_dilithium5 Private Key</option>
+												<option value="dilithium2">Generate Dilithium-2 Private Key (liboqs)</option>
+												<option value="dilithium3">Generate Dilithium-3 Private Key (liboqs)</option>
+												<option value="dilithium5">Generate Dilithium-5 Private Key (liboqs)</option>
+												<option value="falcon512">Generate Falcon-512 Private Key (liboqs)</option>
+												<option value="falcon1024">Generate Falcon-1024 Private Key (liboqs)</option>
+												<option value="sphincssha2128fsimple">Generate SPHINCS+-SHA2-128fs Private Key (liboqs)</option>
+												<option value="sphincssha2128ssimple">Generate SPHINCS+-SHA2-128ss Private Key (liboqs)</option>
+												<option value="sphincssha2192fsimple">Generate SPHINCS+-SHA2-192fs Private Key (liboqs)</option>
+												<option value="sphincssha2192ssimple">Generate SPHINCS+-SHA2-192ss Private Key (liboqs)</option>
+												<option value="sphincssha2256fsimple">Generate SPHINCS+-SHA2-256fs Private Key (liboqs)</option>
+												<option value="sphincssha2256ssimple">Generate SPHINCS+-SHA2-256ss Private Key (liboqs)</option>
+												<option value="sphincsshake128fsimple">Generate SPHINCS+-SHAKE-128fs Private Key (liboqs)</option>
+												<option value="sphincsshake128ssimple">Generate SPHINCS+-SHAKE-128ss Private Key (liboqs)</option>
+												<option value="sphincsshake192fsimple">Generate SPHINCS+-SHAKE-192fs Private Key (liboqs)</option>
+												<option value="sphincsshake192ssimple">Generate SPHINCS+-SHAKE-192ss Private Key (liboqs)</option>
+												<option value="sphincsshake256fsimple">Generate SPHINCS+-SHAKE-256fs Private Key (liboqs)</option>
+												<option value="sphincsshake256ssimple">Generate SPHINCS+-SHAKE-256ss Private Key (liboqs)</option>
 											</select>
 										</div>
 										<div id="keysizecol" class="col-lg-2 col-md-3 col-sm-4 col-xs-4">
