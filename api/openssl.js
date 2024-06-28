@@ -360,7 +360,16 @@ router.post('/getCertFromNetwork', function(req, res) {
 	var netcertoptions = req.body;
 	var command = [];
 	//console.log(netcertoptions);
-	openssl.getCertFromNetwork(netcertoptions, function(err, cert, cmd) {
+	const node_openssl_old = require('node-openssl-cert');
+	const opensslbinpath = '/usr/bin/openssl';
+
+	var options = {
+		binpath: opensslbinpath
+	}
+
+	let opensslold = new node_openssl_old(options);
+
+	opensslold.getCertFromNetwork(netcertoptions, function(err, cert, cmd) {
 		//console.log(cmd);
 		command.push(cmd);
 		if(err) {
