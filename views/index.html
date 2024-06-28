@@ -32,15 +32,16 @@
                 <meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
                 <meta name="theme-color" content="#ffffff">
 		<title>CertificateTools.com - Online X509 Certificate Generator</title>
+		<script src="/js/popper.js/popper.min.js"></script>
 		<script type="text/javascript" src="js/jquery/jquery.min.js"></script>
 		<link rel="stylesheet" href="js/jquery-ui/themes/base/jquery-ui.min.css">
 		<script type="text/javascript" src="js/bootstrap/bootstrap.min.js"></script>
 		<script src="js/jquery-ui/jquery-ui.min.js"></script>
 		<script type="text/javascript" src="js/moment/moment.min.js"></script>
-		<script type="text/javascript" src="js/tempusdominus/tempusdominus-bootstrap-3.min.js"></script>
-		<script src="/js/popper.js/popper.min.js"></script>
 		<link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
-		<link rel="stylesheet" href="css/tempusdominus/tempusdominus-bootstrap-3.css" />
+		<link rel="stylesheet" href="css/tempusdominus-bootstrap-3/tempusdominus-bootstrap-3.css" />
+		<script type="text/javascript" src="js/tempusdominus-bootstrap-3/tempusdominus-bootstrap-3.min.js"></script>
+		<!--<script type="text/javascript" src="js/tempusdominus-core/tempusdominus-core.min.js"></script>-->
 		<style>
 			body {
 				padding-top: 70px;
@@ -1107,7 +1108,7 @@
 						$('#datetimepicker1').datetimepicker('date', new Date());
 						$('#datetimepicker2').css("display", "");
 						$('#datetimepicker2').datetimepicker('date', moment(new Date()).add(1, 'years'));
-						//console.log($('#datetimepicker2').data("DateTimePicker").date().toDate());
+						//console.log($('#datetimepicker2').datetimepicker('date').toDate());
 					} else {
 						timetype.style.display = 'block';
 						timelength.style.display = 'block';
@@ -1232,10 +1233,15 @@
 							callback(false, x509, generated.length - 1);
 						} else {
 							//data.csr = response.csr;
+							if(data.options['hash'] == 'default') {
+								delete data.options['hash'];
+							}
+							console.log(data.options);
 							data.csr = response.csr;
-							if($('#datetimepicker1').data("DateTimePicker").date()) {
-								data.options.startdate = $('#datetimepicker1').data("DateTimePicker").date().toDate();
-								data.options.enddate = $('#datetimepicker2').data("DateTimePicker").date().toDate();
+							//fix datetime picker
+							if($('#datetimepicker1').datetimepicker('date')) {
+								data.options.startdate = $('#datetimepicker1').datetimepicker('date').toDate();
+								data.options.enddate = $('#datetimepicker2').datetimepicker('date').toDate();
 							} else {
 								data.options.days = getdays();
 							}
@@ -1328,7 +1334,7 @@
 				var signcert = document.getElementById('signcert');
 				//console.log(signcert.options[signcert.selectedIndex].value[0]);
 				if(signcert.options[signcert.selectedIndex].innerText[0] == '*') {
-					if(!$('#datetimepicker1').data("DateTimePicker").date() || !$('#datetimepicker2').data("DateTimePicker").date()) {
+					if(!$('#datetimepicker1').datetimepicker('date') || !$('#datetimepicker2').datetimepicker('date').toDate()) {
 						alert("You must specify a valid start and end date for the certificate.");
 						return false;
 					}
@@ -2940,12 +2946,12 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 										</div>
 										<div id="date1" class='col-lg-3 col-md-3 col-sm-6 col-xs-6'>
 											<div class="form-group">
-												<div class='input-group date' id='datetimepicker1'>
-													<input placeholder="Start Date" type='text' class="form-control" />
-													<span class="input-group-addon">
-														<span class="glyphicon glyphicon-calendar"></span>
+												<div class="input-group date" id="datetimepicker1" data-target-input="nearest">
+													<input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1"/>
+													<span class="input-group-addon" data-target="#datetimepicker1" data-toggle="datetimepicker">
+													<span class="glyphicon glyphicon-calendar"></span>
 													</span>
-												</div>
+												 </div>
 											</div>
 										</div>
 										<script type="text/javascript">
@@ -2957,12 +2963,12 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 										</script>
 										<div id="date2" class='col-lg-3 col-md-3 col-sm-6 col-xs-6'>
 											<div class="form-group">
-												<div class='input-group date'  id='datetimepicker2'>
-													<input placeholder="End Date" type='text' class="form-control" />
-													<span class="input-group-addon">
-														<span class="glyphicon glyphicon-calendar"></span>
+												<div class="input-group date" id="datetimepicker2" data-target-input="nearest">
+													<input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker2"/>
+													<span class="input-group-addon" data-target="#datetimepicker2" data-toggle="datetimepicker">
+													<span class="glyphicon glyphicon-calendar"></span>
 													</span>
-												</div>
+												 </div>
 											</div>
 										</div>
 										<script type="text/javascript">

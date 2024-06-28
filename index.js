@@ -42,9 +42,10 @@ app.use('/js/bootstrap',  express.static(__dirname + '/node_modules/bootstrap/di
 app.use('/js/moment', express.static('./node_modules/moment/min'));
 app.use('/js/jquery', express.static('./node_modules/jquery/dist'));
 app.use('/js/jquery-ui', express.static('./node_modules/jquery-ui/dist'));
-app.use('/js/tempusdominus', express.static('./node_modules/tempusdominus-bootstrap-3/build/js'));
+app.use('/js/tempusdominus-bootstrap-3', express.static('./node_modules/tempusdominus-bootstrap-3/build/js'));
+app.use('/js/tempusdominus-core', express.static('./node_modules/tempusdominus-core/build/js'));
 app.use('/js/popper.js', express.static('./node_modules/popper.js/dist/umd'));
-app.use('/css/tempusdominus', express.static('./node_modules/tempusdominus-bootstrap-3/build/css'));
+app.use('/css/tempusdominus-bootstrap-3', express.static('./node_modules/tempusdominus-bootstrap-3/build/css'));
 app.use('/css/bootstrap',  express.static(__dirname + '/node_modules/bootstrap/dist/css'));
 app.use('/css/fonts',  express.static(__dirname + '/node_modules/bootstrap/dist/fonts'));
 app.use('/css/jquery-ui',  express.static(__dirname + '/node_modules/jquery-ui/dist'));
@@ -67,6 +68,12 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);
 		res.render('index.html', template);
+	});
+
+	app.get('/test', function(req, res) {
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		console.log('HTTPS connection from ' + ip);
+		res.render('test.html', template);
 	});
 
 	app.get('/ocsp_checker', function(req, res) {
