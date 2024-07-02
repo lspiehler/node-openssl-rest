@@ -358,30 +358,32 @@ var convertCertToCSR = function(download, certs, index, callback) {
 
 router.post('/getCertFromNetwork', function(req, res) {
 	var netcertoptions = req.body;
+	netcertoptions.groups = [
+        "x25519",
+        "secp256r1",
+        "x448",
+        "secp521r1",
+        "secp384r1",
+        "ffdhe2048",
+        "ffdhe3072",
+        "ffdhe4096",
+        "ffdhe6144",
+        "ffdhe8192",
+        "prime256v1"
+    ]
 	var command = [];
 	//console.log(netcertoptions);
-	const node_openssl_old = require('node-openssl-cert');
-	const opensslbinpath = '/usr/bin/openssl';
-
-	var options = {
-		binpath: opensslbinpath
-	}
-
-	let opensslold = new node_openssl_old(options);
-
-	opensslold.getCertFromNetwork(netcertoptions, function(err, cert, cmd) {
-		//console.log(cmd);
-		command.push(cmd);
+	openssl2.x509.getCertFromNetwork(netcertoptions, function(err, cert, cmd) {
 		if(err) {
 			var data = {
 				error: err,
-				csroptions: cert
+				csroptions: cert.data
 			}
 			res.json(data);
 			return;
 		} else {
 			var certs = [];
-			convertCertToCSR(certs, cert, 0, function(err, csroptions, cmd) {
+			convertCertToCSR(certs, cert.data, 0, function(err, csroptions, cmd) {
 				let usagedata = {
 					action: 'ImportedCertificate',
 					err: err,
