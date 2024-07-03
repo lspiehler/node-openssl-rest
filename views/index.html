@@ -1236,10 +1236,10 @@
 							if(data.options['hash'] == 'default') {
 								delete data.options['hash'];
 							}
-							console.log(data.options);
+							//console.log(data.options);
 							data.csr = response.csr;
 							//fix datetime picker
-							if($('#datetimepicker1').datetimepicker('date')) {
+							if($('#datetimepicker1').css("display")!='none') {
 								data.options.startdate = $('#datetimepicker1').datetimepicker('date').toDate();
 								data.options.enddate = $('#datetimepicker2').datetimepicker('date').toDate();
 							} else {
@@ -1270,6 +1270,7 @@
 								data.ca.keypass = capassword;
 								data.ca.cert = generated[certindex].cert.data
 							}
+							//console.log(data);
 							openSSLRESTAPI('CASignCSR', data, function(err, response) {
 								if(err) {
 									console.log(response);
