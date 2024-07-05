@@ -599,10 +599,25 @@ router.post('/checkCAKey', function(req, res) {
 							res.send(keydata);
 						});
 					});
-				} else {
+				} else if(data['attributes']['Public Key Algorithm'].toLowerCase().indexOf('rsa') >= 0) {
 					fs.readFile(cadir + '/' + capath + '/ca.key', function(err, keydata) {
 						//console.log(keydata);
 						openssl.importRSAPrivateKey(keydata, password, function(err, key, cmd) {
+							//console.log(key);
+							if(err) {
+								var keydata = false;
+							} else {
+								var keydata = {
+									path: capath
+								}
+							}
+							res.send(keydata);
+						});
+					});
+				} else {
+					fs.readFile(cadir + '/' + capath + '/ca.key', function(err, keydata) {
+						//console.log(keydata);
+						openssl2.keypair.importOQSKey({key: keydata, password: password}, function(err, key, cmd) {
 							//console.log(key);
 							if(err) {
 								var keydata = false;
