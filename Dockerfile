@@ -96,6 +96,8 @@ WORKDIR ${INSTALLDIR_OPENSSL}/bin
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR_OPENSSL}/bin:${PATH}"
 
+ARG CACHE_DATE=2024-07-05
+
 LABEL maintainer="Lyas Spiehler"
 
 RUN apk add --update openssl git && \
@@ -110,10 +112,6 @@ WORKDIR /var/node/node-openssl-rest
 VOLUME /var/node/node-openssl-rest/ca
 
 RUN npm install
-
-RUN npm install bower -g
-
-#RUN bower install --allow-root tempusdominus-bootstrap-3 bootstrap@3 jquery-ui moment
 
 EXPOSE 8443
 
