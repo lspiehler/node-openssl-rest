@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 		<meta name="description" content="Online x509 Certificate Generator. Create self-signed certificates, certificate signing requests (CSR), or a root certificate authority. Featuring support for multiple subject alternative names, multiple common names, x509 v3 extensions, RSA and elliptic curve cryptography. OpenSSL commands are shown so they can be run securely offline.">
-		<meta name="keywords" content="openssl command,certificate request,online certificate request generator,certificate request creator, openssl, csr, multiple subject alternative name, multiple common name, SAN, CN, existing certificate, template, multiple domains, private key, elliptic curve cryptography, generate self-signed certificate, self-signed certificate, certificate authority, create, generate, online, tool">
+		<meta name="keywords" content="openssl command,certificate request,online certificate request generator,certificate request creator, openssl, csr, multiple subject alternative name, multiple common name, SAN, CN, existing certificate, template, multiple domains, private key, elliptic curve cryptography, generate self-signed certificate, self-signed certificate, certificate authority, create, generate, online, tool, ml-dsa, dilithium, falcon, sphincs+, post quantum cryptography">
 		<meta name="author" content="Lyas Spiehler">
 		<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
                 <link rel="apple-touch-icon" sizes="57x57" href="/images/apple-icon-57x57.png">
@@ -1236,10 +1236,10 @@
 							if(data.options['hash'] == 'default') {
 								delete data.options['hash'];
 							}
-							console.log(data.options);
+							//console.log(data.options);
 							data.csr = response.csr;
 							//fix datetime picker
-							if($('#datetimepicker1').datetimepicker('date')) {
+							if($('#datetimepicker1').css("display")!='none') {
 								data.options.startdate = $('#datetimepicker1').datetimepicker('date').toDate();
 								data.options.enddate = $('#datetimepicker2').datetimepicker('date').toDate();
 							} else {
@@ -1270,6 +1270,7 @@
 								data.ca.keypass = capassword;
 								data.ca.cert = generated[certindex].cert.data
 							}
+							//console.log(data);
 							openSSLRESTAPI('CASignCSR', data, function(err, response) {
 								if(err) {
 									console.log(response);
@@ -3281,6 +3282,7 @@ dyzGibcJ0i4KVZzXKLIZ0Qw=
 								</ul>
 							<li>Create certificate authorities and optionally save them for later use</li>
 							<li>Sign certificates with certificate authorities you've created</li>
+							<li><strong>**NEW** Added support for NIST's round 4 post-quantum cryptography submissions: CRYSTALS-Dilithium (ML-DSA), FALCON, and SPHINICS+</strong></li>
 						</ul>
 					</div>
 					<div class="modal-footer">
