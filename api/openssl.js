@@ -1006,32 +1006,29 @@ router.post('/ocspChecker', function(req, res) {
 			//console.log(err);
 			//console.log(response);
 			if(err || response.indexOf('unauthorized') >= 0) {
-				ocsp.query(cmd.cert.base64, function(err, response, cmd) {
-					let usagedata = {
-							action: 'OCSPBadChainDownload',
-							err: err,
-							headers: req.headers,
-							ocsp: response
-					}
-					usageData(usagedata);
-					data = {
-						error: err,
-						response: response,
-						command: cmd
-					}
-							if(err) {
-						//console.log(data);
-									res.json(data);
-								} else {
-									//console.log(resp);
-									//for(var i = 0; i <= cmd.ca.length - 1; i++) {
-									//      console.log(cmd.ca[i]);
-									//}
-									//console.log(cmd.cert);
-						//console.log(data);
-						res.json(data);
-								}
+				if(cmd.cert) {
+					ocsp.query(cmd.cert.base64, function(err, response, cmd) {
+						let usagedata = {
+								action: 'OCSPBadChainDownload',
+								err: err,
+								headers: req.headers,
+								ocsp: response
+						}
+						usageData(usagedata);
+						data = {
+							error: err,
+							response: response,
+							command: cmd
+						}
+						if(err) {
+							res.json(data);
+						} else {
+							res.json(data);
+						}
 					});
+				} else {
+					res.json({error: err});
+				}
 			} else {
 				let usagedata = {
 										action: 'OCSPDownload',
