@@ -371,6 +371,28 @@ router.post('/getCertFromNetwork', function(req, res) {
         "ffdhe8192",
         "prime256v1"
     ]
+	netcertoptions.sigalgs = [
+        "ECDSA+SHA256",
+        "ECDSA+SHA384",
+        "ECDSA+SHA512",
+        "ed25519",
+        "ed448",
+        "RSA-PSS+SHA256",
+        "RSA-PSS+SHA384",
+        "RSA-PSS+SHA512",
+        "rsa_pss_rsae_sha256",
+        "rsa_pss_rsae_sha384",
+        "rsa_pss_rsae_sha512",
+        "RSA+SHA256",
+        "RSA+SHA384",
+        "RSA+SHA512",
+        "ECDSA+SHA224",
+        "RSA+SHA224",
+        "DSA+SHA224",
+        "DSA+SHA256",
+        "DSA+SHA384",
+        "DSA+SHA512"
+    ];
 	var command = [];
 	//console.log(netcertoptions);
 	openssl2.x509.getCertFromNetwork(netcertoptions, function(err, cert, cmd) {
