@@ -1013,10 +1013,11 @@ router.post('/ocspChecker', function(req, res) {
 	}
 	var netcertoptions = {
 		        hostname: req.body.hostname,
-		        port: 443,
+		        port: req.body.port,
 		        starttls: false,
 		        protocol: 'https'
 	}
+	//console.log(netcertoptions);
 	if(req.body.method=='download') {
 		ocsp.getCertFromNetwork(netcertoptions, function(err, response, cmd) {
 			var data = {

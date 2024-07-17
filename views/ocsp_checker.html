@@ -308,15 +308,22 @@
 				var hostname = document.getElementById('hostname');
 				var pastex509 = document.getElementById('pastex509');
 				var domain;
+				var port = 443;
 				if(hostname.value.indexOf('/') >= 0) {
 					domain = hostname.value.split('/')[2];
 				} else {
 					domain = hostname.value;
 				}
+				let splitport = domain.split(":");
+				if(splitport.length > 1) {
+					domain = splitport[0];
+					port = parseInt(splitport[1]);
+				}
 				var method = getMethod();
 				if(method=='download') {
 					var data = {
 						hostname: domain,
+						port: port,
 						method: method
 					}
 				
