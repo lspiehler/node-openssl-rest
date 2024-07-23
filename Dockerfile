@@ -64,7 +64,7 @@ COPY --from=buildopenssl ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
 RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs
 
 WORKDIR /optbuild/liboqs
-RUN mkdir build && cd build && cmake -G"Ninja" .. -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR_LIBOQS} && ninja install
+RUN mkdir build && cd build && cmake -G"Ninja" .. -DOQS_ALGS_ENABLED=All -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR_LIBOQS} && ninja install
 
 FROM ${BASE_IMAGE} as buildoqsprovider
 # Take in all global args
@@ -96,7 +96,10 @@ WORKDIR ${INSTALLDIR_OPENSSL}/bin
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR_OPENSSL}/bin:${PATH}"
 
-ARG CACHE_DATE=2024-07-05
+ARG CACHE_DATE=2024-07-23
+
+# update config to allow unsafe renegotiation
+RUN sed -i '/\[system_default_sect\]/a Options = UnsafeLegacyRenegotiation' /opt/openssl32/ssl/openssl.cnf
 
 LABEL maintainer="Lyas Spiehler"
 
