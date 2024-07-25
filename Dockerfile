@@ -38,7 +38,7 @@ RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch master https
 
 # build OpenSSL3
 WORKDIR /optbuild/openssl
-RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR_OPENSSL}/lib64" ./config enable-ssl2 enable-ssl3 enable-ssl3-method enable-weak-ssl-ciphers enable-des enable-dsa enable-rc4 enable-dh shared --prefix=${INSTALLDIR_OPENSSL} && \
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR_OPENSSL}/lib64" ./config enable-ssl3 enable-ssl3-method enable-weak-ssl-ciphers enable-des enable-dsa enable-rc4 enable-dh shared --prefix=${INSTALLDIR_OPENSSL} && \
     make ${MAKE_DEFINES} && make install && if [ -d ${INSTALLDIR_OPENSSL}/lib64 ]; then ln -s ${INSTALLDIR_OPENSSL}/lib64 ${INSTALLDIR_OPENSSL}/lib; fi && if [ -d ${INSTALLDIR_OPENSSL}/lib ]; then ln -s ${INSTALLDIR_OPENSSL}/lib ${INSTALLDIR_OPENSSL}/lib64; fi
 
 FROM ${BASE_IMAGE} as buildliboqs
