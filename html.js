@@ -19,14 +19,16 @@ var html = {
 		'				<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Revocation <span class="caret"></span></a>',
 		'				<ul class="dropdown-menu">',
 		'					<li><a href="/ocsp-checker">OCSP Checker</a></li>',
+		'                   <li><a href="/revocation-checker">Revocation Checker</a></li>',
 		'				</ul>',
 		'			</li>',
 		'			<li class="dropdown">',
-		'                               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Generators <span class="caret"></span></a>',
-		'                               <ul class="dropdown-menu">',
-		'                                       <li><a href="/csr-generator">CSR Generator</a></li>',
-		'                               </ul>',
-		'                       </li>'
+		'               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Generators <span class="caret"></span></a>',
+		'               <ul class="dropdown-menu">',
+		'                   <li><a href="/csr-generator">CSR Generator</a></li>',
+		'                   <li><a href="/">Certificate Generator</a></li>',
+		'               </ul>',
+		'           </li>'
 	]
 }
 
