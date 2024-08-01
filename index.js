@@ -93,6 +93,17 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		template.title = 'OCSP Checker';
 		res.render('ocsp_checker.html', template);
 	});
+
+	app.get('/test-post-quantum-cryptography', function(req, res) {
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		console.log('HTTPS connection from ' + ip);
+		/*let url = req.url;
+		let ocsporrev = url.substring(1).split('-')[0];
+		ocsporrev = ocsporrev.toUpperCase()
+		console.log(ocsporrev);*/
+		template.title = 'Test Post Quantum Cryptography TLS Handshake';
+		res.render('test_post_quantum_cryptography.html', template);
+	});
 	
 	app.get('/revocation-checker', function(req, res) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
@@ -104,6 +115,18 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		console.log(ocsporrev);*/
 		template.title = 'Revocation Checker';
 		res.render('ocsp_checker.html', template);
+	});
+
+	app.get('/download-certificates', function(req, res) {
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		console.log(req.url);
+		console.log('HTTPS connection from ' + ip);
+		/*let url = req.url;
+		let ocsporrev = url.substring(1).split('-')[0];
+		ocsporrev = ocsporrev.charAt(0).toUpperCase() + ocsporrev.slice(1);
+		console.log(ocsporrev);*/
+		template.title = 'Download Certificates';
+		res.render('download_certificates.html', template);
 	});
 	
 	app.get('/csr-generator', function(req, res) {

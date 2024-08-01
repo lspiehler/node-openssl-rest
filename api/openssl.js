@@ -13,6 +13,7 @@ const nodemailer = require('nodemailer');
 const { spawn } = require( 'child_process' );
 var md5 = require('md5');
 var ocsplib = require('../lib/ocsp_checker.js');
+var decoderlib = require('../lib/certificate_decoder.js');
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
@@ -122,6 +123,11 @@ var revokeCerts = function(cadir, caname, revoke, index, callback) {
 		}
 	});
 }
+
+router.post('/decodeCert', function(req, res) {
+	//console.log(req.body);
+	res.json(req.body);
+});
 
 router.post('/revokeCerts', function(req, res) {
 	//console.log(req.body);

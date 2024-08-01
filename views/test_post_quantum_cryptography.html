@@ -1,0 +1,300 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+		<meta name="description" content="Check your website to see if it is post quantum ready by testing post quantum cryptography TLS handshake algorithms">
+		<meta name="keywords" content="post quantum cryptography, pqc, test pqc, x25519_kyber768, p256_kyber768, X25519Kyber768Draft00, X25519Kyber512Draft00, X25519Kyber768Draft00Old, P256Kyber768Draft00">
+		<meta name="author" content="Lyas Spiehler">
+		<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
+		<link rel="apple-touch-icon" sizes="57x57" href="/images/apple-icon-57x57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="/images/apple-icon-60x60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="/images/apple-icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="/images/apple-icon-76x76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="/images/apple-icon-114x114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="/images/apple-icon-120x120.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="/images/apple-icon-144x144.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="/images/apple-icon-152x152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png">
+		<link rel="icon" type="image/png" sizes="192x192"  href="/images/android-icon-192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+		<meta property="og:title" content="CertificateTools.com - Test Post Quantum Cryptography">
+		<meta property="og:description" content="Check your website to see if it is post quantum ready by testing post quantum cryptography TLS handshake algorithms.">
+		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
+		<meta property="og:url" content="https://certificatetools.com">
+		<meta property="og:site_name" content="CertificateTools.com">
+		<meta property="og:locale" content="en_US">
+		<meta property="og:type" content="website">
+		<meta name="msapplication-TileColor" content="#ffffff">
+		<meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
+		<meta name="theme-color" content="#ffffff">
+		<title>OCSP Checker</title>
+		<script type="text/javascript" src="js/jquery/jquery.min.js"></script>
+		<link rel="stylesheet" href="js/jquery-ui/themes/base/jquery-ui.min.css">
+		<script type="text/javascript" src="js/bootstrap/bootstrap.min.js"></script>
+		<script src="js/jquery-ui/jquery-ui.min.js"></script>
+		<link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+		<link rel="stylesheet" href="/loader.css" />
+		<style>
+			input {
+				border: 0;
+				outline: 0;
+				background: transparent;
+				border-bottom: 2px solid #d4d3d3;
+				font-size: 30px;
+				/*width: 90% !important;*/
+				/*margin: auto;*/
+			}
+			input #id, #hostname {
+				width: 90% !important;
+			}
+			textarea {
+				width: 90% !important;
+				white-space: pre;
+				word-wrap: normal;
+				overflow-wrap: normal;
+				overflow-x: auto;
+				font-family: Courier, monospace;
+				display: none;
+			}
+			div.ad {
+				text-align: center;
+			}
+			div.options {
+				text-align: center;
+			}
+			body {
+				padding-top: 70px;
+			}
+			div.container {
+				width: 100%;
+				text-align: center;
+			}
+			div #loading {
+				display: none;
+			}
+			h1 {
+				text-align: center;
+			}
+		</style>
+		<script>
+                        var hosted = {{hosted}};
+                </script>
+                <!-- Global site tag (gtag.js) - Google Analytics -->
+                <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75343349-1"></script>
+                <script>
+                        if(hosted) {
+                                window.dataLayer = window.dataLayer || [];
+                                function gtag(){dataLayer.push(arguments);}
+                                gtag('js', new Date());
+
+                                gtag('config', 'UA-75343349-1');
+                        }
+                </script>
+		<script>
+			function openSSLRESTAPI(api, data, callback) {
+				var request = new XMLHttpRequest();
+				request.open('POST', 'api/openssl/' + api, true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						if(resp.error) {
+							//console.log(resp);
+							callback(resp.error, resp);
+						} else {
+							callback(false, resp);
+						}
+						return;
+						//var key = document.getElementById('key');
+						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						//var csroptions = getCSRParams();
+						//generateCSR(resp.key, csroptions);
+					} else {
+						// We reached our target server, but it returned an error
+						callback(resp, false);
+						return;
+					}
+				};
+
+				request.onerror = function(err) {
+					callback(err, false);
+					//console.log(err);
+					return;
+					// There was a connection error of some sort
+				};
+
+				request.send(JSON.stringify(data));
+			}
+			
+			/*function OCSPChecker() {
+				var loading = document.getElementById('loading');
+				var hostname = document.getElementById('hostname');
+				var pastex509 = document.getElementById('pastex509');
+				var domain;
+				var port = 443;
+				if(hostname.value.indexOf('/') >= 0) {
+					domain = hostname.value.split('/')[2];
+				} else {
+					domain = hostname.value;
+				}
+				let splitport = domain.split(":");
+				if(splitport.length > 1) {
+					domain = splitport[0];
+					port = parseInt(splitport[1]);
+				}
+				var method = getMethod();
+				if(method=='download') {
+					var data = {
+						hostname: domain,
+						port: port,
+						method: method
+					}
+				
+				} else if(method==='paste') {
+					var data = {
+						cert: pastex509.value,
+						method: method
+					}
+				} else {
+					//should never happen
+				}
+				googleAnalyticsEvent('Interaction', 'OCSP', 'Query', domain)
+				//alert(hostname.value);
+				loading.style.display = 'block';
+				openSSLRESTAPI('ocspChecker', data, function(error, response) {
+					loading.style.display = 'none';
+					if(error) {
+						//alert(error);
+						//console.log(response);
+						if(error.indexOf('Error querying OCSP responder') >= 0) {
+							//alert('Matched' + error);
+							if(attempts <= maxattempts) {
+								attempts++;
+								OCSPChecker();
+							} else {
+								alert(error);
+							}
+						} else if(error.indexOf('erify error:unable to get') >=0 ) {
+							attempts = 0;
+							//$( "#template" ).dialog("close");
+							ocspresponse = response;
+							showResponse(response);
+						} else {
+							alert(error);
+						}
+					} else {
+						attempts = 0;
+						//$( "#template" ).dialog("close");
+						ocspresponse = response;
+						showResponse(response);
+						//console.log(response.command);
+						//processImportedCert(response.csroptions);
+					}
+				});
+
+			}*/
+			function submitForm() {
+				//e.preventDefault();
+				startHandshake();
+			}
+			function startHandshake() {
+				alert('started');
+				var hostname = document.getElementById('hostname');
+			}
+			function googleAnalyticsEvent(category, action, label, value) {
+					if(hosted) {
+							gtag('event', action, {
+									'event_category': category,
+									'event_label': label,
+									'value': value
+							});
+					}
+			}
+			function addEventListeners() {
+				var methods = document.getElementsByClassName('methods');
+				for(var i = 0; i <= methods.length - 1; i++) {
+					methods[i].addEventListener("change", function(e){
+						//console.log(e.target);
+						checkMethod();
+					});
+				}
+			}
+		</script>
+	</head>
+	<body>
+		{{{header}}}
+		<h1 class="display-1">{{title}}</h1><br />
+		<form onsubmit="submitForm(); return false;">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+				<div class="col-lg-5 col-md-5 col-sm-6 col-xs-7">
+					<div class="row">
+						&nbsp;
+					</div>
+					<div class="row">
+						<input id="hostname" type="text" class="form-control" placeholder="www.google.com" />
+					</div>
+					<div id="loading" class="row">
+						<div class="container">
+							<div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-1 col-md-1 col-sm-2 col-xs-3">
+					<div class="row">
+						&nbsp;
+					</div>
+					<div class="row">
+						<input id="submit" class="btn btn-primary btn-md" type="submit" value="Validate"/>
+					</div>
+					<div class="row">
+						&nbsp;
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+			</div><br />
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+				<div class="col-lg-6 col-md-6 col-sm-8 col-xs-10">
+					<div class="row">
+						<div id="resptable"></div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+			</div>
+		</div>
+		</form>
+		<br />
+		<div class="ad">
+			<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+			<!-- CertificateTools.com - OCSP Checker -->
+			<ins class="adsbygoogle"
+			     style="display:block"
+			     data-ad-client="ca-pub-4797561390067055"
+			     data-ad-slot="5860436506"
+			     data-ad-format="auto"
+			     data-full-width-responsive="true"></ins>
+			<script>
+				(adsbygoogle = window.adsbygoogle || []).push({});
+			</script>
+			<script>
+				addEventListeners();
+				checkMethod();
+			</script>
+		</div>
+		<form id="downloadtext"></form>
+	</body>
+</html>
