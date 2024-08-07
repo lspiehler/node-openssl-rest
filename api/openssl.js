@@ -14,6 +14,7 @@ const { spawn } = require( 'child_process' );
 var md5 = require('md5');
 var ocsplib = require('../lib/ocsp_checker.js');
 var decoderlib = require('../lib/certificate_decoder.js');
+const https = require('node:https');
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
@@ -710,6 +711,162 @@ router.post('/generateOQSPrivateKey', function(req, res) {
 		res.json(data);
 	});
 });
+
+router.post('/PQCTest', function(req, res) {
+	testPostQuantum(req.body, function(err, pqcresult) {
+		const options = {
+			hostname: req.body.hostname,
+			port: req.body.port,
+			path: '/',
+			method: 'GET',
+		};
+		httpRequest(options, function(err, httpresponse) {
+			var data = {
+				error: err,
+				response: {
+					TLSHandshake: pqcresult,
+					HTTPResponse: httpresponse
+				}
+			}
+			res.json(data);
+		});
+	});
+});
+
+function testPostQuantum(options, callback) {
+	var netcertoptions = {
+		hostname: options.hostname,
+		port: options.port,
+		//starttls: false,
+		protocol: 'https'
+	}
+	netcertoptions.groups = [
+		"x25519_kyber768",
+		"x25519_kyber512",
+		"p256_kyber768"
+	]
+	/*netcertoptions.groups = [
+        "x25519",
+        "secp256r1",
+        "x448",
+        "secp521r1",
+        "secp384r1",
+        "ffdhe2048",
+        "ffdhe3072",
+        "ffdhe4096",
+        "ffdhe6144",
+        "ffdhe8192",
+        "prime256v1"
+    ]
+	netcertoptions.sigalgs = [
+        "ECDSA+SHA256",
+        "ECDSA+SHA384",
+        "ECDSA+SHA512",
+        "ed25519",
+        "ed448",
+        "RSA-PSS+SHA256",
+        "RSA-PSS+SHA384",
+        "RSA-PSS+SHA512",
+        "rsa_pss_rsae_sha256",
+        "rsa_pss_rsae_sha384",
+        "rsa_pss_rsae_sha512",
+        "RSA+SHA256",
+        "RSA+SHA384",
+        "RSA+SHA512",
+        "ECDSA+SHA224",
+        "RSA+SHA224",
+        "DSA+SHA224",
+        "DSA+SHA256",
+        "DSA+SHA384",
+        "DSA+SHA512"
+    ];*/
+	openssl2.x509.TLSHandshake(netcertoptions, function(err, pqc, cmd) {
+		let pqcready = true;
+		if(err) {
+			pqcready = false;
+			netcertoptions.groups = [
+				"x25519",
+				"secp256r1",
+				"x448",
+				"secp521r1",
+				"secp384r1",
+				"ffdhe2048",
+				"ffdhe3072",
+				"ffdhe4096",
+				"ffdhe6144",
+				"ffdhe8192",
+				"prime256v1"
+			]
+			netcertoptions.sigalgs = [
+				"ECDSA+SHA256",
+				"ECDSA+SHA384",
+				"ECDSA+SHA512",
+				"ed25519",
+				"ed448",
+				"RSA-PSS+SHA256",
+				"RSA-PSS+SHA384",
+				"RSA-PSS+SHA512",
+				"rsa_pss_rsae_sha256",
+				"rsa_pss_rsae_sha384",
+				"rsa_pss_rsae_sha512",
+				"RSA+SHA256",
+				"RSA+SHA384",
+				"RSA+SHA512",
+				"ECDSA+SHA224",
+				"RSA+SHA224",
+				"DSA+SHA224",
+				"DSA+SHA256",
+				"DSA+SHA384",
+				"DSA+SHA512"
+			];
+			openssl2.x509.TLSHandshake(netcertoptions, function(err, notpqc, cmd) {
+				if(err) {
+					callback(err, false);
+				} else {
+					callback(false, {
+						pqcready: pqcready,
+						data: notpqc,
+						cmd: cmd
+					});
+				}
+			});
+		} else {
+			callback(false, {
+				pqcready: pqcready,
+				data: pqc,
+				cmd: cmd
+			});
+		}
+	});
+}
+
+function httpRequest(options, callback) {
+	const req = https.request(options, (res) => {
+		//console.log('statusCode:', res.statusCode);
+		//console.log('headers:', res.headers);
+		let resp = [];
+		
+		res.on('data', (d) => {
+			//process.stdout.write(d);
+			resp.push(d);
+		});
+
+		res.on('end', () => {
+			callback(false, {
+				statusCode: res.statusCode,
+				headers: res.headers,
+				responseBody: Buffer.concat(resp).toString()
+			});
+		});
+	});
+	  
+	req.on('error', (e) => {
+		//console.error(e);
+		callback(e, false);
+	});
+
+	req.end(); 
+}
 
 router.post('/generateECCPrivateKey', function(req, res) {
 	var rsakeyoptions = req.body;

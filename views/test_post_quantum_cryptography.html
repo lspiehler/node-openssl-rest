@@ -19,7 +19,7 @@
 		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
-		<meta property="og:title" content="CertificateTools.com - Test Post Quantum Cryptography">
+		<meta property="og:title" content="CertificateTools.com - Test Post Quantum Readiness">
 		<meta property="og:description" content="Check your website to see if it is post quantum ready by testing post quantum cryptography TLS handshake algorithms.">
 		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
 		<meta property="og:url" content="https://certificatetools.com">
@@ -29,9 +29,10 @@
 		<meta name="msapplication-TileColor" content="#ffffff">
 		<meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
 		<meta name="theme-color" content="#ffffff">
-		<title>OCSP Checker</title>
+		<title>Test PQC Readiness</title>
 		<script type="text/javascript" src="js/jquery/jquery.min.js"></script>
 		<link rel="stylesheet" href="js/jquery-ui/themes/base/jquery-ui.min.css">
+		<link rel="stylesheet" href="css/fontawesome-free/all.min.css">
 		<script type="text/javascript" src="js/bootstrap/bootstrap.min.js"></script>
 		<script src="js/jquery-ui/jquery-ui.min.js"></script>
 		<link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
@@ -202,8 +203,45 @@
 				startHandshake();
 			}
 			function startHandshake() {
-				alert('started');
+				var loading = document.getElementById('loading');
 				var hostname = document.getElementById('hostname');
+				var domain;
+				var port = 443;
+				if(hostname.value.indexOf('/') >= 0) {
+					domain = hostname.value.split('/')[2];
+				} else {
+					domain = hostname.value;
+				}
+				let splitport = domain.split(":");
+				if(splitport.length > 1) {
+					domain = splitport[0];
+					port = parseInt(splitport[1]);
+				}
+				var data = {
+					hostname: domain,
+					port: port
+				}
+				loading.style.display = 'block';
+				openSSLRESTAPI('PQCTest', data, function(error, response) {
+					loading.style.display = 'none';
+					if(error) {
+						alert(error);
+					} else {
+						//attempts = 0;
+						//$( "#template" ).dialog("close");
+						//ocspresponse = response;
+						//showResponse(response);
+						console.log(response);
+						var div = document.getElementById('resptable');
+						div.innerHTML = '';
+						if(response.response.TLSHandshake.pqcready) {
+							div.innerHTML = '<h3><span style="color: green;"><i class="fa-solid fa-check"></i>&nbsp;Server is post-quantum ready!</span></h3>';
+						} else {
+							div.innerHTML = '<h3><span style="color: red;"><i class="fa-solid fa-xmark"></i>&nbsp;Server is NOT post-quantum ready!</span></h3>';
+						}
+						//processImportedCert(response.csroptions);
+					}
+				});
 			}
 			function googleAnalyticsEvent(category, action, label, value) {
 					if(hosted) {
@@ -214,22 +252,24 @@
 							});
 					}
 			}
-			function addEventListeners() {
-				var methods = document.getElementsByClassName('methods');
-				for(var i = 0; i <= methods.length - 1; i++) {
-					methods[i].addEventListener("change", function(e){
-						//console.log(e.target);
-						checkMethod();
-					});
-				}
-			}
 		</script>
 	</head>
 	<body>
 		{{{header}}}
 		<h1 class="display-1">{{title}}</h1><br />
-		<form onsubmit="submitForm(); return false;">
+		<form onsubmit="submitForm(this); return false;">
 		<div class="container-fluid">
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+				<div class="col-lg-6 col-md-6 col-sm-8 col-xs-10">
+					This test will attempt a TLS handshake using the X25519Kyber512Draft00, X25519Kyber768Draft00 and P256Kyber768Draft00 post quantum key agreements to determine whether the server is configured to support post-quantum cryptography.
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
+					
+				</div>
+			</div>
 			<div class="row">
 				<div class="col-lg-3 col-md-3 col-sm-2 col-xs-1">
 					
@@ -239,7 +279,7 @@
 						&nbsp;
 					</div>
 					<div class="row">
-						<input id="hostname" type="text" class="form-control" placeholder="www.google.com" />
+						<input id="hostname" type="text" class="form-control" placeholder="pq.cloudflareresearch.com" />
 					</div>
 					<div id="loading" class="row">
 						<div class="container">
@@ -252,7 +292,7 @@
 						&nbsp;
 					</div>
 					<div class="row">
-						<input id="submit" class="btn btn-primary btn-md" type="submit" value="Validate"/>
+						<input id="submit" class="btn btn-primary btn-md" type="submit" value="Start TLS Handshake"/>
 					</div>
 					<div class="row">
 						&nbsp;
@@ -291,10 +331,9 @@
 				(adsbygoogle = window.adsbygoogle || []).push({});
 			</script>
 			<script>
-				addEventListeners();
-				checkMethod();
+				//addEventListeners();
+				//checkMethod();
 			</script>
 		</div>
-		<form id="downloadtext"></form>
 	</body>
 </html>

@@ -32,7 +32,7 @@ var html = {
 		'			<li class="dropdown">',
 		'               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">SSL/TLS <span class="caret"></span></a>',
 		'               <ul class="dropdown-menu">',
-		'                   <li><a href="/test-post-quantum-cryptography">Test Post Quantum TLS Handshake</a></li>',
+		'                   <li><a href="/test-post-quantum-cryptography">Test Post-Quantum TLS Handshake</a></li>',
 		'               </ul>',
 		'           </li>'
 	]

@@ -45,10 +45,13 @@ app.use('/js/jquery-ui', express.static('./node_modules/jquery-ui/dist'));
 app.use('/js/tempusdominus-bootstrap-3', express.static('./node_modules/tempusdominus-bootstrap-3/build/js'));
 app.use('/js/tempusdominus-core', express.static('./node_modules/tempusdominus-core/build/js'));
 app.use('/js/popper.js', express.static('./node_modules/popper.js/dist/umd'));
+//app.use('/js/fontawesome-free', express.static('./node_modules/@fortawesome/fontawesome-free/js'));
 app.use('/css/tempusdominus-bootstrap-3', express.static('./node_modules/tempusdominus-bootstrap-3/build/css'));
 app.use('/css/bootstrap',  express.static(__dirname + '/node_modules/bootstrap/dist/css'));
 app.use('/css/fonts',  express.static(__dirname + '/node_modules/bootstrap/dist/fonts'));
 app.use('/css/jquery-ui',  express.static(__dirname + '/node_modules/jquery-ui/dist'));
+app.use('/css/fontawesome-free', express.static('./node_modules/@fortawesome/fontawesome-free/css'));
+app.use('/css/webfonts', express.static('./node_modules/@fortawesome/fontawesome-free/webfonts'));
 app.use('/images',  express.static(__dirname + '/images'));
 app.use('/static',  express.static(__dirname + '/static'));
 
@@ -101,7 +104,7 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		let ocsporrev = url.substring(1).split('-')[0];
 		ocsporrev = ocsporrev.toUpperCase()
 		console.log(ocsporrev);*/
-		template.title = 'Test Post Quantum Cryptography TLS Handshake';
+		template.title = 'Test Post-Quantum Readiness';
 		res.render('test_post_quantum_cryptography.html', template);
 	});
 	
