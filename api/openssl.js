@@ -724,6 +724,8 @@ router.post('/PQCTest', function(req, res) {
 			var data = {
 				error: err,
 				response: {
+					hostname: req.body.hostname,
+					port: req.body.port,
 					TLSHandshake: pqcresult,
 					HTTPResponse: httpresponse
 				}

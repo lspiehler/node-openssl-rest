@@ -203,6 +203,8 @@
 				startHandshake();
 			}
 			function startHandshake() {
+				var div = document.getElementById('resptable');
+				div.innerHTML = '';
 				var loading = document.getElementById('loading');
 				var hostname = document.getElementById('hostname');
 				var domain;
@@ -232,15 +234,80 @@
 						//ocspresponse = response;
 						//showResponse(response);
 						console.log(response);
-						var div = document.getElementById('resptable');
-						div.innerHTML = '';
-						if(response.response.TLSHandshake.pqcready) {
-							div.innerHTML = '<h3><span style="color: green;"><i class="fa-solid fa-check"></i>&nbsp;Server is post-quantum ready!</span></h3>';
-						} else {
-							div.innerHTML = '<h3><span style="color: red;"><i class="fa-solid fa-xmark"></i>&nbsp;Server is NOT post-quantum ready!</span></h3>';
+						let port = '';
+						if(response.response.port != 443) {
+							port = ':' + response.response.port
 						}
+						if(response.response.TLSHandshake.pqcready) {
+							div.innerHTML = '<h3 style="text-align: center;"><span style="color: green;"><i class="fa-solid fa-check"></i>&nbsp;' + response.response.hostname + port  + ' is post-quantum ready!</span></h3><br />';
+						} else {
+							div.innerHTML = '<h3 style="text-align: center;"><span style="color: red;"><i class="fa-solid fa-xmark"></i>&nbsp;' + response.response.hostname + port  + ' is NOT post-quantum ready!</span></h3><br />';
+						}
+						showOutput(response);
 						//processImportedCert(response.csroptions);
 					}
+				});
+			}
+			function showOutput(response) {
+				var div = document.getElementById('resptable');
+
+				var accordion = document.createElement('div');
+				accordion.className = 'accordion';
+				//var keydiv = document.createElement('div');
+				let certificatestitle = document.createElement('h3');
+				certificatestitle.innerText = 'Certificates';
+				let certificatesbody = document.createElement('div');
+				let pfcerts = document.createElement('pre');
+				pfcerts.style.whiteSpace = 'pre-wrap';
+				pfcerts.innerText = response.response.TLSHandshake.data.data.certs.join('\n');
+				//certificatesbody.style.whiteSpace = 'pre';
+				//certificatesbody.style.fontFamily = 'pre';
+				certificatesbody.appendChild(pfcerts);
+				accordion.appendChild(certificatestitle);
+				accordion.appendChild(certificatesbody);
+				div.appendChild(accordion);
+
+				//var keydiv = document.createElement('div');
+				let tlshandshaketitle = document.createElement('h3');
+				tlshandshaketitle.innerText = 'TLS Handshake';
+				let tlshandshakebody = document.createElement('div');
+				let pfhs = document.createElement('pre');
+				pfhs.style.whiteSpace = 'pre-wrap';
+				pfhs.innerText = response.response.TLSHandshake.data.data.trace
+				//tlshandshakebody.style.whiteSpace = 'pre';
+				//tlshandshakebody.style.fontFamily = 'pre';
+				tlshandshakebody.appendChild(pfhs);
+				accordion.appendChild(tlshandshaketitle);
+				accordion.appendChild(tlshandshakebody);
+				div.appendChild(accordion);
+
+				let headers = [];
+				let keys = Object.keys(response.response.HTTPResponse.headers);
+				for(let i = 0; i < keys.length; i++) {
+					headers.push(keys[i] + ': ' + response.response.HTTPResponse.headers[keys[i]]);
+				}
+
+				//console.log(headers);
+
+				//var keydiv = document.createElement('div');
+				let headerstitle = document.createElement('h3');
+				headerstitle.innerText = 'HTML Headers';
+				let headersbody = document.createElement('div');
+				let pfheaders = document.createElement('pre');
+				pfheaders.style.whiteSpace = 'pre-wrap';
+				pfheaders.innerText = headers.join('\n');
+				//tlshandshakebody.style.whiteSpace = 'pre';
+				//tlshandshakebody.style.fontFamily = 'pre';
+				headersbody.appendChild(pfheaders);
+				accordion.appendChild(headerstitle);
+				accordion.appendChild(headersbody);
+				div.appendChild(accordion);
+
+				$( accordion ).accordion({
+					collapsible: true,
+					active: false,
+					heightStyle: 'content',
+					autoHeight:false
 				});
 			}
 			function googleAnalyticsEvent(category, action, label, value) {
