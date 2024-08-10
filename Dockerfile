@@ -96,7 +96,7 @@ WORKDIR ${INSTALLDIR_OPENSSL}/bin
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR_OPENSSL}/bin:${PATH}"
 
-ARG CACHE_DATE=2024-07-23
+ARG CACHE_DATE=2024-08-10
 
 # update config to allow unsafe renegotiation
 RUN sed -i '/\[system_default_sect\]/a Options = UnsafeLegacyRenegotiation' /opt/openssl32/ssl/openssl.cnf
