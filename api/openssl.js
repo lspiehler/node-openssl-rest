@@ -713,25 +713,37 @@ router.post('/generateOQSPrivateKey', function(req, res) {
 });
 
 router.post('/PQCTest', function(req, res) {
-	testPostQuantum(req.body, function(err, pqcresult) {
-		const options = {
-			hostname: req.body.hostname,
-			port: req.body.port,
-			path: '/',
-			method: 'GET',
-		};
-		httpRequest(options, function(err, httpresponse) {
-			var data = {
-				error: err,
-				response: {
-					hostname: req.body.hostname,
-					port: req.body.port,
-					TLSHandshake: pqcresult,
-					HTTPResponse: httpresponse
-				}
-			}
-			res.json(data);
-		});
+	testPostQuantum(req.body, function(pqerr, pqcresult) {
+		if(pqerr) {
+			res.json({
+				error: pqerr
+			});
+		} else {
+			const options = {
+				hostname: req.body.hostname,
+				port: req.body.port,
+				path: '/',
+				method: 'GET',
+			};
+			httpRequest(options, function(err, httpresponse) {
+				/*if(err) {
+					var data = {
+						error: err.toString()
+					}
+				} else {*/
+					var data = {
+						error: false,
+						response: {
+							hostname: req.body.hostname,
+							port: req.body.port,
+							TLSHandshake: pqcresult,
+							HTTPResponse: httpresponse
+						}
+					}
+				//}
+				res.json(data);
+			});
+		}
 	});
 });
 
@@ -823,23 +835,73 @@ function testPostQuantum(options, callback) {
 			];
 			openssl2.x509.TLSHandshake(netcertoptions, function(err, notpqc, cmd) {
 				if(err) {
-					callback(err, false);
+					callback(err.toString(), false);
 				} else {
-					callback(false, {
-						pqcready: pqcready,
-						data: notpqc,
-						cmd: cmd
+					let pc = new parseCerts();
+					pc.parse(notpqc.data.certs, function(err, certs) {
+						//console.log(certs);
+						callback(false, {
+							pqcready: pqcready,
+							data: notpqc,
+							parsedCerts: certs, 
+							cmd: cmd
+						});
 					});
 				}
 			});
 		} else {
-			callback(false, {
-				pqcready: pqcready,
-				data: pqc,
-				cmd: cmd
+			let pc = new parseCerts();
+			pc.parse(pqc.data.certs, function(err, certs) {
+				//console.log(certs);
+				callback(false, {
+					pqcready: pqcready,
+					data: pqc,
+					parsedCerts: certs, 
+					cmd: cmd
+				});
 			});
 		}
 	});
+}
+
+function parseCerts() {
+	var pc = []
+	var i = 0;
+	var certs = [];
+
+	this.parse = function(c, callback) {
+		certs = c;
+		parse(callback)
+	}
+
+	parse = function(callback) {
+		openssl2.x509.parse({cert: certs[i]}, function(err, parsed) {
+			if(err) {
+				//console.log(i);
+			} else {
+				let name;
+				if(parsed.data.subject.commonName) {
+					if(typeof parsed.data.subject.commonName == 'string') {
+						name = parsed.data.subject.commonName;
+					} else {
+						name = parsed.data.subject.commonName[0];
+					}
+				} else {
+					name = 'Certificate ' + i;
+				}
+				pc.push ({
+					name: name,
+					cert: certs[i]
+				});
+			}
+			i++;
+			if(i < certs.length) {
+				parse(callback);
+			} else {
+				callback(false, pc);
+			}
+		});
+	}
 }
 
 function httpRequest(options, callback) {

@@ -94,6 +94,7 @@
                         }
                 </script>
 		<script>
+			var certlist = [];
 			function openSSLRESTAPI(api, data, callback) {
 				var request = new XMLHttpRequest();
 				request.open('POST', 'api/openssl/' + api, true);
@@ -227,6 +228,7 @@
 				openSSLRESTAPI('PQCTest', data, function(error, response) {
 					loading.style.display = 'none';
 					if(error) {
+						console.log(error);
 						alert(error);
 					} else {
 						//attempts = 0;
@@ -234,29 +236,80 @@
 						//ocspresponse = response;
 						//showResponse(response);
 						console.log(response);
-						let port = '';
-						if(response.response.port != 443) {
-							port = ':' + response.response.port
-						}
-						if(response.response.TLSHandshake.pqcready) {
-							div.innerHTML = '<h3 style="text-align: center;"><span style="color: green;"><i class="fa-solid fa-check"></i>&nbsp;' + response.response.hostname + port  + ' is post-quantum ready!</span></h3><br />';
-						} else {
-							div.innerHTML = '<h3 style="text-align: center;"><span style="color: red;"><i class="fa-solid fa-xmark"></i>&nbsp;' + response.response.hostname + port  + ' is NOT post-quantum ready!</span></h3><br />';
-						}
 						showOutput(response);
 						//processImportedCert(response.csroptions);
 					}
 				});
 			}
+			function downloadText(text, filename, type) {
+				//alert(text);
+				googleAnalyticsEvent('Interaction', 'Download', type, '')
+				var form = document.getElementById('downloadtext');
+				form.action = 'api/openssl/returnDownload';
+				form.method = 'POST';
+				var datainput = document.getElementById('datainput');
+				//console.log(datainput);
+				if(datainput){
+				
+				} else {
+					datainput = document.createElement('textarea');
+					datainput.id = 'datainput';
+				}
+				datainput.name = "data"
+				datainput.innerHTML = text;
+				datainput.style.display = "none";
+				var filenameinput = document.getElementById('filenameinput');
+				if(filenameinput) {
+				
+				} else {
+					filenameinput = document.createElement('input');
+					filenameinput.id = 'filenameinput';
+				}
+				filenameinput.name = "filename"
+				filenameinput.value = filename;
+				filenameinput.type = "hidden";
+				form.appendChild(datainput);
+				form.appendChild(filenameinput);
+				form.submit();
+				
+				form.removeChild(datainput);
+				form.removeChild(filenameinput);
+			}
 			function showOutput(response) {
+				certlist = response.response.TLSHandshake.parsedCerts;
 				var div = document.getElementById('resptable');
 
+				let port = '';
+				if(response.response.port != 443) {
+					port = ':' + response.response.port
+				}
+				if(response.response.TLSHandshake.pqcready) {
+					div.innerHTML = '<h3 style="text-align: center;"><span style="color: green;"><i class="fa-solid fa-check"></i>&nbsp;' + response.response.hostname + port  + ' is post-quantum ready!</span></h3><br />';
+				} else {
+					div.innerHTML = '<h3 style="text-align: center;"><span style="color: red;"><i class="fa-solid fa-xmark"></i>&nbsp;' + response.response.hostname + port  + ' is NOT post-quantum ready!</span></h3><br />';
+				}
 				var accordion = document.createElement('div');
 				accordion.className = 'accordion';
 				//var keydiv = document.createElement('div');
 				let certificatestitle = document.createElement('h3');
 				certificatestitle.innerText = 'Certificates';
+
 				let certificatesbody = document.createElement('div');
+				var list = document.createElement('ul');
+				certificatesbody.appendChild(list);
+
+				for(let i = 0; i < response.response.TLSHandshake.parsedCerts.length; i++) {
+					var item = document.createElement('li');
+					let cert = document.createElement('a');
+					cert.href = 'javascript: downloadText(certlist['+i+'].cert, \''+response.response.TLSHandshake.parsedCerts[i].name+'.cer\', \'cert\');';
+					cert.innerText = response.response.TLSHandshake.parsedCerts[i].name + '.cer';
+					item.appendChild(cert);
+					certificatesbody.appendChild(item);
+				}
+
+				var br = document.createElement('br');
+				certificatesbody.appendChild(br);
+
 				let pfcerts = document.createElement('pre');
 				pfcerts.style.whiteSpace = 'pre-wrap';
 				pfcerts.innerText = response.response.TLSHandshake.data.data.certs.join('\n');
@@ -402,5 +455,6 @@
 				//checkMethod();
 			</script>
 		</div>
+		<form id="downloadtext"></form>
 	</body>
 </html>
