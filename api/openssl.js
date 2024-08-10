@@ -713,6 +713,7 @@ router.post('/generateOQSPrivateKey', function(req, res) {
 });
 
 router.post('/PQCTest', function(req, res) {
+	console.log('PQC test for: ' + req.body.hostname + ':' + req.body.port);
 	testPostQuantum(req.body, function(pqerr, pqcresult) {
 		if(pqerr) {
 			res.json({
@@ -1231,7 +1232,7 @@ router.post('/ocspChecker', function(req, res) {
 	var ocsp = new ocsplib();
 	//console.log(req.body)
 	if(req.body.method=='download') {
-		console.log('OCSP download for: ' + req.body.hostname);
+		console.log('OCSP download for: ' + req.body.hostname + ':' + req.body.port);
 	} else if(req.body.method=='paste') {
 		console.log('OCSP pasted cert:');
 		console.log(req.body.cert);
