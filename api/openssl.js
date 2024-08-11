@@ -668,6 +668,7 @@ router.post('/checkCAKey', function(req, res) {
 });
 
 router.post('/generateRSAPrivateKey', function(req, res) {
+	sendRequestToOS('key', req, function(err, result){});
 	var rsakeyoptions = req.body;
 	//var username = req.body.username;
 	//var password = req.body.password;
@@ -690,6 +691,7 @@ router.post('/generateRSAPrivateKey', function(req, res) {
 });
 
 router.post('/generateOQSPrivateKey', function(req, res) {
+	sendRequestToOS('key', req, function(err, result){});
 	var keyoptions = req.body;
 	//var username = req.body.username;
 	//var password = req.body.password;
@@ -713,34 +715,49 @@ router.post('/generateOQSPrivateKey', function(req, res) {
 	});
 });
 
-function sendRequestToOS(index, data, callback) {
-	let body = JSON.parse(JSON.stringify(data));
-	//body['type'] = type;
-	let now = moment().format('YYYY-MM-DD');
-	const options = {
-		options: {
-			hostname: config.opensearchhost,
-			port: config.opensearchport,
-			path: '/' + index + '-' + now + '/_doc',
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-ndjson'
-			}
-			//sigalgs: 'ECDSA+SHA256,ECDSA+SHA384,ECDSA+SHA512,ed25519,ed448,RSA-PSS+SHA256,RSA-PSS+SHA384,RSA-PSS+SHA512,rsa_pss_rsae_sha256,rsa_pss_rsae_sha384,rsa_pss_rsae_sha512,RSA+SHA256,RSA+SHA384,RSA+SHA512,ECDSA+SHA224,RSA+SHA224,DSA+SHA224,DSA+SHA256,DSA+SHA384,DSA+SHA512'
-		},
-		body: body
-	};
-	httpRequest2(options, function(err, httpresponse) {
-		if(err) {
-			console.log(err);
-		} else {
-			console.log(httpresponse);
+function sendRequestToOS(index, req, callback) {
+	if(config.opensearchhost) {
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		let body = JSON.parse(JSON.stringify(req.body));
+		//body['type'] = type;
+		let now = moment();
+		if(body.hasOwnProperty('key')) {
+			delete body.key;
 		}
-	});
+		body['timestamp'] = now.format('YYYY-MM-DDTHH:mm:ss');
+		body['ip'] = ip;
+		body['Referer'] = req.headers.referer || '';
+		body['User-Agent'] = req.headers['user-agen'] || '';
+		body['url'] = req.url;
+		//console.log(req)
+		const options = {
+			options: {
+				hostname: config.opensearchhost,
+				port: config.opensearchport,
+				path: '/' + index + '-' + now.format('YYYY-MM-DD') + '/_doc',
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-ndjson'
+				}
+				//sigalgs: 'ECDSA+SHA256,ECDSA+SHA384,ECDSA+SHA512,ed25519,ed448,RSA-PSS+SHA256,RSA-PSS+SHA384,RSA-PSS+SHA512,rsa_pss_rsae_sha256,rsa_pss_rsae_sha384,rsa_pss_rsae_sha512,RSA+SHA256,RSA+SHA384,RSA+SHA512,ECDSA+SHA224,RSA+SHA224,DSA+SHA224,DSA+SHA256,DSA+SHA384,DSA+SHA512'
+			},
+			body: body
+		};
+		httpRequest2(options, function(err, httpresponse) {
+			if(err) {
+				callback(err, false);
+			} else {
+				callback(false, httpresponse);
+				console.log(httpresponse);
+			}
+		});
+	} else {
+		callback(false, false);
+	}
 }
 
 router.post('/PQCTest', function(req, res) {
-	sendRequestToOS('pqc', req.body, function(err, result){});
+	sendRequestToOS('pqc', req, function(err, result){});
 	console.log('PQC test for: ' + req.body.hostname + ':' + req.body.port);
 	testPostQuantum(req.body, function(pqerr, pqcresult) {
 		if(pqerr) {
@@ -934,12 +951,12 @@ function parseCerts() {
 }
 
 var httpRequest2 = function(params, callback) {
-    console.log(params);
+    //console.log(params);
     const req = https.request(params.options, res => {
         var resp = [];
 
         res.on('data', function(data) {
-			console.log(data);
+			//console.log(data);
             resp.push(data);
         });
 
@@ -989,6 +1006,7 @@ function httpRequest(options, callback) {
 }
 
 router.post('/generateECCPrivateKey', function(req, res) {
+	sendRequestToOS('key', req, function(err, result){});
 	var rsakeyoptions = req.body;
 	//var username = req.body.username;
 	//var password = req.body.password;
@@ -1038,6 +1056,7 @@ var usageData = function(data) {
 }
 
 router.post('/generateCSR', function(req, res) {
+	sendRequestToOS('x509', req, function(err, result){});
 	var key = req.body.key;
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
@@ -1083,6 +1102,7 @@ router.post('/generateCSR', function(req, res) {
 });
 
 router.post('/selfSignCSR', function(req, res) {
+	sendRequestToOS('x509', req, function(err, result){});
 	var key = req.body.key;
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
@@ -1118,6 +1138,7 @@ router.post('/selfSignCSR', function(req, res) {
 });
 
 router.post('/CASignCSR', function(req, res) {
+	sendRequestToOS('x509', req, function(err, result){});
 	var keypass = req.body.keypass;
 	var csroptions = req.body.options;
 	let cadir = getCADir(req);
@@ -1284,6 +1305,7 @@ router.post('/pasteKey', function(req, res) {
 });
 
 router.post('/ocspChecker', function(req, res) {
+	sendRequestToOS('ocsp', req, function(err, result){});
 	var ocsp = new ocsplib();
 	console.log(req.body)
 	if(req.body.method=='download') {
