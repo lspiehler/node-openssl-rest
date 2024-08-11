@@ -733,7 +733,7 @@ function sendRequestToOS(index, req, callback) {
 		body['timestamp'] = now.format('YYYY-MM-DDTHH:mm:ss');
 		body['ip'] = ip;
 		body['Referer'] = req.headers.referer || '';
-		body['User-Agent'] = req.headers['user-agen'] || '';
+		body['User-Agent'] = req.headers['user-agent'] || '';
 		body['url'] = req.url;
 		//console.log(req)
 		const options = {
