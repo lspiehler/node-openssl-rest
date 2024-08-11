@@ -15,6 +15,7 @@ var md5 = require('md5');
 var ocsplib = require('../lib/ocsp_checker.js');
 var decoderlib = require('../lib/certificate_decoder.js');
 const https = require('node:https');
+const moment = require('moment');
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
@@ -712,18 +713,20 @@ router.post('/generateOQSPrivateKey', function(req, res) {
 	});
 });
 
-function sendRequestToOS(type, data, callback) {
+function sendRequestToOS(index, data, callback) {
 	let body = JSON.parse(JSON.stringify(data));
 	//body['type'] = type;
+	let now = moment().format('YYYY-MM-DD');
 	const options = {
 		options: {
 			hostname: config.opensearchhost,
 			port: config.opensearchport,
-			path: '/' + type + '/_doc',
+			path: '/' + index + '-' + now + '/_doc',
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/x-ndjson'
 			}
+			//sigalgs: 'ECDSA+SHA256,ECDSA+SHA384,ECDSA+SHA512,ed25519,ed448,RSA-PSS+SHA256,RSA-PSS+SHA384,RSA-PSS+SHA512,rsa_pss_rsae_sha256,rsa_pss_rsae_sha384,rsa_pss_rsae_sha512,RSA+SHA256,RSA+SHA384,RSA+SHA512,ECDSA+SHA224,RSA+SHA224,DSA+SHA224,DSA+SHA256,DSA+SHA384,DSA+SHA512'
 		},
 		body: body
 	};
