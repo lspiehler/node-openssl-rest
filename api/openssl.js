@@ -724,6 +724,12 @@ function sendRequestToOS(index, req, callback) {
 		if(body.hasOwnProperty('key')) {
 			delete body.key;
 		}
+		if(body.hasOwnProperty('ca')) {
+			delete body.ca;
+		}
+		if(body.hasOwnProperty('csr')) {
+			delete body.csr;
+		}
 		body['timestamp'] = now.format('YYYY-MM-DDTHH:mm:ss');
 		body['ip'] = ip;
 		body['Referer'] = req.headers.referer || '';
