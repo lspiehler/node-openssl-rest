@@ -13,6 +13,10 @@ var config = {
 	
 	//will enable ocsp and aia
 	publichttp: process.env.PUBLICHTTP || false,
+
+	opensearchhost: process.env.OPENSEARCHHOST || false,
+
+	opensearchport: process.env.OPENSEARCHPORT || false,
 	
 	opensslbinpath: process.env.OPENSSLBINPATH || '/opt/openssl32/bin/openssl'
 	//opensslbinpath: 'C:/Program Files/OpenVPN/bin/openssl.exe'

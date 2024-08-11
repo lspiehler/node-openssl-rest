@@ -15,7 +15,6 @@ var md5 = require('md5');
 var ocsplib = require('../lib/ocsp_checker.js');
 var decoderlib = require('../lib/certificate_decoder.js');
 const https = require('node:https');
-const http = require('node:http');
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
@@ -718,8 +717,8 @@ function sendRequestToOS(type, data, callback) {
 	//body['type'] = type;
 	const options = {
 		options: {
-			hostname: '192.168.1.163',
-			port: 9200,
+			hostname: config.opensearchhost,
+			port: config.opensearchport,
 			path: '/' + type + '/_doc',
 			method: 'POST',
 			headers: {
@@ -933,7 +932,7 @@ function parseCerts() {
 
 var httpRequest2 = function(params, callback) {
     console.log(params);
-    const req = http.request(params.options, res => {
+    const req = https.request(params.options, res => {
         var resp = [];
 
         res.on('data', function(data) {
