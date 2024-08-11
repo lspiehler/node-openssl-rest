@@ -15,6 +15,7 @@ var md5 = require('md5');
 var ocsplib = require('../lib/ocsp_checker.js');
 var decoderlib = require('../lib/certificate_decoder.js');
 const https = require('node:https');
+const http = require('node:http');
 
 /*var rsakeyoptions = {
 	rsa_keygen_bits: 2048,
@@ -712,7 +713,32 @@ router.post('/generateOQSPrivateKey', function(req, res) {
 	});
 });
 
+function sendRequestToOS(type, data, callback) {
+	let body = JSON.parse(JSON.stringify(data));
+	//body['type'] = type;
+	const options = {
+		options: {
+			hostname: '192.168.1.163',
+			port: 9200,
+			path: '/' + type + '/_doc',
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-ndjson'
+			}
+		},
+		body: body
+	};
+	httpRequest2(options, function(err, httpresponse) {
+		if(err) {
+			console.log(err);
+		} else {
+			console.log(httpresponse);
+		}
+	});
+}
+
 router.post('/PQCTest', function(req, res) {
+	sendRequestToOS('pqc', req.body, function(err, result){});
 	console.log('PQC test for: ' + req.body.hostname + ':' + req.body.port);
 	testPostQuantum(req.body, function(pqerr, pqcresult) {
 		if(pqerr) {
@@ -903,6 +929,33 @@ function parseCerts() {
 			}
 		});
 	}
+}
+
+var httpRequest2 = function(params, callback) {
+    console.log(params);
+    const req = http.request(params.options, res => {
+        var resp = [];
+
+        res.on('data', function(data) {
+			console.log(data);
+            resp.push(data);
+        });
+
+        res.on('end', function() {
+            callback(false, {statusCode: res.statusCode, options: params.options, headers: res.headers, body: Buffer.concat(resp).toString()});
+        });
+    })
+
+    req.on('error', function(err) {
+        console.log(err.toString());
+        callback(false, {statusCode: false, options: params.options, headers: false, body: JSON.stringify({ error: err.toString()})});
+    })
+
+    if(params.options.method=='POST') {
+        req.write(JSON.stringify(params.body));
+    }
+
+    req.end()
 }
 
 function httpRequest(options, callback) {
@@ -1230,7 +1283,7 @@ router.post('/pasteKey', function(req, res) {
 
 router.post('/ocspChecker', function(req, res) {
 	var ocsp = new ocsplib();
-	//console.log(req.body)
+	console.log(req.body)
 	if(req.body.method=='download') {
 		console.log('OCSP download for: ' + req.body.hostname + ':' + req.body.port);
 	} else if(req.body.method=='paste') {
