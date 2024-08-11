@@ -19,6 +19,7 @@ var config = {
 	opensearchport: process.env.OPENSEARCHPORT || false,
 	
 	opensslbinpath: process.env.OPENSSLBINPATH || '/opt/openssl32/bin/openssl'
+	//opensslbinpath: process.env.OPENSSLBINPATH || 'openssl'
 	//opensslbinpath: 'C:/Program Files/OpenVPN/bin/openssl.exe'
 	
 }

@@ -365,6 +365,7 @@ var convertCertToCSR = function(download, certs, index, callback) {
 }
 
 router.post('/getCertFromNetwork', function(req, res) {
+	sendRequestToOS('download_cert', req, function(err, result){});
 	var netcertoptions = req.body;
 	netcertoptions.groups = [
         "x25519",
@@ -729,6 +730,9 @@ function sendRequestToOS(index, req, callback) {
 		}
 		if(body.hasOwnProperty('csr')) {
 			delete body.csr;
+		}
+		if(body.hasOwnProperty('keypass')) {
+			delete body.keypass;
 		}
 		body['timestamp'] = now.format('YYYY-MM-DDTHH:mm:ss');
 		body['ip'] = ip;
