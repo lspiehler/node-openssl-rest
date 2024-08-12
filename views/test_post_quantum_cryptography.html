@@ -95,6 +95,7 @@
                 </script>
 		<script>
 			var certlist = [];
+			var urlhostname = '{{ hostname }}';
 			function openSSLRESTAPI(api, data, callback) {
 				var request = new XMLHttpRequest();
 				request.open('POST', 'api/openssl/' + api, true);
@@ -453,6 +454,13 @@
 			<script>
 				//addEventListeners();
 				//checkMethod();
+				window.onload = function() {
+					if(urlhostname != '') {
+						let hostname = document.getElementById('hostname');
+						hostname.value = urlhostname;
+						submitForm();
+					}
+				}
 			</script>
 		</div>
 		<form id="downloadtext"></form>

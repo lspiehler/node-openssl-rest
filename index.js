@@ -58,24 +58,28 @@ app.use('/static',  express.static(__dirname + '/static'));
 //app.use(express.static('files'))app.use('/api/auth', require('./api/auth'));
 
 opensslcap.getCapabilities(function(err, capabilities) {
-	var template = {
-		title: "CertificateTools.com X509 Certificate Generator",
-		certtemplates: certtemplates,
-		javascripttemplates: JSON.stringify(certtemplates, null, 4),
-		capabilities: capabilities,
-		hosted: config.hosted,
-		header: html.header.join('\r\n')
+	function getTemplate() {
+		return template = {
+			title: "CertificateTools.com X509 Certificate Generator",
+			certtemplates: certtemplates,
+			javascripttemplates: JSON.stringify(certtemplates, null, 4),
+			capabilities: capabilities,
+			hosted: config.hosted,
+			header: html.header.join('\r\n')
+		}
 	}
 	//console.log(template);
 	app.get('/', function(req, res) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);
+		let template = getTemplate();
 		res.render('index.html', template);
 	});
 
 	app.get('/test', function(req, res) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);
+		let template = getTemplate();
 		res.render('test.html', template);
 	});
 
@@ -87,13 +91,20 @@ opensslcap.getCapabilities(function(err, capabilities) {
     });
 
 	app.get('/ocsp-checker', function(req, res) {
+		console.log(req.query);
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);
 		/*let url = req.url;
 		let ocsporrev = url.substring(1).split('-')[0];
 		ocsporrev = ocsporrev.toUpperCase()
 		console.log(ocsporrev);*/
+		let template = getTemplate();
 		template.title = 'OCSP Checker';
+		if(req.query.hasOwnProperty('hostname')) {
+			template.hostname = req.query.hostname;
+		}/* else {
+			template.hostname = '';
+		}*/
 		res.render('ocsp_checker.html', template);
 	});
 
@@ -104,7 +115,11 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		let ocsporrev = url.substring(1).split('-')[0];
 		ocsporrev = ocsporrev.toUpperCase()
 		console.log(ocsporrev);*/
+		let template = getTemplate();
 		template.title = 'Test Post-Quantum Readiness';
+		if(req.query.hasOwnProperty('hostname')) {
+			template.hostname = req.query.hostname;
+		}
 		res.render('test_post_quantum_cryptography.html', template);
 	});
 	
@@ -116,6 +131,7 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		let ocsporrev = url.substring(1).split('-')[0];
 		ocsporrev = ocsporrev.charAt(0).toUpperCase() + ocsporrev.slice(1);
 		console.log(ocsporrev);*/
+		let template = getTemplate();
 		template.title = 'Revocation Checker';
 		res.render('ocsp_checker.html', template);
 	});
@@ -128,6 +144,7 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		let ocsporrev = url.substring(1).split('-')[0];
 		ocsporrev = ocsporrev.charAt(0).toUpperCase() + ocsporrev.slice(1);
 		console.log(ocsporrev);*/
+		let template = getTemplate();
 		template.title = 'Download Certificates';
 		res.render('download_certificates.html', template);
 	});
@@ -135,12 +152,14 @@ opensslcap.getCapabilities(function(err, capabilities) {
 	app.get('/csr-generator', function(req, res) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);
+		let template = getTemplate();
 		res.render('csr_generator.html', template);
     });
 	
 	app.get('/manage-certs', function(req, res) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);
+		let template = getTemplate();
 		res.render('manage_certs.html', template);
     });
 

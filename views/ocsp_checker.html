@@ -96,6 +96,7 @@
 			var attempt = 0;
 			var maxattempts = 3;
 			var ocspresponse;
+			var urlhostname = '{{ hostname }}';
 			function openSSLRESTAPI(api, data, callback) {
 				var request = new XMLHttpRequest();
 				request.open('POST', 'api/openssl/' + api, true);
@@ -175,7 +176,7 @@
 				]
 				//console.log(resp);
 				var div = document.getElementById('resptable');
-				div.innerHTML = '';
+				//div.innerHTML = '';
 				var table = document.createElement('table');
 				var row = table.insertRow(0);
 				var col0 = row.insertCell(0);
@@ -304,6 +305,8 @@
 			}
 			
 			function OCSPChecker() {
+				var div = document.getElementById('resptable');
+				div.innerHTML = '';
 				var loading = document.getElementById('loading');
 				var hostname = document.getElementById('hostname');
 				var pastex509 = document.getElementById('pastex509');
@@ -524,6 +527,13 @@ bnkWlGM+OZ2Mn7Bl/VPK2fWrhNSDX5JMDV5cpcboa+wAwRR/Ejr+x/yoAV9W
 			<script>
 				addEventListeners();
 				checkMethod();
+				window.onload = function() {
+					if(urlhostname != '') {
+						let hostname = document.getElementById('hostname');
+						hostname.value = urlhostname;
+						submitForm();
+					}
+				}
 			</script>
 		</div>
 		<form id="downloadtext"></form>
