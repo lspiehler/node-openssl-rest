@@ -91,7 +91,7 @@ opensslcap.getCapabilities(function(err, capabilities) {
     });
 
 	app.get('/ocsp-checker', function(req, res) {
-		console.log(req.query);
+		//console.log(req.query);
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);
 		/*let url = req.url;
