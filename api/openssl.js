@@ -1334,17 +1334,17 @@ router.post('/ocspChecker', function(req, res) {
 	}
 	//console.log(netcertoptions);
 	if(req.body.method=='download') {
-		ocsp.getCertFromNetwork(netcertoptions, function(err, response, cmd) {
+		ocsp.getCertFromNetwork(netcertoptions, function(err, response) {
 			var data = {
 				error: err,
 				response: response,
-				command: cmd
+				command: response.command
 			}
 			//console.log(cmd.cert);
 			//console.log(err);
 			//console.log(response);
-			if(err || response.indexOf('unauthorized') >= 0) {
-				if(cmd.cert) {
+			if(err || response.data.indexOf('unauthorized') >= 0) {
+				if(response != false) {
 					ocsp.query(cmd.cert.base64, function(err, response, cmd) {
 						let usagedata = {
 								action: 'OCSPBadChainDownload',
@@ -1356,7 +1356,7 @@ router.post('/ocspChecker', function(req, res) {
 						data = {
 							error: err,
 							response: response,
-							command: cmd
+							command: response.command
 						}
 						if(err) {
 							res.json(data);
@@ -1381,16 +1381,16 @@ router.post('/ocspChecker', function(req, res) {
 	} else {
 		ocsp.query(req.body.cert, function(err, response, cmd) {
 			let usagedata = {
-                                action: 'OCSPPaste',
-                                err: err,
-                                headers: req.headers,
-                                ocsp: response
-                        }
-                        usageData(usagedata);
+				action: 'OCSPPaste',
+				err: err,
+				headers: req.headers,
+				ocsp: response
+			}
+			usageData(usagedata);
 			data = {
 				error: err,
 				response: response,
-				command: cmd
+				command: response.command
 			}
 			if(err) {
 				//console.log(data);

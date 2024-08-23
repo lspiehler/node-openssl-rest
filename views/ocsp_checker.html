@@ -158,9 +158,9 @@
 			
 			function openSSLCommand(command) {
 				//console.log(ocspresponse.command.cert.base64);
-				command = command.replace('ca.pem', '<a href="javascript: downloadText(ocspresponse.command.ca, \'ca.crt\', \'ca.crt\')">ca.crt</a>');
-				command = command.replace('ca.pem', '<a href="javascript: downloadText(ocspresponse.command.ca, \'ca.crt\', \'ca.crt\')">ca.crt</a>');
-				command = command.replace('cert.pem', '<a href="javascript: downloadText(ocspresponse.command.cert.base64, \'cert.crt\', \'cert.crt\')">cert.crt</a>');
+				command = command.replace('issuer.pem', '<a href="javascript: downloadText(ocspresponse.response.ca, \'ca.crt\', \'ca.crt\')">ca.crt</a>');
+				command = command.replace('issuer.pem', '<a href="javascript: downloadText(ocspresponse.response.ca, \'ca.crt\', \'ca.crt\')">ca.crt</a>');
+				command = command.replace('cert.pem', '<a href="javascript: downloadText(ocspresponse.response.cert.base64, \'cert.crt\', \'cert.crt\')">cert.crt</a>');
 				//alert(command);
 				return command;
 			}
@@ -182,10 +182,10 @@
 				var col0 = row.insertCell(0);
 				var col1 = row.insertCell(1);
 				col0.innerText = 'OpenSSL Command'
-				col1.innerHTML = openSSLCommand(resp.command.command);
+				col1.innerHTML = openSSLCommand(resp.response.command);
 				//console.log(resp.command.command);
 				try {
-					var ocspresp = parseOCSPResponse(resp.response);
+					var ocspresp = parseOCSPResponse(resp.response.data);
 					Object.keys(ocspresp).forEach(function (key) {
 						//console.log(item); // key
 						//console.log(lunch[item]); // value
@@ -213,7 +213,7 @@
 				var col0 = row.insertCell(0);
 				var col1 = row.insertCell(1);
 				col0.innerText = 'OCSP URI'
-				col1.innerText = resp.command.uri;
+				col1.innerText = resp.response.uri;
 				var method = getMethod();
 				//if(method=='download') {
 					var hostname = document.getElementById('hostname');
@@ -223,7 +223,7 @@
 					col0.innerText = 'Domain Name(s)'
 					col1.id = 'namescol';
 					try {
-						col1.innerHTML = showDomainNames(resp.command.cert)
+						col1.innerHTML = showDomainNames(resp.response.cert)
 					} catch(e) {
 					
 					}
@@ -275,9 +275,9 @@
 			function showAllDomains(type) {
 				var names = document.getElementById('namescol');
 				if(type=='cn') {
-					names.innerText = ocspresponse.command.cert.subject.commonName.join(', ');
+					names.innerText = ocspresponse.response.cert.subject.commonName.join(', ');
 				} else if(type='san') {
-					names.innerText = ocspresponse.command.cert.extensions.SANs.DNS.join(', ');
+					names.innerText = ocspresponse.response.cert.extensions.SANs.DNS.join(', ');
 				} else {
 				
 				}
