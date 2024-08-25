@@ -335,28 +335,29 @@
 				accordion.appendChild(tlshandshakebody);
 				div.appendChild(accordion);
 
-				let headers = [];
-				let keys = Object.keys(response.response.HTTPResponse.headers);
-				for(let i = 0; i < keys.length; i++) {
-					headers.push(keys[i] + ': ' + response.response.HTTPResponse.headers[keys[i]]);
+				if(response.response.HTTPResponse) {
+					let headers = [];
+					let keys = Object.keys(response.response.HTTPResponse.headers);
+					for(let i = 0; i < keys.length; i++) {
+						headers.push(keys[i] + ': ' + response.response.HTTPResponse.headers[keys[i]]);
+					}
+
+					//console.log(headers);
+
+					//var keydiv = document.createElement('div');
+					let headerstitle = document.createElement('h3');
+					headerstitle.innerText = 'HTML Headers';
+					let headersbody = document.createElement('div');
+					let pfheaders = document.createElement('pre');
+					pfheaders.style.whiteSpace = 'pre-wrap';
+					pfheaders.innerText = headers.join('\n');
+					//tlshandshakebody.style.whiteSpace = 'pre';
+					//tlshandshakebody.style.fontFamily = 'pre';
+					headersbody.appendChild(pfheaders);
+					accordion.appendChild(headerstitle);
+					accordion.appendChild(headersbody);
+					div.appendChild(accordion);
 				}
-
-				//console.log(headers);
-
-				//var keydiv = document.createElement('div');
-				let headerstitle = document.createElement('h3');
-				headerstitle.innerText = 'HTML Headers';
-				let headersbody = document.createElement('div');
-				let pfheaders = document.createElement('pre');
-				pfheaders.style.whiteSpace = 'pre-wrap';
-				pfheaders.innerText = headers.join('\n');
-				//tlshandshakebody.style.whiteSpace = 'pre';
-				//tlshandshakebody.style.fontFamily = 'pre';
-				headersbody.appendChild(pfheaders);
-				accordion.appendChild(headerstitle);
-				accordion.appendChild(headersbody);
-				div.appendChild(accordion);
-
 				$( accordion ).accordion({
 					collapsible: true,
 					active: false,
