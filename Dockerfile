@@ -96,10 +96,12 @@ WORKDIR ${INSTALLDIR_OPENSSL}/bin
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR_OPENSSL}/bin:${PATH}"
 
-ARG CACHE_DATE=2024-08-11-v7
+ARG CACHE_DATE=2024-08-24
 
 # update config to allow unsafe renegotiation
 RUN sed -i '/\[system_default_sect\]/a Options = UnsafeLegacyRenegotiation' /opt/openssl32/ssl/openssl.cnf
+
+#RUN sed -i '/\[openssl_init\]/a ssl_conf = ssl_sect' /etc/ssl/openssl.cnf && echo >> /etc/ssl/openssl.cnf && echo "[ssl_sect]" >> /etc/ssl/openssl.cnf && echo "system_default = system_default_sect" >> /etc/ssl/openssl.cnf && echo >> /etc/ssl/openssl.cnf && echo "[system_default_sect]" >> /etc/ssl/openssl.cnf  && echo "Options = UnsafeLegacyRenegotiation" >> /etc/ssl/openssl.cnf
 
 LABEL maintainer="Lyas Spiehler"
 
