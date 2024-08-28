@@ -17,6 +17,8 @@ var config = {
 	opensearchhost: process.env.OPENSEARCHHOST || false,
 
 	opensearchport: process.env.OPENSEARCHPORT || false,
+
+	opensearchport: process.env.SSCEPCONTAINER || 'node-sscep',
 	
 	opensslbinpath: process.env.OPENSSLBINPATH || '/opt/openssl32/bin/openssl'
 	//opensslbinpath: process.env.OPENSSLBINPATH || 'openssl'
