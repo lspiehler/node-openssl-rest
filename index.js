@@ -155,6 +155,13 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		let template = getTemplate();
 		res.render('csr_generator.html', template);
     });
+
+	app.get('/scep-request', function(req, res) {
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		console.log('HTTPS connection from ' + ip);
+		let template = getTemplate();
+		res.render('scep_request.html', template);
+    });
 	
 	app.get('/manage-certs', function(req, res) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;

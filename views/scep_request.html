@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+		<meta name="description" content="Generate a certificate signing request (CSR) online in just one click with support for multiple domain names using common names and subject alternative names. Choose from either a 2048 bit RSA key or a 256 bit ECC key.">
+		<meta name="keywords" content="csr generator, generate csr, generate certificate signing request, multiple domain, san, multiple common names, subject alternative names, ecc, rsa">
+		<meta name="author" content="Lyas Spiehler">
+		<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
+		<link rel="apple-touch-icon" sizes="57x57" href="/images/apple-icon-57x57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="/images/apple-icon-60x60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="/images/apple-icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="/images/apple-icon-76x76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="/images/apple-icon-114x114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="/images/apple-icon-120x120.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="/images/apple-icon-144x144.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="/images/apple-icon-152x152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png">
+		<link rel="icon" type="image/png" sizes="192x192"  href="/images/android-icon-192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+		<meta property="og:title" content="CertificateTools.com - CSR Generator">
+		<meta property="og:description" content="Generate a certificate signing request (CSR) online in just one click with support for multiple domain names using common names and subject alternative names. Choose from either a 2048 bit RSA key or a 256 bit ECC key.">
+		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
+		<meta property="og:url" content="https://certificatetools.com">
+		<meta property="og:site_name" content="CertificateTools.com">
+		<meta property="og:locale" content="en_US">
+		<meta property="og:type" content="website">
+		<meta name="msapplication-TileColor" content="#ffffff">
+		<meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
+		<meta name="theme-color" content="#ffffff">
+		<title>CSR Generator</title>
+		<script type="text/javascript" src="js/jquery/jquery.min.js"></script>
+		<link rel="stylesheet" href="js/jquery-ui/themes/base/jquery-ui.min.css">
+		<script type="text/javascript" src="js/bootstrap/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/jquery-ui/jquery-ui.min.js"></script>
+		<link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+		<link rel="stylesheet" href="/loader.css" />
+		<style>
+			input {
+				border: 0;
+				outline: 0;
+				background: transparent;
+				border-bottom: 2px solid #d4d3d3;
+				font-size: 30px;
+				/*width: 90% !important;*/
+				/*margin: auto;*/
+			}
+			input #id, #hostnames {
+				width: 90% !important;
+			}
+			textarea {
+				width: 90% !important;
+				white-space: pre;
+				word-wrap: normal;
+				overflow-wrap: normal;
+				overflow-x: auto;
+				font-family: Courier, monospace;
+				display: none;
+			}
+			div.ad {
+				text-align: center;
+			}
+			div.options {
+				text-align: center;
+			}
+			div#loading {
+				text-align: center;
+			}
+			body {
+				padding-top: 70px;
+			}
+			div.container {
+				width: 100%;
+				text-align: center;
+			}
+			div #loading {
+				display: none;
+			}
+			h1 {
+				text-align: center;
+			}
+			div.align-bottom {
+				display: table-cell;
+				vertical-align: bottom;
+			}
+		</style>
+		<script>
+                        var hosted = {{hosted}};
+                </script>
+                <!-- Global site tag (gtag.js) - Google Analytics -->
+                <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75343349-1"></script>
+                <script>
+                        if(hosted) {
+                                window.dataLayer = window.dataLayer || [];
+                                function gtag(){dataLayer.push(arguments);}
+                                gtag('js', new Date());
+
+                                gtag('config', 'UA-75343349-1');
+                        }
+                </script>
+		<script>
+			var storedkey;
+			var storedcsr;
+			var attempt = 0;
+			var maxattempts = 3;
+			function openSSLRESTAPI(api, data, callback) {
+				var request = new XMLHttpRequest();
+				request.open('POST', 'api/openssl/' + api, true);
+				request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+				
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						// Success!
+						var resp = JSON.parse(request.responseText);
+						if(resp.error) {
+							//console.log(resp);
+							callback(resp.error, resp);
+						} else {
+							callback(false, resp);
+						}
+						return;
+						//var key = document.getElementById('key');
+						//key.innerText = resp.command + '\r\n\r\n' + resp.key;
+						//var csroptions = getCSRParams();
+						//generateCSR(resp.key, csroptions);
+					} else {
+						// We reached our target server, but it returned an error
+						callback(resp, false);
+						return;
+					}
+				};
+
+				request.onerror = function(err) {
+					callback(err, false);
+					//console.log(err);
+					return;
+					// There was a connection error of some sort
+				};
+
+				request.send(JSON.stringify(data));
+			}
+			
+			function downloadText(text, filename, type) {
+				//alert(text);
+				googleAnalyticsEvent('Interaction', 'Download', type, '')
+				var form = document.getElementById('downloadtext');
+				form.action = 'api/openssl/returnDownload';
+				form.method = 'POST';
+				var datainput = document.getElementById('datainput');
+				//console.log(datainput);
+				if(datainput){
+				
+				} else {
+					datainput = document.createElement('textarea');
+					datainput.id = 'datainput';
+				}
+				datainput.name = "data"
+				datainput.innerHTML = text;
+				datainput.style.display = "none";
+				var filenameinput = document.getElementById('filenameinput');
+				if(filenameinput) {
+				
+				} else {
+					filenameinput = document.createElement('input');
+					filenameinput.id = 'filenameinput';
+				}
+				filenameinput.name = "filename"
+				filenameinput.value = filename;
+				filenameinput.type = "hidden";
+				form.appendChild(datainput);
+				form.appendChild(filenameinput);
+				form.submit();
+				
+				form.removeChild(datainput);
+				form.removeChild(filenameinput);
+			}
+			
+			function submitForm() {
+				//e.preventDefault();
+				googleAnalyticsEvent('Interaction', 'simpleCSR', '', '')
+				var output = document.getElementById('output');
+				var submit = document.getElementById('submit');
+				submit.disabled = true;
+				output.innerHTML = '';
+				showLoader(true);
+				getPrivateKey();
+			}
+			
+			function showLoader(enable) {
+				var loading = document.getElementById('loading');
+				if(enable) {
+					loading.style.display = 'block';
+				} else {
+					loading.style.display = 'none';
+				}
+			}
+			
+			function validateIPaddress(text) {
+				var ipformat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+				if(text.match(ipformat)) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+			
+			function getKeyType() {
+				var keytype = document.getElementsByClassName('keytype');
+				for(var i = 0; i <= keytype.length - 1; i++) {
+					if(keytype[i].checked) {
+						return keytype[i].value;
+					}
+				}
+			}
+			
+			function getPrivateKey() {
+				var hostnames = document.getElementById('hostnames');
+				var scepurl = document.getElementById('scepurl');
+				if(hostnames.value=='') {
+					showLoader(false);
+					var submit = document.getElementById('submit');
+					submit.disabled = false;
+					alert('You must enter at least one or more domain names.');
+					return false;
+				}
+
+				if(scepurl.value=='') {
+					showLoader(false);
+					var submit = document.getElementById('submit');
+					submit.disabled = false;
+					alert('You must enter SCEP URL');
+					return false;
+				}
+
+				var keyoptions = {
+					format: 'PKCS8'
+				}
+					
+				//console.log(getKeyType());
+				
+				if(getKeyType()=='ecc') {
+					keyoptions.curve = 'prime256v1';
+					openSSLRESTAPI('generateECCPrivateKey', keyoptions, function(err, response) {
+						if(err) {
+							console.log(response);
+						} else {
+							//console.log(response.key);
+							generateCSR(response);
+						}
+					});
+				} else {
+					keyoptions.rsa_keygen_bits = 2048;
+					openSSLRESTAPI('generateRSAPrivateKey', keyoptions, function(err, response) {
+						if(err) {
+							console.log(response);
+						} else {
+							//console.log(response.key);
+							generateCSR(response);
+						}
+					});
+				}
+			}
+			
+			function generateCSR(key) {
+				var passphrase = document.getElementById('passphrase');
+				var scepurl = document.getElementById('scepurl');
+				var domains = [];
+				var ips = [];
+				var hostnames = document.getElementById('hostnames');
+				var hostnamessplit = hostnames.value.split(',');
+				for(var i = 0; i <= hostnamessplit.length - 1; i++) {
+					var value = hostnamessplit[i].trim(' ');
+					domains.push(value);
+					if(validateIPaddress(value)) {
+						ips.push(value);
+					}
+				}
+				var csr = {
+					subject: {
+						commonName: domains[0]
+					},
+					extensions: {
+						SANs: {
+							DNS: domains
+						},
+						keyUsage: {
+							critical: true,
+							usages: [
+								'digitalSignature'
+							]
+						},
+						extendedKeyUsage: {
+							usages: [
+								'serverAuth'
+							]
+						}
+					},
+					hash: 'sha256',
+					string_mask: "nombstr"
+				}
+				if(passphrase.value!='') {
+					csr.requestAttributes = {
+            			challengePassword: passphrase.value
+					}
+				}
+				if(ips.length >= 1) {
+					csr.extensions.SANs.IP = ips;
+				}
+				var country = document.getElementById('country');
+				var state = document.getElementById('state');
+				var locality = document.getElementById('locality');
+				var organization = document.getElementById('organization');
+				if(country.value != "") {
+					csr.subject.countryName = country.value;
+				}
+				if(state.value != "") {
+					csr.subject.stateOrProvinceName = state.value;
+				}
+				if(locality.value != "") {
+					csr.subject.localityName = locality.value;
+				}
+				if(organization.value != "") {
+					csr.subject.organizationName = organization.value;
+				}
+				
+				if(getKeyType()=='rsa') {
+					csr.extensions.keyUsage.usages.push('keyEncipherment');
+					csr.extensions.extendedKeyUsage.usages.push('clientAuth');
+				} else {
+				
+				}
+				//console.log(csr);
+				var data = {
+					options: csr,
+					key: key.key,
+					sign: 'simplecsr'
+				}
+				//console.log(data);
+				openSSLRESTAPI('generateCSR', data, function(error, response) {
+					var submit = document.getElementById('submit');
+					submit.disabled = false;
+					let sceprequest = {
+						url: scepurl.value,
+						key: key.key,
+						csr: response.csr
+					}
+					openSSLRESTAPI('SCEPRequest', sceprequest, function(error, response) {
+						console.log(sceprequest);
+						console.log(response);
+					});
+					showOutput(key, response);
+				});
+			}
+			
+			function showOutput(key, csr) {
+				//console.log(key);
+				//console.log(csr);
+				storedkey = key;
+				storedcsr = csr;
+				var output = document.getElementById('output');
+				//output.innerText = key.key + csr.csr
+				showLoader(false);
+				var accordion = document.createElement('div');
+				accordion.id='accordion';
+				var downloadtitle = document.createElement('h3');
+				downloadtitle.innerText = 'Download';
+				accordion.appendChild(downloadtitle);
+				var downloadcontainer = document.createElement('div');
+				var downloadtext = document.createElement('p');
+				downloadcontainer.appendChild(downloadtext);
+				var list = document.createElement('ul');
+				downloadcontainer.appendChild(list);
+				
+				var item = document.createElement('li');
+				var keydownload = document.createElement('a');
+				keydownload.href = 'javascript: downloadText(storedkey.key, \'priv.key\', \'key\');';
+				keydownload.innerText = 'Private Key';
+				item.appendChild(keydownload);
+				list.appendChild(item);
+				
+				var item = document.createElement('li');
+				var csrdownload = document.createElement('a');
+				csrdownload.href = 'javascript: downloadText(storedcsr.csr, \'cert.csr\', \'csr\');';
+				csrdownload.innerText = 'Certificate Signing Request (CSR)';
+				downloadtext.appendChild(csrdownload);
+				item.appendChild(csrdownload);
+				list.appendChild(item);
+				
+				var item = document.createElement('li');
+				var configdownload = document.createElement('a');
+				configdownload.href = 'javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csr\');';
+				configdownload.innerText = 'OpenSSL CSR Config';
+				downloadtext.appendChild(configdownload);
+				item.appendChild(configdownload);
+				list.appendChild(item);
+				
+				accordion.appendChild(downloadcontainer);
+				var keytitle = document.createElement('h3');
+				keytitle.innerText = 'Private Key';
+				accordion.appendChild(keytitle);
+				var keycontainer = document.createElement('div');
+				var keytext = document.createElement('p');
+				keycontainer.appendChild(keytext);
+				keytext.innerText = key.key;
+				keytext.style.fontFamily = 'Courier, monospace';
+				accordion.appendChild(keycontainer);
+				
+				var cmdtitle = document.createElement('h3');
+				cmdtitle.innerText = 'OpenSSL Command(s)';
+				accordion.appendChild(cmdtitle);
+				var cmdcontainer = document.createElement('div');
+				var cmdtext = document.createElement('p');
+				cmdcontainer.appendChild(cmdtext);
+				try {
+					cmdtext.innerHTML = key.command.join('<br /><br />\r\n') + '<br /><br />\r\n' + csr.command.command.join('<br /><br />\r\n').replace('csrconfig.txt', '<a href="javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csrconfig\');">csrconfig.txt</a>');
+				} catch(e) {
+				
+				}
+				cmdtext.style.fontFamily = 'Courier, monospace';
+				accordion.appendChild(cmdcontainer);
+				
+				var csrconfigtitle = document.createElement('h3');
+				csrconfigtitle.innerText = 'OpenSSL CSR Config';
+				accordion.appendChild(csrconfigtitle);
+				var csrconfigcontainer = document.createElement('div');
+				var csrconfigtext = document.createElement('p');
+				csrconfigcontainer.appendChild(csrconfigtext);
+				csrconfigtext.innerText = csr.command.files.config;
+				console.log(csr.command);
+				csrconfigtext.style.fontFamily = 'Courier, monospace';
+				accordion.appendChild(csrconfigcontainer);
+				
+				var csrtitle = document.createElement('h3');
+				csrtitle.innerText = 'Certificate Signing Request (CSR)';
+				accordion.appendChild(csrtitle);
+				var csrcontainer = document.createElement('div');
+				var csrtext = document.createElement('p');
+				csrcontainer.appendChild(csrtext);
+				csrtext.innerText = csr.csr;
+				csrtext.style.fontFamily = 'Courier, monospace';
+				accordion.appendChild(csrcontainer);
+				
+				$( accordion ).accordion({
+							collapsible: true,
+							active: 4,
+							heightStyle: 'content'
+							//autoHeight:false
+						});
+				output.appendChild(accordion);
+				//console.log(key.command);
+				//console.log(csr.command);
+				var elmnt = document.getElementById("scrolltocerts");
+				elmnt.scrollIntoView(); 
+			}
+			
+			function googleAnalyticsEvent(category, action, label, value) {
+					if(hosted) {
+							gtag('event', action, {
+									'event_category': category,
+									'event_label': label,
+									'value': value
+							});
+					}
+			}
+			function addEventListeners() {
+				/*var methods = document.getElementsByClassName('methods');
+				for(var i = 0; i <= methods.length - 1; i++) {
+					methods[i].addEventListener("change", function(e){
+						//console.log(e.target);
+					});
+				}*/
+			}
+			function changeType(elem) {
+				console.log(elem.value);
+				let existingcsr = document.getElementById('existingcsr');
+				let csrpassphrase = document.getElementById('csrpassphrase');
+				let csrsans = document.getElementById('csrsans');
+				let csrcustomize = document.getElementById('csrcustomize');
+				if(elem.value=='existing') {
+					csrpassphrase.style.display = 'none';
+					csrsans.style.display = 'none';
+					csrcustomize.style.display = 'none';
+					existingcsr.style.display = 'block';
+				} else {
+					csrpassphrase.style.display = 'block';
+					csrsans.style.display = 'block';
+					csrcustomize.style.display = 'block';
+					existingcsr.style.display = 'none';
+				}
+			}
+		</script>
+	</head>
+	<body>
+		{{{header}}}
+		<form onsubmit="submitForm(); return false;">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-lg-1 col-md-1 col-sm-0 col-xs-0">
+
+				</div>
+				<div class="col-lg-6 col-md-6 col-sm-8 col-xs-12">
+					<div class="row">
+						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+							
+						</div>
+					</div>
+					<div style="display: none;" id="existing" class="row">
+
+					</div>
+					<div class="row">
+						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+							<div class="row">
+								<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+									<h1 class="display-1">SCEP Request</h1>
+								</div>
+							</div>
+							<div class="row options">
+								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+									<label for="rsatype" class="radio-inline">
+										<input onchange="changeType(this)" id="rsatype" class="keytype" value="rsa" type="radio" name="optradio" checked>
+										RSA
+									</label>
+								</div>
+								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+									<label for="ecctype" class="radio-inline">
+										<input onchange="changeType(this)" id="ecctype" class="keytype" value="ecc" type="radio" name="optradio">
+										ECC
+									</label>
+								</div>
+								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+									<label for="csrtype" class="radio-inline">
+										<input onchange="changeType(this)" id="csrtype" class="keytype" value="existing" type="radio" name="optradio">
+										Paste Existing CSR
+									</label>
+								</div>
+							</div>
+							<div class="row">
+								&nbsp;
+							</div>
+							<div class="row">
+								<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+									<div class="row">
+										<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+											<div class="row">
+												<div class="col-lg-10 col-md-9 col-sm-9 col-xs-8">
+													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
+													<div class="form-group">
+														<label for="scepurl">SCEP URL</label>
+														<input id="scepurl" type="text" class="form-control" placeholder="http://scep.mydomain.org">
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div id="existingcsr" style="display: none;" class="row">
+										<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+											<div class="row">
+												<div class="col-lg-10 col-md-9 col-sm-9 col-xs-8">
+													<div class="form-group">
+														<label for="csr">CSR</label>
+														<textarea class="form-control" rows="10" style="white-space: pre; word-wrap: normal; overflow-wrap: normal; overflow-x: auto; font-family: Courier, monospace;" title="csr" id="csr" placeholder="Paste CSR containing a valid challenge passphrase for the SCEP server"></textarea>
+													</div>
+												</div>
+												<div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 align-bottom">
+													<div class="form-group">
+														<label for="submit">&nbsp;</label>
+														<input id="submit" class="btn btn-primary btn-md form-control" type="submit" value="Submit"/>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div id="csrpassphrase" class="row">
+										<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+											<div class="row">
+												<div class="col-lg-10 col-md-9 col-sm-9 col-xs-8">
+													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
+													<div class="form-group">
+														<label for="passphrase">Challenge Passphrase</label>
+														<input id="passphrase" type="text" class="form-control">
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div id="csrsans" class="row">
+										<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+											<div class="row">
+												<div class="col-lg-10 col-md-9 col-sm-9 col-xs-8">
+													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
+													<div class="form-group">
+														<label for="hostnames">Domain Names</label>
+														<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com">
+													</div>
+												</div>
+												<div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 align-bottom">
+													<div class="form-group">
+														<label for="submit">&nbsp;</label>
+														<input id="submit" class="btn btn-primary btn-md form-control" type="submit" value="Submit"/>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div id="csrcustomize" class="row">
+										<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+											<div style="display: none;" id="customize">
+												<h3>Customize Additional Subject Attributes</h3>
+												<div>
+													<div class="form-group">
+														<label for="country">Country</label>
+														<input id="country" maxlength="2" type="text" class="form-control" placeholder="US">
+													</div>
+													<div class="form-group">
+														<label for="state">State</label>
+														<input id="state" type="text" class="form-control" placeholder="Louisiana">
+													</div>
+													<div class="form-group">
+														<label for="locality">Locality</label>
+														<input id="locality" type="text" class="form-control" placeholder="New Orleans">
+													</div>
+													<div class="form-group">
+														<label for="organization">Organization</label>
+														<input id="organization" type="text" class="form-control" placeholder="Certificate Tools">
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<hr id="scrolltocerts">
+							<div class="row">
+								<div id="loading" class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+									<div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+							&nbsp;
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+							<div id="output" class="row">
+						
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-4 col-md-4 col-sm-3 hidden-xs">
+					<div id="features" class="affix">
+						<div>
+						<script>
+							//var featurediv = document.getElementById('features');
+							//featurediv.style.height = window.innerHeight + 'px';
+						</script>
+						<h3 style="text-align: center;">Features</h3>
+						<ul>
+							<li>Includes support for multiple domain names (comma separated)</li>
+							<li>First domain name listed is used as the Common Name</li>
+							<li>All domain names entered are added as Subject Alternative Names</li>
+							<li>Choose from a 2048 bit RSA Key or 256 bit ECC Key</li>
+							<li>SHA-256 is used as the signature hash</li>
+							<li>Copy/Paste or download CSR and private key</li>
+							<li>CSR and key are generated using best practices and industry standards to avoid browser errors</li>
+							<li>The OpenSSL commands are shown and can be executed securely on a local system</li>
+							<li>Additional customizations and more powerful features are available using the <a href="/">Advanced x509 Generator</a></li>
+						</ul>
+						<div style="width: 100%; height: 325px;">
+						<!--<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+						<ins class="adsbygoogle"
+	        style="display:block"
+	      data-ad-client="ca-pub-4797561390067055"
+            data-ad-slot="1657746854"
+	         data-ad-format="auto"
+	       data-full-width-responsive="true"></ins>
+	<script>
+		(adsbygoogle = window.adsbygoogle || []).push({});
+	</script>-->
+						<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle"
+     style="display:block; text-align:center;"
+     data-ad-layout="in-article"
+     data-ad-format="fluid"
+     data-ad-client="ca-pub-4797561390067055"
+     data-ad-slot="2652044575"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+					</div>
+					</div>
+					</div>
+				</div>
+			</div>
+		</form>
+		<br />
+		<div class="ad">
+		</div>
+		<form id="downloadtext"></form>
+	</body>
+	<script>
+		addEventListeners();
+		document.getElementById('hostnames').focus();
+		$( function() {
+			$( "#customize" ).accordion({
+				collapsible: true,
+				active: false
+			});
+			
+		} );
+		document.getElementById('customize').style.display = 'block';
+	</script>
+</html>

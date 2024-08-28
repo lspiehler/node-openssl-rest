@@ -27,6 +27,7 @@ var html = {
 		'               <ul class="dropdown-menu">',
 		'                   <li><a href="/csr-generator">CSR Generator</a></li>',
 		'                   <li><a href="/">Certificate Generator</a></li>',
+		'                   <li><a href="/scep-request">SCEP Request</a></li>',
 		'               </ul>',
 		'           </li>',
 		'			<li class="dropdown">',

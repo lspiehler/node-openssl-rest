@@ -15,6 +15,7 @@ var md5 = require('md5');
 var ocsplib = require('../lib/ocsp_checker.js');
 var decoderlib = require('../lib/certificate_decoder.js');
 const https = require('node:https');
+const http = require('node:http');
 const moment = require('moment');
 
 /*var rsakeyoptions = {
@@ -987,6 +988,33 @@ var httpRequest2 = function(params, callback) {
     req.end()
 }
 
+var SCEPHTTPRequest = function(params, callback) {
+    //console.log(params);
+    const req = http.request(params.options, res => {
+        var resp = [];
+
+        res.on('data', function(data) {
+			//console.log(data);
+            resp.push(data);
+        });
+
+        res.on('end', function() {
+            callback(false, {statusCode: res.statusCode, options: params.options, headers: res.headers, body: Buffer.concat(resp).toString()});
+        });
+    })
+
+    req.on('error', function(err) {
+        console.log(err.toString());
+        callback(false, {statusCode: false, options: params.options, headers: false, body: JSON.stringify({ error: err.toString()})});
+    })
+
+    if(params.options.method=='POST') {
+        req.write(JSON.stringify(params.body));
+    }
+
+    req.end()
+}
+
 function httpRequest(options, callback) {
 	const req = https.request(options, (res) => {
 		//console.log('statusCode:', res.statusCode);
@@ -1064,6 +1092,33 @@ var usageData = function(data) {
 		});
 	}
 }
+
+router.post('/SCEPRequest', function(req, res) {
+	const options = {
+		options: {
+			hostname: 'node-sscep',
+			port: 3000,
+			path: '/scep',
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+			//sigalgs: 'ECDSA+SHA256,ECDSA+SHA384,ECDSA+SHA512,ed25519,ed448,RSA-PSS+SHA256,RSA-PSS+SHA384,RSA-PSS+SHA512,rsa_pss_rsae_sha256,rsa_pss_rsae_sha384,rsa_pss_rsae_sha512,RSA+SHA256,RSA+SHA384,RSA+SHA512,ECDSA+SHA224,RSA+SHA224,DSA+SHA224,DSA+SHA256,DSA+SHA384,DSA+SHA512'
+		},
+		body: req.body
+	};
+	SCEPHTTPRequest(options, function(err, httpresponse) {
+		let response = {
+			error: false
+		}
+		if(err) {
+			response.error = err
+		} else {
+			response.response = httpresponse
+		}
+		res.json(response);
+	});
+});
 
 router.post('/generateCSR', function(req, res) {
 	sendRequestToOS('x509', req, function(err, result){});
