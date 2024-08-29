@@ -1096,8 +1096,8 @@ var usageData = function(data) {
 router.post('/SCEPRequest', function(req, res) {
 	const options = {
 		options: {
-			hostname: 'node-sscep',
-			port: 3000,
+			hostname: config.sscepapihost,
+			port: config.sscepapiport,
 			path: '/scep',
 			method: 'POST',
 			headers: {

@@ -103,6 +103,7 @@
 		<script>
 			var storedkey;
 			var storedcsr;
+			var storedscep;
 			var attempt = 0;
 			var maxattempts = 3;
 			function openSSLRESTAPI(api, data, callback) {
@@ -182,10 +183,25 @@
 				googleAnalyticsEvent('Interaction', 'simpleCSR', '', '')
 				var output = document.getElementById('output');
 				var submit = document.getElementById('submit');
+				var scepurl = document.getElementById('scepurl');
+				let keytype = getKeyType();
+
+				if(scepurl.value=='') {
+					showLoader(false);
+					var submit = document.getElementById('submit');
+					submit.disabled = false;
+					alert('You must enter SCEP URL');
+					return false;
+				}
+
 				submit.disabled = true;
 				output.innerHTML = '';
 				showLoader(true);
-				getPrivateKey();
+				if(keytype=='existing') {
+					alert('handle existing key');
+				} else {
+					getPrivateKey();
+				}
 			}
 			
 			function showLoader(enable) {
@@ -216,21 +232,14 @@
 			}
 			
 			function getPrivateKey() {
+				var output = document.getElementById('output');
+				output.innerHTML = '';
 				var hostnames = document.getElementById('hostnames');
-				var scepurl = document.getElementById('scepurl');
 				if(hostnames.value=='') {
 					showLoader(false);
 					var submit = document.getElementById('submit');
 					submit.disabled = false;
 					alert('You must enter at least one or more domain names.');
-					return false;
-				}
-
-				if(scepurl.value=='') {
-					showLoader(false);
-					var submit = document.getElementById('submit');
-					submit.disabled = false;
-					alert('You must enter SCEP URL');
 					return false;
 				}
 
@@ -338,27 +347,41 @@
 					sign: 'simplecsr'
 				}
 				//console.log(data);
-				openSSLRESTAPI('generateCSR', data, function(error, response) {
+				openSSLRESTAPI('generateCSR', data, function(error, csrresponse) {
 					var submit = document.getElementById('submit');
 					submit.disabled = false;
 					let sceprequest = {
 						url: scepurl.value,
 						key: key.key,
-						csr: response.csr
+						csr: csrresponse.csr
 					}
 					openSSLRESTAPI('SCEPRequest', sceprequest, function(error, response) {
-						console.log(sceprequest);
-						console.log(response);
+						//console.log(sceprequest);
+						scepresponse = JSON.parse(response.response.body);
+						if(scepresponse.error) {
+							if(scepresponse.error.indexOf('Error: connect ECONNREFUSED') >= 0) {
+								alert('Failed to communicate with SCEP request container: ' + scepresponse.error + '. Please contact the administrator.');
+							} else if(scepresponse.error.indexOf('error reading PKCS#7 data') >= 0) {
+								alert('The SSCEP process returned the following error: ' + scepresponse.error.replace('/usr/local/bin/sscep: ', '') + '. Please check your challenge passphrase. If it appears to be correct, check you SCEP server logs for errors.');
+							} else if(scepresponse.error.indexOf('error while sending message') >= 0) {
+								alert('The SSCEP process returned the following error: ' + scepresponse.error.replace('/usr/local/bin/sscep: ', '') + '. Please check your SCEP URL. If it appears to be correct, check you SCEP server logs for errors.');
+							} else {
+								alert(scepresponse.error);
+							}
+							showLoader(false);
+							return;
+						}
+						showOutput(key, csrresponse, scepresponse.data);
 					});
-					showOutput(key, response);
 				});
 			}
 			
-			function showOutput(key, csr) {
+			function showOutput(key, csr, scep) {
 				//console.log(key);
-				//console.log(csr);
+				//console.log(scep);
 				storedkey = key;
 				storedcsr = csr;
+				storedscep = scep;
 				var output = document.getElementById('output');
 				//output.innerText = key.key + csr.csr
 				showLoader(false);
@@ -395,6 +418,22 @@
 				downloadtext.appendChild(configdownload);
 				item.appendChild(configdownload);
 				list.appendChild(item);
+
+				var item = document.createElement('li');
+				var configdownload = document.createElement('a');
+				configdownload.href = 'javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csr\');';
+				configdownload.innerText = 'OpenSSL CSR Config';
+				downloadtext.appendChild(configdownload);
+				item.appendChild(configdownload);
+				list.appendChild(item);
+
+				var item = document.createElement('li');
+				var configdownload = document.createElement('a');
+				configdownload.href = 'javascript: downloadText(storedscep.cert, \'cert.crt\', \'crt\');';
+				configdownload.innerText = 'SCEP Certificate';
+				downloadtext.appendChild(configdownload);
+				item.appendChild(configdownload);
+				list.appendChild(item);
 				
 				accordion.appendChild(downloadcontainer);
 				var keytitle = document.createElement('h3');
@@ -428,7 +467,7 @@
 				var csrconfigtext = document.createElement('p');
 				csrconfigcontainer.appendChild(csrconfigtext);
 				csrconfigtext.innerText = csr.command.files.config;
-				console.log(csr.command);
+				//console.log(csr.command);
 				csrconfigtext.style.fontFamily = 'Courier, monospace';
 				accordion.appendChild(csrconfigcontainer);
 				
@@ -441,10 +480,32 @@
 				csrtext.innerText = csr.csr;
 				csrtext.style.fontFamily = 'Courier, monospace';
 				accordion.appendChild(csrcontainer);
+
+				var sscepcommandstitle = document.createElement('h3');
+				sscepcommandstitle.innerText = 'SSCEP Commands';
+				accordion.appendChild(sscepcommandstitle);
+				var sscepcommandscontainer = document.createElement('div');
+				var sscepcommandstext = document.createElement('p');
+				sscepcommandscontainer.appendChild(sscepcommandstext);
+				//console.log(scep.command);
+				sscepcommandstext.innerHTML = scep.command.join('<br /><br />\r\n');
+				sscepcommandstext.style.fontFamily = 'Courier, monospace';
+				accordion.appendChild(sscepcommandscontainer);
+
+				var sscepcerttitle = document.createElement('h3');
+				sscepcerttitle.innerText = 'SCEP Certificate';
+				accordion.appendChild(sscepcerttitle);
+				var sscepcertcontainer = document.createElement('div');
+				var sscepcertstext = document.createElement('p');
+				sscepcertcontainer.appendChild(sscepcertstext);
+				//console.log(scep.command);
+				sscepcertstext.innerText = scep.cert;
+				sscepcertstext.style.fontFamily = 'Courier, monospace';
+				accordion.appendChild(sscepcertcontainer);
 				
 				$( accordion ).accordion({
 							collapsible: true,
-							active: 4,
+							active: 6,
 							heightStyle: 'content'
 							//autoHeight:false
 						});
@@ -473,7 +534,7 @@
 				}*/
 			}
 			function changeType(elem) {
-				console.log(elem.value);
+				//console.log(elem.value);
 				let existingcsr = document.getElementById('existingcsr');
 				let csrpassphrase = document.getElementById('csrpassphrase');
 				let csrsans = document.getElementById('csrsans');
@@ -548,7 +609,7 @@
 													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
 													<div class="form-group">
 														<label for="scepurl">SCEP URL</label>
-														<input id="scepurl" type="text" class="form-control" placeholder="http://scep.mydomain.org">
+														<input id="scepurl" type="text" class="form-control" value="http://cyopki.com/scep/9yHXxExLBD" placeholder="http://scep.mydomain.org">
 													</div>
 												</div>
 											</div>
@@ -579,7 +640,7 @@
 													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
 													<div class="form-group">
 														<label for="passphrase">Challenge Passphrase</label>
-														<input id="passphrase" type="text" class="form-control">
+														<input id="passphrase" type="text" value="ZXEFH4I7FPSXK2UY" class="form-control">
 													</div>
 												</div>
 											</div>
@@ -592,7 +653,7 @@
 													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
 													<div class="form-group">
 														<label for="hostnames">Domain Names</label>
-														<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com">
+														<input id="hostnames" type="text" class="form-control" value="sceptest.com" placeholder="google.com, www.google.com">
 													</div>
 												</div>
 												<div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 align-bottom">
@@ -652,50 +713,39 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-lg-4 col-md-4 col-sm-3 hidden-xs">
+				<div class="col-lg-3 col-md-3 col-sm-3 hidden-xs">
 					<div id="features" class="affix">
 						<div>
-						<script>
-							//var featurediv = document.getElementById('features');
-							//featurediv.style.height = window.innerHeight + 'px';
-						</script>
-						<h3 style="text-align: center;">Features</h3>
-						<ul>
-							<li>Includes support for multiple domain names (comma separated)</li>
-							<li>First domain name listed is used as the Common Name</li>
-							<li>All domain names entered are added as Subject Alternative Names</li>
-							<li>Choose from a 2048 bit RSA Key or 256 bit ECC Key</li>
-							<li>SHA-256 is used as the signature hash</li>
-							<li>Copy/Paste or download CSR and private key</li>
-							<li>CSR and key are generated using best practices and industry standards to avoid browser errors</li>
-							<li>The OpenSSL commands are shown and can be executed securely on a local system</li>
-							<li>Additional customizations and more powerful features are available using the <a href="/">Advanced x509 Generator</a></li>
-						</ul>
-						<div style="width: 100%; height: 325px;">
-						<!--<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-						<ins class="adsbygoogle"
-	        style="display:block"
-	      data-ad-client="ca-pub-4797561390067055"
-            data-ad-slot="1657746854"
-	         data-ad-format="auto"
-	       data-full-width-responsive="true"></ins>
-	<script>
-		(adsbygoogle = window.adsbygoogle || []).push({});
-	</script>-->
-						<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<ins class="adsbygoogle"
-     style="display:block; text-align:center;"
-     data-ad-layout="in-article"
-     data-ad-format="fluid"
-     data-ad-client="ca-pub-4797561390067055"
-     data-ad-slot="2652044575"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-					</div>
-					</div>
+							<script>
+								//var featurediv = document.getElementById('features');
+								//featurediv.style.height = window.innerHeight + 'px';
+							</script>
+							<h3 style="text-align: center;">Features</h3>
+							<ul>
+								<li>This site uses <a target="_blank" href="https://github.com/certnanny/sscep">SSCEP</a> to send SCEP certificate requests</li>
+								<li>First domain name listed is used as the Common Name</li>
+								<li>All domain names entered are added as Subject Alternative Names</li>
+								<li>Choose from a 2048 bit RSA Key or 256 bit ECC Key</li>
+								<li>SHA-256 is used as the signature hash</li>
+								<li>The OpenSSL and SSCEP commands are shown and can be executed securely on a local system</li>
+								<li>A CSR may be uploaded, but must require a valid challenge passphrase. Some SCEP servers require string to be encoded as a "PrintableString". These options and more are available using the <a href="/">Advanced CSR Generator</a></li>
+							</ul>
+							<div style="width: 100%; height: 325px;">
+								<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+								<ins class="adsbygoogle"
+									style="display:block; text-align:center;"
+									data-ad-layout="in-article"
+									data-ad-format="fluid"
+									data-ad-client="ca-pub-4797561390067055"
+									data-ad-slot="2652044575"></ins>
+								<script>
+									(adsbygoogle = window.adsbygoogle || []).push({});
+								</script>
+							</div>
+						</div>
 					</div>
 				</div>
+				<div class="col-lg-1 col-md-1 hidden-sm hidden-xs"></div>
 			</div>
 		</form>
 		<br />
