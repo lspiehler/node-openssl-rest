@@ -297,6 +297,81 @@ router.get('/getAvailableCurves', function(req, res) {
 	});
 });
 
+router.post('/parseCSR', function(req, res) {
+	openssl2.csr.parse({csr: req.body.csr}, function(err, result, command) {
+		if(err) {
+			res.json({
+				error: err,
+				csr: result,
+				command: command
+			});
+		} else {
+			res.json({
+				error: false,
+				csr: result,
+				command: command
+			});
+		}
+	});
+});
+
+router.post('/importPrivateKey', function(req, res) {
+	openssl.importRSAPrivateKey(req.body.key, req.body.password, function(err, key, cmd) {
+		if(err) {
+			console.log(err);
+			if(err.indexOf('maybe wrong password') >= 0) {
+				res.json({
+					error: 'password',
+					key: false
+				});
+				return;
+			}
+			openssl.importECCPrivateKey(req.body.key, req.body.password, function(err, key, cmd) {
+				if(err) {
+					console.log(err);
+					if(err.indexOf('maybe wrong password') >= 0) {
+						res.json({
+							error: 'password',
+							key: false
+						});
+						return;
+					}
+					openssl2.keypair.importOQSKey({key: req.body.key, password: req.body.password}, function(err, key, cmd) {
+						console.log(err);
+						if(err) {
+							if(err.indexOf('maybe wrong password') >= 0) {
+								res.json({
+									error: 'password',
+									key: false
+								});
+							} else {
+								res.json({
+									error: err
+								});
+							}
+						} else {
+							res.json({
+								error: false,
+								key: key
+							});
+						}
+					});
+				} else {
+					res.json({
+						error: false,
+						key: key
+					});
+				}
+			});
+		} else {
+			res.json({
+				error: false,
+				key: key
+			});
+		}
+	});
+});
+
 router.get('/issuer/:ca', function(req, res) {
 	let cadir = getCADir(req);
 	fs.stat(cadir + '/' + req.params.ca + '/ca.der', function(err, stat) {

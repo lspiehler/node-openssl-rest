@@ -104,6 +104,7 @@
 			var storedkey;
 			var storedcsr;
 			var storedscep;
+			var keypass = '';
 			var attempt = 0;
 			var maxattempts = 3;
 			function openSSLRESTAPI(api, data, callback) {
@@ -145,7 +146,7 @@
 			
 			function downloadText(text, filename, type) {
 				//alert(text);
-				googleAnalyticsEvent('Interaction', 'Download', type, '')
+				//googleAnalyticsEvent('Interaction', 'Download', type, '')
 				var form = document.getElementById('downloadtext');
 				form.action = 'api/openssl/returnDownload';
 				form.method = 'POST';
@@ -177,31 +178,68 @@
 				form.removeChild(datainput);
 				form.removeChild(filenameinput);
 			}
+
+			function disableSubmit(disabled) {
+				let submit = document.getElementsByName('submit');
+				for(let i = 0; i < submit.length; i++) {
+					submit[i].style.disabled = disabled
+				}
+			}
 			
 			function submitForm() {
 				//e.preventDefault();
-				googleAnalyticsEvent('Interaction', 'simpleCSR', '', '')
+				//googleAnalyticsEvent('Interaction', 'simpleCSR', '', '')
 				var output = document.getElementById('output');
-				var submit = document.getElementById('submit');
 				var scepurl = document.getElementById('scepurl');
 				let keytype = getKeyType();
 
 				if(scepurl.value=='') {
 					showLoader(false);
-					var submit = document.getElementById('submit');
-					submit.disabled = false;
+					disableSubmit(false);
 					alert('You must enter SCEP URL');
 					return false;
 				}
 
-				submit.disabled = true;
+				disableSubmit(true);
 				output.innerHTML = '';
 				showLoader(true);
 				if(keytype=='existing') {
-					alert('handle existing key');
+					let key = document.getElementById('key');
+					processKey({key: key.value, password: keypass}, function(err, processedkey) {
+						if(err) {
+							disableSubmit(false);
+							showLoader(false);
+							//alert(err);
+							if(err == 'password') {
+								//alert('show password prompt and update password');
+								$( "#passworddialog" ).dialog("open");
+							} else {
+								alert('Invalid private key!');
+							}
+						} else {
+							processCSR(processedkey);
+						}
+					});
 				} else {
 					getPrivateKey();
 				}
+			}
+
+			function updatePassword(){
+				let passwordprompt = document.getElementById('passwordprompt');
+				keypass = passwordprompt.value;
+				$( "#passworddialog" ).dialog("close");
+				submitForm();
+			}
+
+			function processKey(params, callback) {
+				openSSLRESTAPI('importPrivateKey', params, function(error, keyresponse) {
+					if(keyresponse.error) {
+						callback(keyresponse.error, false);
+					} else {
+						callback(false, keyresponse.key);
+					}
+				});
 			}
 			
 			function showLoader(enable) {
@@ -230,6 +268,63 @@
 					}
 				}
 			}
+
+			function processCSR(key) {
+				//alert('handle existing key');
+				let csr = document.getElementById('csr');
+				//let key = document.getElementById('key');
+				var submit = document.getElementById('submit');
+				var scepurl = document.getElementById('scepurl');
+				disableSubmit(true);
+				openSSLRESTAPI('parseCSR', {csr: csr.value}, function(err, response) {
+					if(err) {
+						disableSubmit(false);
+						showLoader(false);
+						alert('Failed to read CSR:' + response.error)
+					} else {
+						/*if(response.csr.data.attributes.hasOwnProperty('challengePassword')) {
+
+						} else {
+
+						}*/
+						let sceprequest = {
+							url: scepurl.value,
+							key: key,
+							csr: csr.value
+						}
+						processSCEPRequest(sceprequest, function(err, result) {
+							if(err) {
+								disableSubmit(false);
+								showLoader(false);
+								alert(err);
+							} else {
+								showOutput(key.value, csr.value, scepresponse.data);
+							}
+						});
+					}
+				});
+			}
+
+			function processSCEPRequest(sceprequest, callback) {
+				openSSLRESTAPI('SCEPRequest', sceprequest, function(error, response) {
+					//console.log(sceprequest);
+					scepresponse = JSON.parse(response.response.body);
+					if(scepresponse.error) {
+						if(scepresponse.error.indexOf('Error: connect ECONNREFUSED') >= 0) {
+							callback('Failed to communicate with SCEP request container: ' + scepresponse.error.replace('\n', '') + '. Please contact the administrator.', false);
+						} else if(scepresponse.error.indexOf('error reading PKCS#7 data') >= 0) {
+							callback('The SSCEP process returned the following error: ' + scepresponse.error.replace('/usr/local/bin/sscep: ', '').replace('\n', '') + '. Please check your challenge passphrase. If it appears to be correct, check you SCEP server logs for errors.', false);
+						} else if(scepresponse.error.indexOf('error while sending message') >= 0) {
+							callback('The SSCEP process returned the following error: ' + scepresponse.error.replace('/usr/local/bin/sscep: ', '').replace('\n', '') + '. Please check your SCEP URL. If it appears to be correct, check you SCEP server logs for errors.', false);
+						} else {
+							callback(scepresponse.error);
+						}
+					} else {
+						callback(false, scepresponse.data);
+						//showOutput(key, csrresponse, scepresponse.data);
+					}
+				});
+			}
 			
 			function getPrivateKey() {
 				var output = document.getElementById('output');
@@ -238,7 +333,7 @@
 				if(hostnames.value=='') {
 					showLoader(false);
 					var submit = document.getElementById('submit');
-					submit.disabled = false;
+					disableSubmit(false);
 					alert('You must enter at least one or more domain names.');
 					return false;
 				}
@@ -273,6 +368,7 @@
 			}
 			
 			function generateCSR(key) {
+				var submit = document.getElementById('submit');
 				var passphrase = document.getElementById('passphrase');
 				var scepurl = document.getElementById('scepurl');
 				var domains = [];
@@ -348,30 +444,20 @@
 				}
 				//console.log(data);
 				openSSLRESTAPI('generateCSR', data, function(error, csrresponse) {
-					var submit = document.getElementById('submit');
-					submit.disabled = false;
+					disableSubmit(false);
 					let sceprequest = {
 						url: scepurl.value,
 						key: key.key,
 						csr: csrresponse.csr
 					}
-					openSSLRESTAPI('SCEPRequest', sceprequest, function(error, response) {
-						//console.log(sceprequest);
-						scepresponse = JSON.parse(response.response.body);
-						if(scepresponse.error) {
-							if(scepresponse.error.indexOf('Error: connect ECONNREFUSED') >= 0) {
-								alert('Failed to communicate with SCEP request container: ' + scepresponse.error + '. Please contact the administrator.');
-							} else if(scepresponse.error.indexOf('error reading PKCS#7 data') >= 0) {
-								alert('The SSCEP process returned the following error: ' + scepresponse.error.replace('/usr/local/bin/sscep: ', '') + '. Please check your challenge passphrase. If it appears to be correct, check you SCEP server logs for errors.');
-							} else if(scepresponse.error.indexOf('error while sending message') >= 0) {
-								alert('The SSCEP process returned the following error: ' + scepresponse.error.replace('/usr/local/bin/sscep: ', '') + '. Please check your SCEP URL. If it appears to be correct, check you SCEP server logs for errors.');
-							} else {
-								alert(scepresponse.error);
-							}
+					processSCEPRequest(sceprequest, function(err, result) {
+						if(err) {
+							disableSubmit(false);
 							showLoader(false);
-							return;
+							alert(err);
+						} else {
+							showOutput(key, csrresponse, scepresponse.data);	
 						}
-						showOutput(key, csrresponse, scepresponse.data);
 					});
 				});
 			}
@@ -379,6 +465,9 @@
 			function showOutput(key, csr, scep) {
 				//console.log(key);
 				//console.log(scep);
+				let keytype = getKeyType();
+				var submit = document.getElementById('submit');
+				disableSubmit(false);
 				storedkey = key;
 				storedcsr = csr;
 				storedscep = scep;
@@ -403,83 +492,88 @@
 				item.appendChild(keydownload);
 				list.appendChild(item);
 				
-				var item = document.createElement('li');
-				var csrdownload = document.createElement('a');
-				csrdownload.href = 'javascript: downloadText(storedcsr.csr, \'cert.csr\', \'csr\');';
-				csrdownload.innerText = 'Certificate Signing Request (CSR)';
-				downloadtext.appendChild(csrdownload);
-				item.appendChild(csrdownload);
-				list.appendChild(item);
-				
-				var item = document.createElement('li');
-				var configdownload = document.createElement('a');
-				configdownload.href = 'javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csr\');';
-				configdownload.innerText = 'OpenSSL CSR Config';
-				downloadtext.appendChild(configdownload);
-				item.appendChild(configdownload);
-				list.appendChild(item);
+				if(keytype != 'existing') {
+					var item = document.createElement('li');
+					var csrdownload = document.createElement('a');
+					csrdownload.href = 'javascript: downloadText(storedcsr.csr, \'cert.csr\', \'csr\');';
+					csrdownload.innerText = 'Certificate Signing Request (CSR)';
+					downloadtext.appendChild(csrdownload);
+					item.appendChild(csrdownload);
+					list.appendChild(item);
+					
+					var item = document.createElement('li');
+					var configdownload = document.createElement('a');
+					configdownload.href = 'javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csr\');';
+					configdownload.innerText = 'OpenSSL CSR Config';
+					downloadtext.appendChild(configdownload);
+					item.appendChild(configdownload);
+					list.appendChild(item);
+
+					var item = document.createElement('li');
+					var configdownload = document.createElement('a');
+					configdownload.href = 'javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csr\');';
+					configdownload.innerText = 'OpenSSL CSR Config';
+					downloadtext.appendChild(configdownload);
+					item.appendChild(configdownload);
+					list.appendChild(item);
+				}
 
 				var item = document.createElement('li');
-				var configdownload = document.createElement('a');
-				configdownload.href = 'javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csr\');';
-				configdownload.innerText = 'OpenSSL CSR Config';
-				downloadtext.appendChild(configdownload);
-				item.appendChild(configdownload);
-				list.appendChild(item);
-
-				var item = document.createElement('li');
-				var configdownload = document.createElement('a');
-				configdownload.href = 'javascript: downloadText(storedscep.cert, \'cert.crt\', \'crt\');';
-				configdownload.innerText = 'SCEP Certificate';
-				downloadtext.appendChild(configdownload);
-				item.appendChild(configdownload);
+				var certdownload = document.createElement('a');
+				certdownload.href = 'javascript: downloadText(storedscep.cert, \'cert.crt\', \'crt\');';
+				certdownload.innerText = 'SCEP Certificate';
+				downloadtext.appendChild(certdownload);
+				item.appendChild(certdownload);
 				list.appendChild(item);
 				
 				accordion.appendChild(downloadcontainer);
-				var keytitle = document.createElement('h3');
-				keytitle.innerText = 'Private Key';
-				accordion.appendChild(keytitle);
-				var keycontainer = document.createElement('div');
-				var keytext = document.createElement('p');
-				keycontainer.appendChild(keytext);
-				keytext.innerText = key.key;
-				keytext.style.fontFamily = 'Courier, monospace';
-				accordion.appendChild(keycontainer);
-				
-				var cmdtitle = document.createElement('h3');
-				cmdtitle.innerText = 'OpenSSL Command(s)';
-				accordion.appendChild(cmdtitle);
-				var cmdcontainer = document.createElement('div');
-				var cmdtext = document.createElement('p');
-				cmdcontainer.appendChild(cmdtext);
-				try {
-					cmdtext.innerHTML = key.command.join('<br /><br />\r\n') + '<br /><br />\r\n' + csr.command.command.join('<br /><br />\r\n').replace('csrconfig.txt', '<a href="javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csrconfig\');">csrconfig.txt</a>');
-				} catch(e) {
-				
+
+				if(keytype != 'existing') {
+					var keytitle = document.createElement('h3');
+					keytitle.innerText = 'Private Key';
+					accordion.appendChild(keytitle);
+					var keycontainer = document.createElement('div');
+					var keytext = document.createElement('p');
+					keycontainer.appendChild(keytext);
+					keytext.innerText = key.key;
+					keytext.style.fontFamily = 'Courier, monospace';
+					accordion.appendChild(keycontainer);
+					
+					var cmdtitle = document.createElement('h3');
+					cmdtitle.innerText = 'OpenSSL Command(s)';
+					accordion.appendChild(cmdtitle);
+					var cmdcontainer = document.createElement('div');
+					var cmdtext = document.createElement('p');
+					cmdcontainer.appendChild(cmdtext);
+					try {
+						cmdtext.innerHTML = key.command.join('<br /><br />\r\n') + '<br /><br />\r\n' + csr.command.command.join('<br /><br />\r\n').replace('csrconfig.txt', '<a href="javascript: downloadText(storedcsr.command.files.config, \'csrconfig.txt\', \'csrconfig\');">csrconfig.txt</a>');
+					} catch(e) {
+					
+					}
+					cmdtext.style.fontFamily = 'Courier, monospace';
+					accordion.appendChild(cmdcontainer);
+					
+					var csrconfigtitle = document.createElement('h3');
+					csrconfigtitle.innerText = 'OpenSSL CSR Config';
+					accordion.appendChild(csrconfigtitle);
+					var csrconfigcontainer = document.createElement('div');
+					var csrconfigtext = document.createElement('p');
+					csrconfigcontainer.appendChild(csrconfigtext);
+					csrconfigtext.innerText = csr.command.files.config;
+					//console.log(csr.command);
+					csrconfigtext.style.fontFamily = 'Courier, monospace';
+					accordion.appendChild(csrconfigcontainer);
+					
+					var csrtitle = document.createElement('h3');
+					csrtitle.innerText = 'Certificate Signing Request (CSR)';
+					accordion.appendChild(csrtitle);
+					var csrcontainer = document.createElement('div');
+					var csrtext = document.createElement('p');
+					csrcontainer.appendChild(csrtext);
+					csrtext.innerText = csr.csr;
+					csrtext.style.fontFamily = 'Courier, monospace';
+					accordion.appendChild(csrcontainer);
 				}
-				cmdtext.style.fontFamily = 'Courier, monospace';
-				accordion.appendChild(cmdcontainer);
-				
-				var csrconfigtitle = document.createElement('h3');
-				csrconfigtitle.innerText = 'OpenSSL CSR Config';
-				accordion.appendChild(csrconfigtitle);
-				var csrconfigcontainer = document.createElement('div');
-				var csrconfigtext = document.createElement('p');
-				csrconfigcontainer.appendChild(csrconfigtext);
-				csrconfigtext.innerText = csr.command.files.config;
-				//console.log(csr.command);
-				csrconfigtext.style.fontFamily = 'Courier, monospace';
-				accordion.appendChild(csrconfigcontainer);
-				
-				var csrtitle = document.createElement('h3');
-				csrtitle.innerText = 'Certificate Signing Request (CSR)';
-				accordion.appendChild(csrtitle);
-				var csrcontainer = document.createElement('div');
-				var csrtext = document.createElement('p');
-				csrcontainer.appendChild(csrtext);
-				csrtext.innerText = csr.csr;
-				csrtext.style.fontFamily = 'Courier, monospace';
-				accordion.appendChild(csrcontainer);
 
 				var sscepcommandstitle = document.createElement('h3');
 				sscepcommandstitle.innerText = 'SSCEP Commands';
@@ -536,6 +630,7 @@
 			function changeType(elem) {
 				//console.log(elem.value);
 				let existingcsr = document.getElementById('existingcsr');
+				let existingkey = document.getElementById('existingkey');
 				let csrpassphrase = document.getElementById('csrpassphrase');
 				let csrsans = document.getElementById('csrsans');
 				let csrcustomize = document.getElementById('csrcustomize');
@@ -544,11 +639,13 @@
 					csrsans.style.display = 'none';
 					csrcustomize.style.display = 'none';
 					existingcsr.style.display = 'block';
+					existingkey.style.display = 'block';
 				} else {
 					csrpassphrase.style.display = 'block';
 					csrsans.style.display = 'block';
 					csrcustomize.style.display = 'block';
 					existingcsr.style.display = 'none';
+					existingkey.style.display = 'none';
 				}
 			}
 		</script>
@@ -593,7 +690,7 @@
 								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
 									<label for="csrtype" class="radio-inline">
 										<input onchange="changeType(this)" id="csrtype" class="keytype" value="existing" type="radio" name="optradio">
-										Paste Existing CSR
+										Paste Existing CSR and Key
 									</label>
 								</div>
 							</div>
@@ -615,19 +712,31 @@
 											</div>
 										</div>
 									</div>
+									<div id="existingkey" style="display: none;" class="row">
+										<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+											<div class="row">
+												<div class="col-lg-10 col-md-9 col-sm-9 col-xs-8">
+													<div class="form-group">
+														<label for="key">Private Key</label>
+														<textarea class="form-control" rows="10" style="white-space: pre; word-wrap: normal; overflow-wrap: normal; overflow-x: auto; font-family: Courier, monospace;" title="key" id="key" placeholder="Paste private key in base64 format"></textarea>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
 									<div id="existingcsr" style="display: none;" class="row">
 										<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 											<div class="row">
 												<div class="col-lg-10 col-md-9 col-sm-9 col-xs-8">
 													<div class="form-group">
 														<label for="csr">CSR</label>
-														<textarea class="form-control" rows="10" style="white-space: pre; word-wrap: normal; overflow-wrap: normal; overflow-x: auto; font-family: Courier, monospace;" title="csr" id="csr" placeholder="Paste CSR containing a valid challenge passphrase for the SCEP server"></textarea>
+														<textarea class="form-control" rows="10" style="white-space: pre; word-wrap: normal; overflow-wrap: normal; overflow-x: auto; font-family: Courier, monospace;" title="csr" id="csr" placeholder="Paste a valid base64 CSR containing a valid challenge passphrase for the SCEP server"></textarea>
 													</div>
 												</div>
 												<div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 align-bottom">
 													<div class="form-group">
 														<label for="submit">&nbsp;</label>
-														<input id="submit" class="btn btn-primary btn-md form-control" type="submit" value="Submit"/>
+														<input name="submit" class="btn btn-primary btn-md form-control" type="submit" value="Submit"/>
 													</div>
 												</div>
 											</div>
@@ -659,7 +768,7 @@
 												<div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 align-bottom">
 													<div class="form-group">
 														<label for="submit">&nbsp;</label>
-														<input id="submit" class="btn btn-primary btn-md form-control" type="submit" value="Submit"/>
+														<input name="submit" class="btn btn-primary btn-md form-control" type="submit" value="Submit"/>
 													</div>
 												</div>
 											</div>
@@ -752,6 +861,26 @@
 		<div class="ad">
 		</div>
 		<form id="downloadtext"></form>
+		<div id="passworddialog" title="Encrypted Private Key">
+			<p>The private key is encrypted and requires a password</p>
+			<table>
+				<tr>
+					<td>Password:</td>
+					<td>&nbsp;</td>
+					<td>
+						<input id="passwordprompt" type="password" class="form-control" />
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td align="center" colspan="3">
+						<button class="btn btn-primary" onclick="updatePassword();" type="button">Submit</button>
+					</td>
+				</tr>
+			</table>
+		</div>
 	</body>
 	<script>
 		addEventListeners();
@@ -764,5 +893,9 @@
 			
 		} );
 		document.getElementById('customize').style.display = 'block';
+		$( "#passworddialog" ).dialog({
+			modal: true,
+			autoOpen: false
+		});
 	</script>
 </html>
