@@ -20,7 +20,7 @@
 		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
-		<meta property="og:title" content="CertificateTools.com - CSR Generator">
+		<meta property="og:title" content="CertificateTools.com - SCEP Request">
 		<meta property="og:description" content="Test your SCEP server with a web-based SCEP client based on the open source SSCEP project.">
 		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
 		<meta property="og:url" content="https://certificatetools.com">
@@ -448,7 +448,9 @@
 					let sceprequest = {
 						url: scepurl.value,
 						key: key.key,
-						csr: csrresponse.csr
+						csr: csrresponse.csr,
+						passphrase: passphrase.value,
+						domains: domains
 					}
 					processSCEPRequest(sceprequest, function(err, result) {
 						if(err) {
@@ -706,7 +708,7 @@
 													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
 													<div class="form-group">
 														<label for="scepurl">SCEP URL</label>
-														<input id="scepurl" type="text" class="form-control" placeholder="http://scep.mydomain.org">
+														<input id="scepurl" type="text" class="form-control" value="{{scep.url}}" placeholder="http://scep.mydomain.org">
 													</div>
 												</div>
 											</div>
@@ -749,7 +751,7 @@
 													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
 													<div class="form-group">
 														<label for="passphrase">Challenge Passphrase</label>
-														<input id="passphrase" type="text" class="form-control">
+														<input id="passphrase" value="{{scep.challenge}}" type="text" class="form-control">
 													</div>
 												</div>
 											</div>
@@ -762,7 +764,7 @@
 													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
 													<div class="form-group">
 														<label for="hostnames">Domain Names</label>
-														<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com">
+														<input id="hostnames" value="{{scep.domains}}" type="text" class="form-control" placeholder="google.com, www.google.com">
 													</div>
 												</div>
 												<div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 align-bottom">
@@ -829,16 +831,18 @@
 								//var featurediv = document.getElementById('features');
 								//featurediv.style.height = window.innerHeight + 'px';
 							</script>
-							<h3 style="text-align: center;">Features</h3>
+							<h3 style="text-align: center;">About this Tool</h3>
 							<ul>
-								<li>This tool uses <a target="_blank" href="https://github.com/certnanny/sscep">SSCEP</a> to send SCEP certificate requests</li>
+								<li>It is highly recommended to use sigle-use and expiring challenge passphrases when using this tool</li>
+								<li>This tool is for testing purposes only. Private keys are sent securely via https, but should not be used in production as all keys should be generated locally</li>
+								<li>On the backend, the open source project <a target="_blank" href="https://github.com/certnanny/sscep">SSCEP</a> is used to send SCEP certificate requests</li>
 								<li>Choose from a 2048 bit RSA Key or 256 bit ECC Key **</li>
 								<li>All domain names entered are added as Subject Alternative Names</li>
 								<li>SHA-256 is used as the signature hash</li>
 								<li>The OpenSSL and SSCEP commands are shown and can be executed securely on a local system</li>
 								<li>A CSR may be uploaded but it must include a valid challenge passphrase. Some SCEP servers require the challenge passphrase to be encoded as a "PrintableString". These options and more are available using the <a href="/">Advanced CSR Generator</a></li>
 							</ul>
-							<span>** The SCEP client this tool is built on (SSCEP) doesn't support ECC, but the option exists for future testing</span>
+							<span>** The SCEP client this tool is built on (SSCEP) doesn't support ECC, but the option exists for future testing</span><br />
 							<div style="width: 100%; height: 325px;">
 								<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 								<ins class="adsbygoogle"

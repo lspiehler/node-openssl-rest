@@ -1169,6 +1169,7 @@ var usageData = function(data) {
 }
 
 router.post('/SCEPRequest', function(req, res) {
+	console.log(req.body);
 	sendRequestToOS('scep', req, function(err, result){});
 	const options = {
 		options: {

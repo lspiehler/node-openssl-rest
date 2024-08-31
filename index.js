@@ -160,6 +160,22 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);
 		let template = getTemplate();
+		template.scep = {};
+		if(req.query.hasOwnProperty('domains')) {
+			template.scep.domains = req.query.domains;
+		} else {
+			template.scep.domains = '';
+		}
+		if(req.query.hasOwnProperty('url')) {
+			template.scep.url = req.query.url;
+		} else {
+			template.scep.url = '';
+		}
+		if(req.query.hasOwnProperty('challenge')) {
+			template.scep.challenge = req.query.challenge;
+		} else {
+			template.scep.challenge = '';
+		}
 		res.render('scep_request.html', template);
     });
 	
