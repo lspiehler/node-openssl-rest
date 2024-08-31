@@ -352,7 +352,7 @@ router.post('/importPrivateKey', function(req, res) {
 						} else {
 							res.json({
 								error: false,
-								key: key
+								key: key.data
 							});
 						}
 					});
