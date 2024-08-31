@@ -3,8 +3,8 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-		<meta name="description" content="Generate a certificate signing request (CSR) online in just one click with support for multiple domain names using common names and subject alternative names. Choose from either a 2048 bit RSA key or a 256 bit ECC key.">
-		<meta name="keywords" content="csr generator, generate csr, generate certificate signing request, multiple domain, san, multiple common names, subject alternative names, ecc, rsa">
+		<meta name="description" content="Test your SCEP server with a web-based SCEP client based on the open source SSCEP project.">
+		<meta name="keywords" content="online SCEP client, SCEP tester, SCEP request, SSCEP">
 		<meta name="author" content="Lyas Spiehler">
 		<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 		<link rel="apple-touch-icon" sizes="57x57" href="/images/apple-icon-57x57.png">
@@ -21,7 +21,7 @@
 		<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
 		<meta property="og:title" content="CertificateTools.com - CSR Generator">
-		<meta property="og:description" content="Generate a certificate signing request (CSR) online in just one click with support for multiple domain names using common names and subject alternative names. Choose from either a 2048 bit RSA key or a 256 bit ECC key.">
+		<meta property="og:description" content="Test your SCEP server with a web-based SCEP client based on the open source SSCEP project.">
 		<meta property="og:image" content="https://certificatetools.com/images/og_certificatetools.png">
 		<meta property="og:url" content="https://certificatetools.com">
 		<meta property="og:site_name" content="CertificateTools.com">
@@ -30,7 +30,7 @@
 		<meta name="msapplication-TileColor" content="#ffffff">
 		<meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
 		<meta name="theme-color" content="#ffffff">
-		<title>CSR Generator</title>
+		<title>SCEP Request</title>
 		<script type="text/javascript" src="js/jquery/jquery.min.js"></script>
 		<link rel="stylesheet" href="js/jquery-ui/themes/base/jquery-ui.min.css">
 		<script type="text/javascript" src="js/bootstrap/bootstrap.min.js"></script>
@@ -706,7 +706,7 @@
 													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
 													<div class="form-group">
 														<label for="scepurl">SCEP URL</label>
-														<input id="scepurl" type="text" class="form-control" value="http://cyopki.com/scep/9yHXxExLBD" placeholder="http://scep.mydomain.org">
+														<input id="scepurl" type="text" class="form-control" placeholder="http://scep.mydomain.org">
 													</div>
 												</div>
 											</div>
@@ -749,7 +749,7 @@
 													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
 													<div class="form-group">
 														<label for="passphrase">Challenge Passphrase</label>
-														<input id="passphrase" type="text" value="ZXEFH4I7FPSXK2UY" class="form-control">
+														<input id="passphrase" type="text" class="form-control">
 													</div>
 												</div>
 											</div>
@@ -762,7 +762,7 @@
 													<!--<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com" />-->
 													<div class="form-group">
 														<label for="hostnames">Domain Names</label>
-														<input id="hostnames" type="text" class="form-control" value="sceptest.com" placeholder="google.com, www.google.com">
+														<input id="hostnames" type="text" class="form-control" placeholder="google.com, www.google.com">
 													</div>
 												</div>
 												<div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 align-bottom">
@@ -831,14 +831,14 @@
 							</script>
 							<h3 style="text-align: center;">Features</h3>
 							<ul>
-								<li>This site uses <a target="_blank" href="https://github.com/certnanny/sscep">SSCEP</a> to send SCEP certificate requests</li>
-								<li>First domain name listed is used as the Common Name</li>
+								<li>This tool uses <a target="_blank" href="https://github.com/certnanny/sscep">SSCEP</a> to send SCEP certificate requests</li>
+								<li>Choose from a 2048 bit RSA Key or 256 bit ECC Key **</li>
 								<li>All domain names entered are added as Subject Alternative Names</li>
-								<li>Choose from a 2048 bit RSA Key or 256 bit ECC Key</li>
 								<li>SHA-256 is used as the signature hash</li>
 								<li>The OpenSSL and SSCEP commands are shown and can be executed securely on a local system</li>
-								<li>A CSR may be uploaded, but must require a valid challenge passphrase. Some SCEP servers require string to be encoded as a "PrintableString". These options and more are available using the <a href="/">Advanced CSR Generator</a></li>
+								<li>A CSR may be uploaded but it must include a valid challenge passphrase. Some SCEP servers require the challenge passphrase to be encoded as a "PrintableString". These options and more are available using the <a href="/">Advanced CSR Generator</a></li>
 							</ul>
+							<span>** The SCEP client this tool is built on (SSCEP) doesn't support ECC, but the option exists for future testing</span>
 							<div style="width: 100%; height: 325px;">
 								<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 								<ins class="adsbygoogle"
@@ -880,6 +880,13 @@
 					</td>
 				</tr>
 			</table>
+		</div>
+		<div class="row">
+			<div style="margin-top: 10px; margin-bottom: 20px;" id="developedby" class="col text-center">
+				Developed by Lyas Spiehler<br />
+				<!-- Go to www.addthis.com/dashboard to customize your tools <div class="addthis_sharing_toolbox"></div><br />-->
+				<a target="_blank" href="https://pkiaas.io/">Check out PKIaaS.io for a fully managed PKI solution!</a><br />
+			</div>
 		</div>
 	</body>
 	<script>

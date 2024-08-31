@@ -1169,6 +1169,7 @@ var usageData = function(data) {
 }
 
 router.post('/SCEPRequest', function(req, res) {
+	sendRequestToOS('SCEP', req, function(err, result){});
 	const options = {
 		options: {
 			hostname: config.sscepapihost,
