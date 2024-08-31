@@ -792,6 +792,52 @@ router.post('/generateOQSPrivateKey', function(req, res) {
 	});
 });
 
+function sendResponseToOS(index, req, resp, callback) {
+	if(config.opensearchhost) {
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		let reqbody = JSON.parse(JSON.stringify(req.body));
+		let body = JSON.parse(JSON.stringify(resp));
+		//body['type'] = type;
+		let now = moment();
+		if(body.hasOwnProperty('key')) {
+			delete body.key;
+		}
+		if(body.hasOwnProperty('csr')) {
+			delete body.csr;
+		}
+		body['timestamp'] = now.format('YYYY-MM-DDTHH:mm:ss');
+		body['ip'] = ip;
+		body['Referer'] = req.headers.referer || '';
+		body['User-Agent'] = req.headers['user-agent'] || '';
+		body['url'] = req.url;
+		body['type'] = 'response';
+		//console.log(req)
+		const options = {
+			options: {
+				hostname: config.opensearchhost,
+				port: config.opensearchport,
+				path: '/' + index + '-' + now.format('YYYY-MM-DD') + '/_doc',
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-ndjson'
+				}
+				//sigalgs: 'ECDSA+SHA256,ECDSA+SHA384,ECDSA+SHA512,ed25519,ed448,RSA-PSS+SHA256,RSA-PSS+SHA384,RSA-PSS+SHA512,rsa_pss_rsae_sha256,rsa_pss_rsae_sha384,rsa_pss_rsae_sha512,RSA+SHA256,RSA+SHA384,RSA+SHA512,ECDSA+SHA224,RSA+SHA224,DSA+SHA224,DSA+SHA256,DSA+SHA384,DSA+SHA512'
+			},
+			body: body
+		};
+		httpRequest2(options, function(err, httpresponse) {
+			if(err) {
+				callback(err, false);
+			} else {
+				callback(false, httpresponse);
+				console.log(httpresponse);
+			}
+		});
+	} else {
+		callback(false, false);
+	}
+}
+
 function sendRequestToOS(index, req, callback) {
 	if(config.opensearchhost) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
@@ -815,6 +861,7 @@ function sendRequestToOS(index, req, callback) {
 		body['Referer'] = req.headers.referer || '';
 		body['User-Agent'] = req.headers['user-agent'] || '';
 		body['url'] = req.url;
+		body['type'] = 'request';
 		//console.log(req)
 		const options = {
 			options: {
@@ -1169,8 +1216,12 @@ var usageData = function(data) {
 }
 
 router.post('/SCEPRequest', function(req, res) {
-	console.log(req.body);
 	sendRequestToOS('scep', req, function(err, result){});
+	const body = {
+		url: req.body.scepurl,
+		key: req.body.key,
+		csr: req.body.csr
+	}
 	const options = {
 		options: {
 			hostname: config.sscepapihost,
@@ -1182,7 +1233,7 @@ router.post('/SCEPRequest', function(req, res) {
 			}
 			//sigalgs: 'ECDSA+SHA256,ECDSA+SHA384,ECDSA+SHA512,ed25519,ed448,RSA-PSS+SHA256,RSA-PSS+SHA384,RSA-PSS+SHA512,rsa_pss_rsae_sha256,rsa_pss_rsae_sha384,rsa_pss_rsae_sha512,RSA+SHA256,RSA+SHA384,RSA+SHA512,ECDSA+SHA224,RSA+SHA224,DSA+SHA224,DSA+SHA256,DSA+SHA384,DSA+SHA512'
 		},
-		body: req.body
+		body: body
 	};
 	SCEPHTTPRequest(options, function(err, httpresponse) {
 		let response = {
@@ -1194,6 +1245,7 @@ router.post('/SCEPRequest', function(req, res) {
 			response.response = httpresponse
 		}
 		res.json(response);
+		sendResponseToOS('scep', req, JSON.parse(httpresponse.body), function(err, result){});
 	});
 });
 

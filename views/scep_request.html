@@ -446,7 +446,7 @@
 				openSSLRESTAPI('generateCSR', data, function(error, csrresponse) {
 					disableSubmit(false);
 					let sceprequest = {
-						url: scepurl.value,
+						scepurl: scepurl.value,
 						key: key.key,
 						csr: csrresponse.csr,
 						passphrase: passphrase.value,
