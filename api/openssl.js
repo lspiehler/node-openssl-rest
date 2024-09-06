@@ -1,5 +1,7 @@
 var express = require('express'), 
 router = express.Router();
+const crypto = require('crypto');
+const tls = require('tls');
 var openssl = require('../lib/openssl.js');
 var openssl2 = require('../lib/openssl2.js');
 var ocspcache = require('../lib/ocspcache.js');
@@ -898,9 +900,15 @@ router.post('/PQCTest', function(req, res) {
 				error: pqerr
 			});
 		} else {
+			let securecontext = tls.createSecureContext({
+				secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT
+			});
+			
 			const options = {
 				hostname: req.body.hostname,
 				port: req.body.port,
+				rejectUnauthorized: false,
+            	secureContext: securecontext,
 				path: '/',
 				method: 'GET',
 			};
