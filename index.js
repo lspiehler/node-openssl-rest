@@ -76,6 +76,13 @@ opensslcap.getCapabilities(function(err, capabilities) {
 		res.render('index.html', template);
 	});
 
+	app.get('/about', function(req, res) {
+		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		console.log('HTTPS connection from ' + ip);
+		let template = getTemplate();
+		res.render('about.html', template);
+	});
+
 	app.get('/test', function(req, res) {
 		let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 		console.log('HTTPS connection from ' + ip);

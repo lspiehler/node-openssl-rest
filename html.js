@@ -35,6 +35,9 @@ var html = {
 		'               <ul class="dropdown-menu">',
 		'                   <li><a href="/test-post-quantum-cryptography">Test Post-Quantum TLS Handshake</a></li>',
 		'               </ul>',
+		'           </li>',
+		'			<li class="dropdown">',
+		'               <a href="/about">About</a>',
 		'           </li>'
 	]
 }
