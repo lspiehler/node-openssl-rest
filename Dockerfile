@@ -33,7 +33,7 @@ RUN apk add build-base linux-headers \
             git wget
 
 # get current openssl sources
-RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch master https://github.com/openssl/openssl.git
+RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch openssl-3.4.0 --single-branch https://github.com/openssl/openssl.git
 #mkdir /optbuild && cd /optbuild && git clone --branch master https://github.com/openssl/openssl.git &&  cd /optbuild/openssl && git checkout db2ac4f
 
 # build OpenSSL3
@@ -96,7 +96,7 @@ WORKDIR ${INSTALLDIR_OPENSSL}/bin
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR_OPENSSL}/bin:${PATH}"
 
-ARG CACHE_DATE=2024-08-24
+ARG CACHE_DATE=2024-12-10
 
 # update config to allow unsafe renegotiation
 RUN sed -i '/\[system_default_sect\]/a Options = UnsafeLegacyRenegotiation' /opt/openssl32/ssl/openssl.cnf
