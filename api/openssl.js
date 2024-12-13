@@ -421,19 +421,20 @@ router.get('/issuer/:ca', function(req, res) {
 
 var convertCertToCSR = function(download, certs, index, callback) {
 	//console.log(index);
-	openssl.convertCertToCSR(certs[index], function(err,csr,cmd) {
+	openssl2.x509.parse({cert: certs[index]}, function(err, csr) {
+		//console.log(csr);
 		if(err) {
 			//console.log(err);
-			callback("Unable to download certificates.", download, cmd);
+			callback("Unable to download certificates.", download, csr.command.join('\r\n'));
 		} else {
 			var cert = {
 				cert: certs[index],
-				options: csr
+				options: csr.data
 			}
 			download.push(cert);
 			if(index==certs.length - 1) {
-				callback(err, download, cmd);
-				//console.log(csroptions);
+				callback(err, download, csr.command.join('\r\n'));
+				//console.log(csr);
 				return;
 			} else {
 				convertCertToCSR(download, certs, index + 1, callback);
@@ -540,19 +541,21 @@ router.post('/getCertFromNetwork', function(req, res) {
 
 router.post('/getCSRFromCert', function(req, res) {
 	var cert = req.body.cert;
-	openssl.convertCertToCSR(cert, function(err,csroptions,cmd) {
+	//openssl.convertCertToCSR(cert, function(err,csroptions,cmd) {
+	openssl2.x509.parse({cert: cert}, function(err, csroptions) {
+		console.log(csroptions.command.join('\r\n'));
 		//command.push(cmd);
 		if(err) {
 			var data = {
 				error: err,
-				csroptions: csroptions,
-				command: cmd
+				csroptions: csroptions.data,
+				command: csroptions.command.join('\r\n')
 			}
 		} else {
 			var data = {
 				error: err,
-				csroptions: csroptions,
-				command: cmd
+				csroptions: csroptions.data,
+				command: csroptions.command.join('\r\n')
 			}
 		}
 		//console.log(data);
