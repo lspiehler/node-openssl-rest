@@ -945,6 +945,7 @@ function testPostQuantum(options, callback) {
 		protocol: 'https'
 	}
 	netcertoptions.groups = [
+		"X25519MLKEM768",
 		"x25519_kyber768",
 		"x25519_kyber512",
 		"p256_kyber768"
