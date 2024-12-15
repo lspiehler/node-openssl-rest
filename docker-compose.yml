@@ -1,6 +1,6 @@
 services:
   node-openssl-rest:
-    conatiner-name: node-openssl-rest
+    #conatiner-name: node-openssl-rest
     image: lspiehler/node-openssl-rest:latest
     restart: unless-stopped
     stdin_open: true
@@ -15,8 +15,20 @@ services:
     volumes:
       - /var/docker/node-openssl-rest/certs:/var/node/node-openssl-rest/certs
       - /cas:/var/node/node-openssl-rest/ca
+  openssl-pq-server:
+    image: lspiehler/node-openssl-rest:latest
+    stdin_open: true
+    tty: true
+    networks:
+      - certificates
+    ports:
+      - 4433:4433
+    volumes:
+      - /etc/letsencrypt/live/certificatetools.com:/etc/letsencrypt/live/certificatetools.com
+      - /etc/letsencrypt/archive/certificatetools.com:/etc/letsencrypt/archive/certificatetools.com
+    entrypoint: /opt/openssl32/bin/openssl s_server -cert /etc/letsencrypt/live/certificatetools.com/fullchain.pem -key /etc/letsencrypt/live/certificatetools.com/privkey.pem -groups X25519MLKEM768 -ignore_unexpected_eof -www -tls1_3 -accept 0.0.0.0:4433
   node-sscep:
-    conatiner-name: node-sscep
+    #conatiner-name: node-sscep
     image: lspiehler/node-sscep:latest
     restart: unless-stopped
     stdin_open: true
