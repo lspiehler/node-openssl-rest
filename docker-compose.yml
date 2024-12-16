@@ -17,6 +17,7 @@ services:
       - /cas:/var/node/node-openssl-rest/ca
   openssl-pq-server:
     image: lspiehler/node-openssl-rest:latest
+    restart: unless-stopped
     stdin_open: true
     tty: true
     networks:
