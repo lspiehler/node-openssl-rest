@@ -821,7 +821,7 @@ function sendResponseToOS(index, req, resp, callback) {
 			options: {
 				hostname: config.opensearchhost,
 				port: config.opensearchport,
-				path: '/' + index + '-' + now.format('YYYY-MM-DD') + '/_doc',
+				path: '/' + index + '-' + now.format('YYYY-MM') + '/_doc',
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/x-ndjson'
@@ -872,7 +872,7 @@ function sendRequestToOS(index, req, callback) {
 			options: {
 				hostname: config.opensearchhost,
 				port: config.opensearchport,
-				path: '/' + index + '-' + now.format('YYYY-MM-DD') + '/_doc',
+				path: '/' + index + '-' + now.format('YYYY-MM') + '/_doc',
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/x-ndjson'
