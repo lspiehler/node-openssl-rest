@@ -754,18 +754,18 @@ router.post('/generateRSAPrivateKey', function(req, res) {
 	var rsakeyoptions = req.body;
 	//var username = req.body.username;
 	//var password = req.body.password;
-	openssl.generateRSAPrivateKey(rsakeyoptions, function(err, key, cmd) {
+	openssl2.keypair.generateRSA(rsakeyoptions, function(err, key) {
 		if(err) {
 			var data = {
 				error: err,
-				key: key,
-				command: cmd
+				key: key.data,
+				command: key.command
 			}
 		} else {
 			var data = {
 				error: false,
-				key: key,
-				command: cmd
+				key: key.data,
+				command: key.command
 			}
 		}
 		res.json(data);

@@ -61,7 +61,7 @@ RUN apk add build-base linux-headers \
 # Get OpenSSL image (from cache)
 COPY --from=buildopenssl ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
 
-RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs
+RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch 0.12.0 https://github.com/open-quantum-safe/liboqs
 
 WORKDIR /optbuild/liboqs
 RUN mkdir build && cd build && cmake -G"Ninja" .. -DOQS_ALGS_ENABLED=All -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR_LIBOQS} && ninja install
@@ -82,7 +82,7 @@ RUN apk add build-base linux-headers \
             libtool cmake ninja \
             git wget
 
-RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git
+RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch 0.8.0 https://github.com/open-quantum-safe/oqs-provider.git
 
 # Get openssl32 and liboqs
 COPY --from=buildopenssl ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
@@ -96,7 +96,7 @@ WORKDIR ${INSTALLDIR_OPENSSL}/bin
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR_OPENSSL}/bin:${PATH}"
 
-ARG CACHE_DATE=2024-12-10
+ARG CACHE_DATE=2025-02-03v2
 
 # update config to allow unsafe renegotiation
 RUN sed -i '/\[system_default_sect\]/a Options = UnsafeLegacyRenegotiation' /opt/openssl32/ssl/openssl.cnf
