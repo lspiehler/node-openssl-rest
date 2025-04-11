@@ -587,14 +587,15 @@ router.post('/returnDownload', function(req, res) {
 
 router.post('/downloadPFX', function(req, res) {
 	//console.log(req.body);
-	openssl.createPKCS12(req.body.crt, req.body.key, req.body.passin, req.body.passout, false, function(err, pfx, command) {
+	// openssl.createPKCS12(req.body.crt, req.body.key, req.body.passin, req.body.passout, false, function(err, pfx, command) {
+		openssl2.x509.createPKCS12({cert: req.body.crt, key: req.body.key, pkcs12pass: req.body.passout, keypass: req.body.passin, legacy: true}, function(err, pkcs12) {
 		if (err) console.log(err);
 		var mimetype = 'application/x-pkcs12';
 		res.setHeader('Content-disposition', 'attachment; filename=cert.pfx');
 		res.setHeader('Content-type', mimetype);
 		res.charset = 'UTF-8';
-		//console.log(command);
-		res.send(pfx);
+		// console.log(pkcs12);
+		res.send(pkcs12.data);
 	});
 });
 
