@@ -15,6 +15,11 @@ services:
     volumes:
       - /var/docker/node-openssl-rest/certs:/var/node/node-openssl-rest/certs
       - /cas:/var/node/node-openssl-rest/ca
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
   openssl-pq-server:
     image: ghcr.io/lspiehler/node-openssl-rest:latest
     restart: unless-stopped
@@ -28,6 +33,11 @@ services:
       - /etc/letsencrypt/live/certificatetools.com:/etc/letsencrypt/live/certificatetools.com
       - /etc/letsencrypt/archive/certificatetools.com:/etc/letsencrypt/archive/certificatetools.com
     entrypoint: /opt/openssl32/bin/openssl s_server -cert /etc/letsencrypt/live/certificatetools.com/fullchain.pem -key /etc/letsencrypt/live/certificatetools.com/privkey.pem -groups X25519MLKEM768 -ignore_unexpected_eof -www -tls1_3 -accept 0.0.0.0:4433
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
   node-sscep:
     #conatiner-name: node-sscep
     image: lspiehler/node-sscep:latest
@@ -41,6 +51,11 @@ services:
     volumes:
       - /var/docker/node-openssl-rest/certs:/var/node/node-openssl-rest/certs
       - /cas:/var/node/node-openssl-rest/ca
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 networks:
   certificates:
     ipam:
