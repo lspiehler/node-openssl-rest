@@ -946,10 +946,11 @@ function testPostQuantum(options, callback) {
 		protocol: 'https'
 	}
 	netcertoptions.groups = [
-		"X25519MLKEM768",
-		"x25519_kyber768",
-		"x25519_kyber512",
-		"p256_kyber768"
+		// "X25519MLKEM768",
+		// "x25519_kyber768",
+		// "x25519_kyber512",
+		// "p256_kyber768"
+		"X25519"
 	]
 	/*netcertoptions.groups = [
         "x25519",
@@ -989,44 +990,48 @@ function testPostQuantum(options, callback) {
 	openssl2.x509.TLSHandshake(netcertoptions, function(err, pqc, cmd) {
 		let pqcready = true;
 		if(err) {
+			// console.log(err);
 			pqcready = false;
-			netcertoptions.groups = [
-				"x25519",
-				"secp256r1",
-				"x448",
-				"secp521r1",
-				"secp384r1",
-				"ffdhe2048",
-				"ffdhe3072",
-				"ffdhe4096",
-				"ffdhe6144",
-				"ffdhe8192",
-				"prime256v1"
-			]
-			netcertoptions.sigalgs = [
-				"ECDSA+SHA256",
-				"ECDSA+SHA384",
-				"ECDSA+SHA512",
-				"ed25519",
-				"ed448",
-				"RSA-PSS+SHA256",
-				"RSA-PSS+SHA384",
-				"RSA-PSS+SHA512",
-				"rsa_pss_rsae_sha256",
-				"rsa_pss_rsae_sha384",
-				"rsa_pss_rsae_sha512",
-				"RSA+SHA256",
-				"RSA+SHA384",
-				"RSA+SHA512",
-				"ECDSA+SHA224",
-				"RSA+SHA224",
-				"DSA+SHA224",
-				"DSA+SHA256",
-				"DSA+SHA384",
-				"DSA+SHA512"
-			];
+			delete netcertoptions.groups;
+			delete netcertoptions.sigalgs;
+			// netcertoptions.groups = [
+			// 	"x25519",
+			// 	"secp256r1",
+			// 	"x448",
+			// 	"secp521r1",
+			// 	"secp384r1",
+			// 	"ffdhe2048",
+			// 	"ffdhe3072",
+			// 	"ffdhe4096",
+			// 	"ffdhe6144",
+			// 	"ffdhe8192",
+			// 	"prime256v1"
+			// ]
+			// netcertoptions.sigalgs = [
+			// 	"ECDSA+SHA256",
+			// 	"ECDSA+SHA384",
+			// 	"ECDSA+SHA512",
+			// 	"ed25519",
+			// 	"ed448",
+			// 	"RSA-PSS+SHA256",
+			// 	"RSA-PSS+SHA384",
+			// 	"RSA-PSS+SHA512",
+			// 	"rsa_pss_rsae_sha256",
+			// 	"rsa_pss_rsae_sha384",
+			// 	"rsa_pss_rsae_sha512",
+			// 	"RSA+SHA256",
+			// 	"RSA+SHA384",
+			// 	"RSA+SHA512",
+			// 	"ECDSA+SHA224",
+			// 	"RSA+SHA224",
+			// 	"DSA+SHA224",
+			// 	"DSA+SHA256",
+			// 	"DSA+SHA384",
+			// 	"DSA+SHA512"
+			// ];
 			openssl2.x509.TLSHandshake(netcertoptions, function(err, notpqc, cmd) {
 				if(err) {
+					// console.log(err);
 					callback(err.toString(), false);
 				} else {
 					let pc = new parseCerts();
