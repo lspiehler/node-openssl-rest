@@ -1,7 +1,7 @@
 services:
   node-openssl-rest:
     #conatiner-name: node-openssl-rest
-    image: lspiehler/node-openssl-rest:latest
+    image: ghcr.io/lspiehler/node-openssl-rest:latest
     restart: unless-stopped
     stdin_open: true
     tty: true
@@ -16,7 +16,7 @@ services:
       - /var/docker/node-openssl-rest/certs:/var/node/node-openssl-rest/certs
       - /cas:/var/node/node-openssl-rest/ca
   openssl-pq-server:
-    image: lspiehler/node-openssl-rest:latest
+    image: ghcr.io/lspiehler/node-openssl-rest:latest
     restart: unless-stopped
     stdin_open: true
     tty: true
