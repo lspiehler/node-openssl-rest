@@ -1,7 +1,5 @@
 FROM node:lts-alpine3.23
 
-# ARG CACHE_DATE=2025-10-03
-
 LABEL maintainer="Lyas Spiehler"
 
 RUN apk add --update python3 \
@@ -18,6 +16,8 @@ RUN apk add --update python3 \
 LABEL maintainer="Lyas Spiehler"
 
 WORKDIR /var/node
+
+ARG CACHE_DATE=2026-01-12
 
 RUN git clone https://github.com/lspiehler/node-openssl-rest.git
 
