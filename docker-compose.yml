@@ -32,7 +32,7 @@ services:
     volumes:
       - /etc/letsencrypt/live/certificatetools.com:/etc/letsencrypt/live/certificatetools.com
       - /etc/letsencrypt/archive/certificatetools.com:/etc/letsencrypt/archive/certificatetools.com
-    entrypoint: /opt/openssl32/bin/openssl s_server -cert /etc/letsencrypt/live/certificatetools.com/fullchain.pem -key /etc/letsencrypt/live/certificatetools.com/privkey.pem -groups X25519MLKEM768 -ignore_unexpected_eof -www -tls1_3 -accept 0.0.0.0:4433
+    entrypoint: openssl s_server -cert /etc/letsencrypt/live/certificatetools.com/fullchain.pem -key /etc/letsencrypt/live/certificatetools.com/privkey.pem -groups X25519MLKEM768 -ignore_unexpected_eof -www -tls1_3 -accept 0.0.0.0:4433
     logging:
       driver: "json-file"
       options:
