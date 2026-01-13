@@ -28,8 +28,7 @@ docker push ghcr.io/lspiehler/node-openssl-rest:latest
 
 #### Update production container
 ```
-docker stop node-openssl-rest
-docker rm node-openssl-rest
+docker compose down
 docker image rm ghcr.io/lspiehler/node-openssl-rest
-docker run -d --restart unless-stopped --name node-openssl-rest -p 8443:8443 -p 8081:8081 --env-file /var/node/node-openssl-rest/.env -v /var/docker/node-openssl-rest/certs:/var/node/node-openssl-rest/certs -v /cas:/var/node/node-openssl-rest/ca -it ghcr.io/lspiehler/node-openssl-rest:latest
+docker compose up -d
 ```

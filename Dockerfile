@@ -17,7 +17,7 @@ LABEL maintainer="Lyas Spiehler"
 
 WORKDIR /var/node
 
-ARG CACHE_DATE=2026-01-12
+ARG CACHE_DATE=2026-01-13
 
 RUN git clone https://github.com/lspiehler/node-openssl-rest.git
 
