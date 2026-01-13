@@ -1519,7 +1519,7 @@ router.post('/pasteKey', function(req, res) {
 router.post('/ocspChecker', function(req, res) {
 	sendRequestToOS('ocsp', req, function(err, result){});
 	var ocsp = new ocsplib();
-	console.log(req.body)
+	// console.log(req.body)
 	if(req.body.method=='download') {
 		console.log('OCSP download for: ' + req.body.hostname + ':' + req.body.port);
 	} else if(req.body.method=='paste') {
